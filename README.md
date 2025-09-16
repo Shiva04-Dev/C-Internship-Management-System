@@ -6,8 +6,13 @@ The system allows students to register, browse available internships, and apply 
 ✨ Key Features I will be including in my Project:
 
 🔐 Authentication & Role Management – separate access for students, companies, and admins.
+
 📄 Internship CRUD – companies can create, update, and delete internship postings.
+
 📝 Application Workflow – students apply to internships and track their status.
+
 📊 Admin Dashboard – administrators can approve/reject applications and view summary reports.
+
 🗂️ Relational Database – SQL Server backend with properly normalized schema.
+
 💡 Scalable Architecture – built with ASP.NET Core MVC + Entity Framework Core for maintainability.
