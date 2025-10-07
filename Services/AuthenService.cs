@@ -62,27 +62,27 @@ namespace C__Internship_Management_Program.Services
             if (await _context.Companies.AnyAsync(c => c.Email == dto.Email))
                 throw new Exception("Email Exists");
 
-                var company = new Company
-                {
-                    CompanyName = dto.CompanyName,
-                    Email = dto.Email,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                    PhoneNumber = dto.PhoneNumber,
-                    Website = dto.Website,
-                    UpdatedAt = DateTime.UtcNow
-                };
+            var company = new Company
+            {
+                CompanyName = dto.CompanyName,
+                Email = dto.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                PhoneNumber = dto.PhoneNumber,
+                Website = dto.Website,
+                UpdatedAt = DateTime.UtcNow
+            };
 
-                _context.Companies.Add(company);
-                await _context.SaveChangesAsync();
+            _context.Companies.Add(company);
+            await _context.SaveChangesAsync();
 
-                return await GenerateAuthenticationResponse(company.CompanyID, company.Email, "Company", company.CompanyName);
+            return await GenerateAuthenticationResponse(company.CompanyID, company.Email, "Company", company.CompanyName);
         }
 
         public async Task<AuthenticationResponseDto> RegisterAdminAsync(AdminRegisterDto dto)
         {
-            if (await _context.Companies.AnyAsync(c => c.Email == dto.Email))
-                    throw new Exception("Email Exists");
-            
+            if (await _context.Admins.AnyAsync(c => c.Email == dto.Email))
+                throw new Exception("Email Exists");
+
             var admin = new Admin
             {
                 FirstName = dto.FirstName,
@@ -92,10 +92,10 @@ namespace C__Internship_Management_Program.Services
                 UpdatedAt = DateTime.UtcNow
             };
 
-             _context.Admins.Add(admin);
-             await _context.SaveChangesAsync();
+            _context.Admins.Add(admin);
+            await _context.SaveChangesAsync();
 
-             return await GenerateAuthenticationResponse(admin.AdminID, admin.Email, "Admin", $"{admin.FirstName} {admin.LastName}");
+            return await GenerateAuthenticationResponse(admin.AdminID, admin.Email, "Admin", $"{admin.FirstName} {admin.LastName}");
         }
 
         public async Task<AuthenticationResponseDto> LoginAsync(LoginDto dto, string userType)
@@ -130,7 +130,7 @@ namespace C__Internship_Management_Program.Services
             var storedToken = await _context.RefreshTokens
                 .Include(rt => rt.Student)
                 .Include(rt => rt.Company)
-                .Include(rt => rt.Student)
+                .Include(rt => rt.Admin)
                 .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
 
             if (storedToken == null || !storedToken.IsActive)
@@ -149,7 +149,7 @@ namespace C__Internship_Management_Program.Services
                 userId = storedToken.StudentID.Value;
                 email = storedToken.Student.Email;
                 name = $"{storedToken.Student.FirstName} {storedToken.Student.LastName}";
-            } 
+            }
             else if (storedToken.UserType == "Company")
             {
                 userId = storedToken.CompanyID.Value;
@@ -168,6 +168,46 @@ namespace C__Internship_Management_Program.Services
             return await GenerateAuthenticationResponse(userId, email, storedToken.UserType, name);
         }
 
+        public async Task<bool> RevokeRefreshTokenAsync(string refreshToken)
+        {
+            var token = await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+            if (token == null) return false;
 
+            token.IsRevoked = true;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        private async Task<AuthenticationResponseDto> GenerateAuthenticationResponse(int userId, string email, string userType, string name)
+        {
+            var accessToken = _jwtService.GenerateAccessToken(userId, email, userType, name);
+            var refreshToken = _jwtService.GenerateRefreshToken();
+
+            var refreshTokenEntity = new RefreshToken
+            {
+                Token = refreshToken,
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                UserType = userType
+            };
+
+            //Sets appropriate user ID based on type
+            if (userType == "Student") refreshTokenEntity.StudentID = userId;
+            else if (userType == "Company") refreshTokenEntity.CompanyID = userId;
+            else if (userType == "Admin") refreshTokenEntity.AdminID = userId;
+
+            _context.RefreshTokens.Add(refreshTokenEntity);
+            await _context.SaveChangesAsync();
+
+            return new AuthenticationResponseDto
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                UserType = userType,
+                UserID = userId,
+                Email = email,
+                Name = name,
+                ExpiresAt = DateTime.UtcNow.AddMinutes(60)
+            };
+        }
     }
 }
