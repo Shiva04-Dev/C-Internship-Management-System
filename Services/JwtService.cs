@@ -19,7 +19,7 @@ namespace C__Internship_Management_Program.Services
     {
         private readonly IConfiguration _configuration;
 
-        public JWTService(IConfiguration configuration)
+        public JwtService(IConfiguration configuration)
         {
             _configuration = configuration;
         }
