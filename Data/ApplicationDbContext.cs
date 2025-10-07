@@ -28,45 +28,37 @@ namespace C__Internship_Management_Program.Data
             modelBuilder.Entity<NotificationRole>()
                 .HasKey(nr => new { nr.NotificationID, nr.RoleID });
 
-            modelBuilder.Entity<RefreshToken>(entity =>
-            {
-                entity.ToTable("RefreshTokens");
 
-                entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(64);
-                entity.Property(e => e.JwtID).IsRequired().HasMaxLength(200);
-                entity.Property(e => e.ReplacedByTokenHash).IsRequired().HasMaxLength(64);
-                entity.Property(e => e.CreatedByIP).IsRequired().HasMaxLength(45);
-                entity.Property(e => e.RevokedByIP).IsRequired().HasMaxLength(45);
+            modelBuilder.Entity<RefreshToken>()
+            .HasOne(rt => rt.Student)
+            .WithMany(s => s.RefreshTokens)
+            .HasForeignKey(rt => rt.StudentID)
+            .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasIndex(e => e.TokenHash).IsUnique();
-                entity.HasIndex(e => e.JwtID);
-                entity.HasIndex(e => e.StudentID);
-                entity.HasIndex(e => e.CompanyID);
-                entity.HasIndex(e => e.AdminID);
+            modelBuilder.Entity<RefreshToken>()
+            .HasOne (rt => rt.Company)
+            .WithMany(c => c.RefreshTokens)
+            .HasForeignKey(rt => rt.CompanyID)
+            .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(e => e.Student)
-                .WithMany(s => s.RefreshTokens)
-                .HasForeignKey(e => e.StudentID)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<RefreshToken>()
+            .HasOne(rt => rt.Admin)
+            .WithMany(a => a.RefreshTokens)
+            .HasForeignKey(rt => rt.AdminID)
+            .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(e => e.Company)
-                .WithMany(c => c.RefreshTokens)
-                .HasForeignKey(e => e.CompanyID)
-                .OnDelete(DeleteBehavior.Cascade);
+            //Unique Email Constraint
+            modelBuilder.Entity<Student>()
+            .HasIndex(s => s.Email)
+            .IsUnique();
 
-                entity.HasOne(e => e.Admin)
-                .WithMany(a => a.RefreshTokens)
-                .HasForeignKey(e => e.AdminID)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Company>()
+                .HasIndex(c => c.Email)
+                .IsUnique();
 
-                //SQL Server check: That only 1 owner is set
-                entity.HasCheckConstraint(
-                    "CK_RefreshTokens_SingleOwner",
-                "((CASE WHEN [StudentID] IS NOT NULL THEN 1 ELSE 0 END) + " +
-                "(CASE WHEN [CompanyID] IS NOT NULL THEN 1 ELSE 0 END) + " +
-                "(CASE WHEN [AdminID] IS NOT NULL THEN 1 ELSE 0 END)) = 1"
-                );
-            });
+            modelBuilder.Entity<Admin>()
+                .HasIndex(c => c.Email)
+                .IsUnique();
         }
     }
 }
