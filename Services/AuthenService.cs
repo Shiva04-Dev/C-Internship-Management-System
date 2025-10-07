@@ -7,6 +7,7 @@ using C__Internship_Management_Program.Models;
 using C__Internship_Management_Program.DTOs;
 using BCrypt.Net;
 using System.CodeDom.Compiler;
+using Microsoft.Identity.Client;
 
 namespace C__Internship_Management_Program.Services
 {
@@ -79,25 +80,49 @@ namespace C__Internship_Management_Program.Services
 
         public async Task<AuthenticationResponseDto> RegisterAdminAsync(AdminRegisterDto dto)
         {
-            if (await _context.Companies.AnyAsync(c => c.Email == dto.Email) {
+            if (await _context.Companies.AnyAsync(c => c.Email == dto.Email))
                     throw new Exception("Email Exists");
+            
+            var admin = new Admin
+            {
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Email = dto.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                UpdatedAt = DateTime.UtcNow
+            };
 
-                var admin = new Admin
-                {
-                    FirstName = dto.FirstName,
-                    LastName = dto.LastName,
-                    Email = dto.Email,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                    UpdatedAt = DateTime.UtcNow
-                };
+             _context.Admins.Add(admin);
+             await _context.SaveChangesAsync();
 
-                _context.Admins.Add(admin);
-                await _context.SaveChangesAsync();
+             return await GenerateAuthenticationResponse(admin.AdminID, admin.Email, "Admin", $"{admin.FirstName} {admin.LastName}");
+        }
 
-                return await GenerateAuthenticationResponse(admin.AdminID, admin.Email, "Admin", $"{admin.FirstName} {admin.LastName}");
+        public async Task<AuthenticationResponseDto> LoginAsync(LoginDto dto, string userType)
+        {
+            switch (userType.ToLower())
+            {
+                case "student":
+                    var student = await _context.Students.FirstOrDefaultAsync(s => s.Email == dto.Email);
+                    if (student == null || !BCrypt.Net.BCrypt.Verify(dto.Password, student.PasswordHash))
+                        throw new Exception("Invalid Email or Password");
+                    return await GenerateAuthenticationResponse(student.StudentID, student.Email, "Student", $"{student.FirstName} {student.LastName}");
+
+                case "company":
+                    var company = await _context.Companies.FirstOrDefaultAsync(c => c.Email == dto.Email);
+                    if (company == null || !BCrypt.Net.BCrypt.Verify(dto.Password, company.PasswordHash))
+                        throw new Exception("Invalid Email or Password");
+                    return await GenerateAuthenticationResponse(company.CompanyID, company.Email, "Company", company.CompanyName);
+
+                case "admin":
+                    var admin = await _context.Admins.FirstOrDefaultAsync(a => a.Email == dto.Email);
+                    if (admin == null || !BCrypt.Net.BCrypt.Verify(dto.Password, admin.PasswordHash))
+                        throw new Exception("Invalid Email or Password");
+                    return await GenerateAuthenticationResponse(admin.AdminID, admin.Email, "Admin", $"{admin.FirstName} {admin.LastName}");
+
+                default:
+                    throw new Exception("Invalid User Type");
             }
-
-
         }
     }
 }
