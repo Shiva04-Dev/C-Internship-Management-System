@@ -10,8 +10,8 @@ namespace C__Internship_Management_Program.Services
 {
     public interface IJwtService
     {
-        string GenerateAccesssToken(int userId, string email, string userType, string name);
-        string GeneratorRefreshToken();
+        string GenerateAccessToken(int userId, string email, string userType, string name);
+        string GenerateRefreshToken();
         ClaimsPrincipal ValidateToken(string token);
     }
 
