@@ -20,7 +20,7 @@ namespace C__Internship_Management_Program.Models
         public string Email { get; set; }
 
         [Required, MaxLength(50)]
-        public string Password { get; set; }
+        public string PasswordHash { get; set; }
 
         [MaxLength(15)]
         public string PhoneNumber { get; set; }
@@ -29,10 +29,11 @@ namespace C__Internship_Management_Program.Models
 
         public string Degree { get; set; }
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         //Navigation
         public ICollection<Application> Applications { get; set; }
         public ICollection<Feedback> Feedbacks { get; set; }
+        public ICollection<RefreshToken> RefreshTokens { get; set; }
     }
 }
