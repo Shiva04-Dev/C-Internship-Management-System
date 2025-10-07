@@ -35,7 +35,7 @@ namespace C__Internship_Management_Program.Services
         {
 
             //Checking if student's email exists
-            if (await _context.Students.AnySync(s => s.Email == dto.Email))
+            if (await _context.Students.AnyAsync(s => s.Email == dto.EmailAddress))
                 throw new Exception("Email Exists");
 
             var student = new Student
@@ -43,7 +43,7 @@ namespace C__Internship_Management_Program.Services
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Email = dto.EmailAddress,
-                PasswordHash = BCrypt.Net.BCrypt.HashPasssword(dto.Password),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 PhoneNumber = dto.PhoneNumber,
                 University = dto.University,
                 Degree = dto.Degree,
@@ -54,6 +54,50 @@ namespace C__Internship_Management_Program.Services
             await _context.SaveChangesAsync();
 
             return await GenerateAuthenticationResponse(student.StudentID, student.Email, "Student", $"{student.FirstName} {student.LastName}");
+        }
+
+        public async Task<AuthenticationResponseDto> RegisterCompanyAsync(CompanyRegisterDto dto)
+        {
+            if (await _context.Companies.AnyAsync(c => c.Email == dto.Email))
+                throw new Exception("Email Exists");
+
+                var company = new Company
+                {
+                    CompanyName = dto.CompanyName,
+                    Email = dto.Email,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                    PhoneNumber = dto.PhoneNumber,
+                    Website = dto.Website,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.Companies.Add(company);
+                await _context.SaveChangesAsync();
+
+                return await GenerateAuthenticationResponse(company.CompanyID, company.Email, "Company", company.CompanyName);
+        }
+
+        public async Task<AuthenticationResponseDto> RegisterAdminAsync(AdminRegisterDto dto)
+        {
+            if (await _context.Companies.AnyAsync(c => c.Email == dto.Email) {
+                    throw new Exception("Email Exists");
+
+                var admin = new Admin
+                {
+                    FirstName = dto.FirstName,
+                    LastName = dto.LastName,
+                    Email = dto.Email,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.Admins.Add(admin);
+                await _context.SaveChangesAsync();
+
+                return await GenerateAuthenticationResponse(admin.AdminID, admin.Email, "Admin", $"{admin.FirstName} {admin.LastName}");
+            }
+
+
         }
     }
 }
