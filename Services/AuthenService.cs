@@ -124,5 +124,50 @@ namespace C__Internship_Management_Program.Services
                     throw new Exception("Invalid User Type");
             }
         }
+
+        public async Task<AuthenticationResponseDto> RefreshTokenAsync(string refreshToken)
+        {
+            var storedToken = await _context.RefreshTokens
+                .Include(rt => rt.Student)
+                .Include(rt => rt.Company)
+                .Include(rt => rt.Student)
+                .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+
+            if (storedToken == null || !storedToken.IsActive)
+                throw new Exception("Invalid or Exipred Token");
+
+            //Revoking old token
+            storedToken.IsRevoked = true;
+
+            //Generate new tokens based on type of user
+            string name = "";
+            string email = "";
+            int userId = 0;
+
+            if (storedToken.UserType == "Student")
+            {
+                userId = storedToken.StudentID.Value;
+                email = storedToken.Student.Email;
+                name = $"{storedToken.Student.FirstName} {storedToken.Student.LastName}";
+            } 
+            else if (storedToken.UserType == "Company")
+            {
+                userId = storedToken.CompanyID.Value;
+                email = storedToken.Company.Email;
+                name = storedToken.Company.CompanyName;
+            }
+            else if (storedToken.UserType == "Admin")
+            {
+                userId = storedToken.AdminID.Value;
+                email = storedToken.Admin.Email;
+                name = $"{storedToken.Admin.FirstName} {storedToken.Admin.LastName}";
+            }
+
+            await _context.SaveChangesAsync();
+
+            return await GenerateAuthenticationResponse(userId, email, storedToken.UserType, name);
+        }
+
+
     }
 }
