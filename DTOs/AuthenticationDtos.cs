@@ -70,7 +70,7 @@ namespace C__Internship_Management_Program.DTOs
         public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
         public string UserType { get; set; }
-        public string UserID { get; set; }
+        public int UserID { get; set; }
         public string Email { get; set; }
         public string Name { get; set; }
         public DateTime ExpiresAt { get; set; }
