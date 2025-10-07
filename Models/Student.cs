@@ -19,7 +19,7 @@ namespace C__Internship_Management_Program.Models
         [Required, EmailAddress, MaxLength(50)]
         public string Email { get; set; }
 
-        [Required, MaxLength(50)]
+        [Required, MaxLength(255)]
         public string PasswordHash { get; set; }
 
         [MaxLength(15)]
