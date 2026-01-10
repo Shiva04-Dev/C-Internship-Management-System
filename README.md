@@ -6,14 +6,14 @@ Students can browse and apply for internships, companies can post and manage opp
 
 Key Features
 
-Role-Based Authentication (Students, Companies, Admins)
+🔐 Role-Based Authentication (Students, Companies, Admins)
 
-Internship Management (CRUD) for companies
+📄 Internship Management (CRUD) for companies
 
-Application Tracking Workflow for students
+📝 Application Tracking Workflow for students
 
-Admin Dashboard for approvals and reporting
+📊 Admin Dashboard for approvals and reporting
 
-Normalized SQL Server Database
+🗂️ Normalized SQL Server Database
 
-Scalable Architecture using ASP.NET Core MVC & Entity Framework Core
+💡 Scalable Architecture using ASP.NET Core MVC & Entity Framework Core
