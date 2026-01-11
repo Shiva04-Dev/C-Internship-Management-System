@@ -13,7 +13,7 @@ namespace C__Internship_Management_Program.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        public AdminControlller(ApplicationDbContext context)
+        public AdminController(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -27,14 +27,14 @@ namespace C__Internship_Management_Program.Controllers
                 var totalStudents = await _context.Students.CountAsync();
                 var totalCompanies = await _context.Companies.CountAsync();
                 var totalInternships = await _context.Internships.CountAsync();
-                var activeInternships = await _context.Internships.CountAsync();
+                var activeInternships = await _context.Internships.CountAsync(i => i.Status == "Active");
                 var totalApplications = await _context.Applications.CountAsync();
-                var pendingApplications = await _context.Applications.CountAsync();
+                var pendingApplications = await _context.Applications.CountAsync(a => a.Status == "Pending");
 
                 //Recent Activity
                 var recentInternships = await _context.Internships
                     .Include(i => i.Company)
-                    .OrderBYDescending(i => i.CreatedAt)
+                    .OrderByDescending(i => i.CreatedAt)
                     .Take(5)
                     .Select(i => new
                     {
@@ -45,12 +45,12 @@ namespace C__Internship_Management_Program.Controllers
                         i.Status,
                         i.CreatedAt
                     })
-                    .TotalAsync();
+                    .ToListAsync();
 
                 var recentApplications = await _context.Applications
                     .Include(a => a.Student)
                     .Include(a => a.Internship)
-                    .OrderByDescending(a => AppliedAt)
+                    .OrderByDescending(a => a.AppliedAt)
                     .Take(5)
                     .Select(a => new
                     {
@@ -80,7 +80,7 @@ namespace C__Internship_Management_Program.Controllers
 
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Error fetching dashboard", error = exMessage });
+                return StatusCode(500, new { message = "Error fetching dashboard", error = ex.Message });
             }
         }
 
@@ -141,7 +141,7 @@ namespace C__Internship_Management_Program.Controllers
 
                 var companies = await _context.Companies
                     .Include(c => c.Internships)
-                    .OrderByDescedning(c => c.UpdatedAt)
+                    .OrderByDescending(c => c.UpdatedAt)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .Select(c => new
@@ -162,8 +162,8 @@ namespace C__Internship_Management_Program.Controllers
                     totalCount,
                     currentPage = page,
                     pageSize,
-                    totalPages = (int)Math.Ceiling(toalCount / (double)pageSize),
-                    compaines
+                    totalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                    companies
                 });
             }
 
@@ -192,7 +192,7 @@ namespace C__Internship_Management_Program.Controllers
                 var totalCount = await query.CountAsync();
 
                 var internships = await query
-                    .OrderByDescedning(i => i.CreatedAt)
+                    .OrderByDescending(i => i.CreatedAt)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .Select(i => new
@@ -207,7 +207,7 @@ namespace C__Internship_Management_Program.Controllers
                         CompanyName = i.Company.CompanyName,
                         ApplicationCount = i.Applications.Count
                     })
-                    .TolIstAsync();
+                    .ToListAsync();
 
                 return Ok(new
                 {
@@ -245,7 +245,7 @@ namespace C__Internship_Management_Program.Controllers
                     query = query.Where(a => a.Status == status);
                 }
 
-                var toalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync();
 
                 var applications = await query
                     .OrderByDescending(a => a.AppliedAt)
@@ -305,7 +305,7 @@ namespace C__Internship_Management_Program.Controllers
 
         //GET: api/Admin/reports - Get summary reports
         [HttpGet("reports")]
-        public async Task<IAcctionResult> GetReports()
+        public async Task<IActionResult> GetReports()
         {
             try
             {
@@ -326,8 +326,6 @@ namespace C__Internship_Management_Program.Controllers
                     .Include(c => c.Internships)
                     .OrderByDescending(c => c.Internships.Count)
                     .Take(5)
-                    .Select(c => c.Internships.Count)
-                    .Take(5)
                     .Select(c => new
                     {
                         c.CompanyName,
@@ -341,12 +339,21 @@ namespace C__Internship_Management_Program.Controllers
                     .Include(s => s.Applications)
                     .OrderByDescending(s => s.Applications.Count)
                     .Take(5)
-                    .Select(async s => new
+                    .Select(s => new
                     {
                         studentName = $"{s.FirstName} {s.LastName}",
                         applicationCount = s.Applications.Count,
-                        acceptedCount = a.Applications.Count(a => a.Status == "Accepted")
+                        acceptedCount = s.Applications.Count(a => a.Status == "Accepted")
                     })
+                    .ToListAsync();
+
+                //Applications over time(-30days)
+                var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+                var applicationsOverTime = await _context.Applications
+                    .Where(a => a.AppliedAt >= thirtyDaysAgo)
+                    .GroupBy(a => a.AppliedAt.Date)
+                    .Select(g => new { date = g.Key, count = g.Count() })
+                    .OrderBy(x => x.date)
                     .ToListAsync();
 
                 return Ok(new
