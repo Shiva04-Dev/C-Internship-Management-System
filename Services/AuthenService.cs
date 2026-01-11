@@ -187,7 +187,8 @@ namespace C__Internship_Management_Program.Services
             {
                 Token = refreshToken,
                 ExpiresAt = DateTime.UtcNow.AddDays(7),
-                UserType = userType
+                UserType = userType,
+                CreatedByIP = "127.0.0.1"
             };
 
             //Sets appropriate user ID based on type
