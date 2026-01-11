@@ -72,52 +72,50 @@ namespace C__Internship_Management_Program.Controllers
 			}
 		}
 
-		//GET: api/Internship/{id} - Get internship details
-		[HttpGet("{id")]
-		public async Task<IActionResult> GetInternshipById(int id)
-		{
-			try
-			{
-				var internship = await _context.Internships
-					.Include(i => i.Company)
-					.Where(i => i.InternshipID == id)
-					.Select(i => new
-					{
-						i.InternshipID,
-						i.Title,
-						i.Description,
-						i.Location,
-						i.StartDate,
-						i.EndDate,
-						i.Requirements,
-						i.Status,
-						i.CreatedAt,
-						Company = new
-						{
-							i.Company.CpmpanyID,
-							i.Company.CompanyName,
-							i.Company.Email,
-							i.Company.PhoneNumber,
-							i.Compnay.Website
-						}
-					})
-					.FirstOrDefaultAsync();
+        // GET: api/Internship/{id} - Get specific internship details
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetInternshipById(int id)
+        {
+            try
+            {
+                var internship = await _context.Internships
+                    .Include(i => i.Company)
+                    .Where(i => i.InternshipID == id)
+                    .Select(i => new
+                    {
+                        i.InternshipID,
+                        i.Title,
+                        i.Description,
+                        i.Location,
+                        i.StartDate,
+                        i.EndDate,
+                        i.Requirements,
+                        i.Status,
+                        i.CreatedAt,
+                        Company = new
+                        {
+                            i.Company.CompanyID,
+                            i.Company.CompanyName,
+                            i.Company.Email,
+                            i.Company.PhoneNumber,
+                            i.Company.Website
+                        }
+                    })
+                    .FirstOrDefaultAsync();
 
-				if (internship = null)
-					return NotFound(new { message = "Internship not found" });
+                if (internship == null)
+                    return NotFound(new { message = "Internship not found" });
 
                 return Ok(internship);
             }
-
             catch (Exception ex)
-			{
-				return StatusCode(500, new { message = "Error fetchting the internship", error = ex.Message });
-			}
-
+            {
+                return StatusCode(500, new { message = "Error retrieving internship", error = ex.Message });
+            }
         }
 
-		//GET: api/Internship/company/mine - Get all internships for the logged-in company
-		[HttpGet("company/mine")]
+        //GET: api/Internship/company/mine - Get all internships for the logged-in company
+        [HttpGet("company/mine")]
 		[Authorize(Roles = "Company")]
 		public async Task<IActionResult> GetMyCompanyInternships()
 		{
