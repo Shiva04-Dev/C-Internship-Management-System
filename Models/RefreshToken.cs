@@ -9,7 +9,7 @@ namespace C__Internship_Management_Program.Models
         [Key]
         public int RefreshTokenID { get; set; }
 
-        [Required, MaxLength(64)]
+        [Required, MaxLength(500)]
         public string Token { get; set; }
 
         //Lifecycle
@@ -21,21 +21,18 @@ namespace C__Internship_Management_Program.Models
         public bool IsRevoked { get; set; } = false;
 
         [MaxLength(45)]
-        public string CreatedByIP { get; set; }
+        public string? CreatedByIP { get; set; }
 
         //User Type and ID
         [MaxLength(20)]
         public string UserType { get;set; }
 
-        [Required]
         public int? StudentID { get; set; }
         public Student Student { get; set; }
 
-        [Required]
         public int? CompanyID { get; set; }
         public Company Company  { get; set; }
 
-        [Required]
         public int? AdminID { get; set; }
         public Admin Admin { get; set; }
 
