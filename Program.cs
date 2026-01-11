@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Services;
+using C__Internship_Management_Program.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,19 +85,44 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Configure CORS (optional but recommended for React/Angular frontend)
+// Configure CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:4200") // React and Angular default ports
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        policy.WithOrigins(
+            "http://localhost:3000",        //React dev server
+            "http://localhost:5173",        //Vite dev server
+            "http://localhost:4200"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
 var app = builder.Build();
+
+// Seed the database with demo data
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+
+        // Ensure database is created
+        context.Database.EnsureCreated();
+
+        // Seed demo data
+        await DatabaseSeeder.SeedData(context);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
+}
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
