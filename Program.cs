@@ -140,4 +140,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+Console.WriteLine("\n Internship Management API is running!");
+Console.WriteLine("Swagger UI: https://localhost:7179/swagger");
+Console.WriteLine("API Base URL: https://localhost:7179/api");
+
 app.Run();
