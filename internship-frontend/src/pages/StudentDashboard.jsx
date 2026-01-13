@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { internshipAPI, applicationAPI } from '../services/api';
 import { 
   Briefcase, LogOut, Search, MapPin, Calendar, Building2, 
-  FileText, CheckCircle, Clock, XCircle, Loader2, ExternalLink 
+  FileText, CheckCircle, Clock, XCircle, Loader2, ExternalLink, RefreshCw 
 } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function StudentDashboard() {
   const { user, logout } = useAuth();
@@ -16,12 +17,13 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const loadData = async () => {
+  const loadData = async (showToast = false) => {
     setLoading(true);
     try {
       const [internshipsRes, applicationsRes] = await Promise.all([
@@ -30,16 +32,31 @@ export default function StudentDashboard() {
       ]);
       setInternships(internshipsRes.data);
       setApplications(applicationsRes.data);
+      if (showToast) {
+        toast.success('Dashboard refreshed!', { duration: 2000 });
+      }
     } catch (error) {
       console.error('Error loading data:', error);
+      toast.error('Failed to load data. Please try again.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadData(true);
+  };
+
   const handleLogout = async () => {
-    await logout();
-    navigate('/');
+    const confirmLogout = window.confirm('Are you sure you want to logout?');
+    if (confirmLogout) {
+      toast.loading('Signing out...', { duration: 1000 });
+      await logout();
+      toast.success('Logged out successfully!');
+      navigate('/');
+    }
   };
 
   const handleApply = (internshipId) => {
@@ -48,10 +65,10 @@ export default function StudentDashboard() {
 
   const getStatusBadge = (status) => {
     const styles = {
-      Pending: 'bg-yellow-100 text-yellow-800',
-      Accepted: 'bg-green-100 text-green-800',
-      Rejected: 'bg-red-100 text-red-800',
-      Withdrawn: 'bg-gray-100 text-gray-800',
+      Pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      Accepted: 'bg-green-100 text-green-800 border-green-200',
+      Rejected: 'bg-red-100 text-red-800 border-red-200',
+      Withdrawn: 'bg-gray-100 text-gray-800 border-gray-200',
     };
     const icons = {
       Pending: Clock,
@@ -61,7 +78,7 @@ export default function StudentDashboard() {
     };
     const Icon = icons[status];
     return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${styles[status]}`}>
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${styles[status]} animate-fadeIn`}>
         <Icon className="h-4 w-4 mr-1" />
         {status}
       </span>
@@ -76,15 +93,20 @@ export default function StudentDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-purple-600" />
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Toaster position="top-center" />
+      
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-sm border-b sticky top-0 z-10 animate-slideDown">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -95,13 +117,21 @@ export default function StudentDashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all transform hover:scale-110"
+                title="Refresh dashboard"
+              >
+                <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{user.name}</p>
                 <p className="text-xs text-gray-500">{user.email}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all transform hover:scale-105"
               >
                 <LogOut className="h-5 w-5" />
                 <span>Logout</span>
@@ -114,65 +144,65 @@ export default function StudentDashboard() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all animate-slideUp">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total Applications</p>
-                <p className="text-3xl font-bold text-gray-900">{applications.length}</p>
+                <p className="text-purple-100 text-sm mb-1">Total Applications</p>
+                <p className="text-4xl font-bold">{applications.length}</p>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <FileText className="h-6 w-6 text-purple-600" />
+              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur">
+                <FileText className="h-6 w-6" />
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all animate-slideUp" style={{ animationDelay: '0.1s' }}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Pending</p>
-                <p className="text-3xl font-bold text-yellow-600">
+                <p className="text-yellow-100 text-sm mb-1">Pending</p>
+                <p className="text-4xl font-bold">
                   {applications.filter(a => a.status === 'Pending').length}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Clock className="h-6 w-6 text-yellow-600" />
+              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur">
+                <Clock className="h-6 w-6" />
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all animate-slideUp" style={{ animationDelay: '0.2s' }}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Accepted</p>
-                <p className="text-3xl font-bold text-green-600">
+                <p className="text-green-100 text-sm mb-1">Accepted</p>
+                <p className="text-4xl font-bold">
                   {applications.filter(a => a.status === 'Accepted').length}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur">
+                <CheckCircle className="h-6 w-6" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 animate-fadeIn">
           <div className="border-b border-gray-200">
             <div className="flex">
               <button
                 onClick={() => setActiveTab('browse')}
-                className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
+                className={`px-6 py-4 font-medium text-sm border-b-2 transition-all transform ${
                   activeTab === 'browse'
-                    ? 'border-purple-600 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-purple-600 text-purple-600 scale-105'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:scale-102'
                 }`}
               >
                 Browse Internships ({filteredInternships.length})
               </button>
               <button
                 onClick={() => setActiveTab('applications')}
-                className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
+                className={`px-6 py-4 font-medium text-sm border-b-2 transition-all transform ${
                   activeTab === 'applications'
-                    ? 'border-purple-600 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-purple-600 text-purple-600 scale-105'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:scale-102'
                 }`}
               >
                 My Applications ({applications.length})
@@ -184,7 +214,7 @@ export default function StudentDashboard() {
             {activeTab === 'browse' && (
               <>
                 {/* Search Filters */}
-                <div className="flex gap-4 mb-6">
+                <div className="flex gap-4 mb-6 animate-slideUp">
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
@@ -192,7 +222,7 @@ export default function StudentDashboard() {
                       placeholder="Search by title..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all"
                     />
                   </div>
                   <div className="w-64 relative">
@@ -202,7 +232,7 @@ export default function StudentDashboard() {
                       placeholder="Location..."
                       value={locationFilter}
                       onChange={(e) => setLocationFilter(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
@@ -210,17 +240,27 @@ export default function StudentDashboard() {
                 {/* Internships List */}
                 <div className="space-y-4">
                   {filteredInternships.length === 0 ? (
-                    <div className="text-center py-12">
+                    <div className="text-center py-12 animate-fadeIn">
                       <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                       <p className="text-gray-600">No internships found</p>
+                      <button
+                        onClick={() => {
+                          setSearchTerm('');
+                          setLocationFilter('');
+                        }}
+                        className="mt-4 text-purple-600 hover:text-purple-700 font-medium"
+                      >
+                        Clear filters
+                      </button>
                     </div>
                   ) : (
-                    filteredInternships.map((internship) => {
+                    filteredInternships.map((internship, index) => {
                       const hasApplied = applications.some(a => a.internship.internshipID === internship.internshipID);
                       return (
                         <div
                           key={internship.internshipID}
-                          className="border border-gray-200 rounded-lg p-6 hover:border-purple-300 hover:shadow-md transition-all"
+                          className="border border-gray-200 rounded-lg p-6 hover:border-purple-300 hover:shadow-md transition-all transform hover:scale-102 animate-slideUp"
+                          style={{ animationDelay: `${index * 0.05}s` }}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -257,7 +297,7 @@ export default function StudentDashboard() {
                               className={`ml-4 px-6 py-2 rounded-lg font-medium flex items-center space-x-2 transition-all ${
                                 hasApplied
                                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                  : 'bg-purple-600 text-white hover:bg-purple-700 hover:scale-105'
+                                  : 'bg-purple-600 text-white hover:bg-purple-700 transform hover:scale-105 active:scale-95 shadow-md'
                               }`}
                             >
                               {hasApplied ? (
@@ -284,21 +324,22 @@ export default function StudentDashboard() {
             {activeTab === 'applications' && (
               <div className="space-y-4">
                 {applications.length === 0 ? (
-                  <div className="text-center py-12">
+                  <div className="text-center py-12 animate-fadeIn">
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                     <p className="text-gray-600 mb-2">No applications yet</p>
                     <button
                       onClick={() => setActiveTab('browse')}
-                      className="text-purple-600 hover:text-purple-700 font-medium"
+                      className="text-purple-600 hover:text-purple-700 font-medium hover:underline"
                     >
                       Browse internships to get started
                     </button>
                   </div>
                 ) : (
-                  applications.map((application) => (
+                  applications.map((application, index) => (
                     <div
                       key={application.applicationID}
-                      className="border border-gray-200 rounded-lg p-6"
+                      className="border border-gray-200 rounded-lg p-6 transform hover:scale-102 transition-all animate-slideUp"
+                      style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
@@ -320,16 +361,17 @@ export default function StudentDashboard() {
                         {getStatusBadge(application.status)}
                       </div>
                       {application.status === 'Pending' && (
-                        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 animate-fadeIn">
                           <p className="text-sm text-blue-800">
+                            <Clock className="h-4 w-4 inline mr-1" />
                             Your application is under review. You'll be notified once there's an update.
                           </p>
                         </div>
                       )}
                       {application.status === 'Accepted' && (
-                        <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                        <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-100 animate-fadeIn">
                           <p className="text-sm text-green-800 font-medium">
-                            Your application has been accepted. The company will contact you soon.
+                            🎉 Congratulations! Your application has been accepted. The company will contact you soon.
                           </p>
                         </div>
                       )}
@@ -341,6 +383,19 @@ export default function StudentDashboard() {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slideDown { animation: slideDown 0.4s ease-out; }
+        .animate-slideUp { animation: slideUp 0.4s ease-out; animation-fill-mode: both; }
+      `}</style>
     </div>
   );
 }
