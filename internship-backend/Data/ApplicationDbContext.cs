@@ -20,6 +20,7 @@ namespace C__Internship_Management_Program.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<NotificationRole> NotificationRoles { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<CompanyBan> CompanyBans { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
