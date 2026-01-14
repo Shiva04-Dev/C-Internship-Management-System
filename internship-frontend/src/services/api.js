@@ -76,9 +76,22 @@ export const applicationAPI = {
   getMine: () => api.get('/Application/student/mine'),
   getForInternship: (id) => api.get(`/Application/internship/${id}`),
   submit: (data) => api.post('/Application', data),
+  submitWithResume: (formData) => api.post('/Application/with-resume', formData, {
+    headers: {'Content-Type': 'multipart/form-data'}
+  }),
   updateStatus: (id, status) => api.put(`/Application/${id}/status`, { status }),
   withdraw: (id) => api.delete(`/Application/${id}`),
   getStats: () => api.get('/Application/stats'),
+  downloadResume: (applicationId) => api.get(`/Application/download-resume/${applicationId}`, {
+    responseType: 'blob'
+  }),
+};
+
+//Company APIs
+export const companyAPI = {
+    banStudent: (studentId) => api.post(`/Company/ban-student/${studentId}`),
+    unbanStudent: (studentId) => api.post(`/Company/unban-student/${studentId}`),
+    getBannedStudents: () => api.get('/Company/banned-students'),
 };
 
 //Admin APIs
@@ -90,6 +103,9 @@ export const adminAPI = {
   getApplications: (params) => api.get('/Admin/applications', { params }),
   getReports: () => api.get('/Admin/reports'),
   closeInternship: (id) => api.delete(`/Admin/internship/${id}`),
+  banUser: (userId, userType) => api.post(`/Admin/ban-user/${userId}/${userType}`),
+  unbanUser: (userId, userType) => api.post(`/Admin/unban-user/${userId}/${userType}`),
+  getBannedUsers: () => api.get('/Admin/banned-users'),
 };
 
 export default api;
