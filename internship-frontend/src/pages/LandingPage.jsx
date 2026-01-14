@@ -88,7 +88,7 @@ export default function LandingPage() {
                             <ul className = "space-y-3 text-gray-600">
                                 <li className = "flex items-start">
                                     <CheckCircle className = "h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                                    <span> Browse through 100's of Internship Opportunities </span>
+                                    <span> Browse through 100's of Internships</span>
                                 </li>
                                 <li className = "flex items-start">
                                     <CheckCircle className = "h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
