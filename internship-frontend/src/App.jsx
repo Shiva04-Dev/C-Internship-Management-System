@@ -1,6 +1,6 @@
 import {BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
 import {AuthProvider, useAuth} from './context/AuthContext';
-//PAGES
+import {DarkModeProvider} from './context/DarkModeContext';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -87,7 +87,9 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <AppRoutes />
+        <DarkModeProvider>
+          <AppRoutes />
+        </DarkModeProvider>
       </AuthProvider>
     </Router>
   );
