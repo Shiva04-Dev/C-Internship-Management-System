@@ -139,10 +139,10 @@ namespace C__Internship_Management_Program.Controllers
                 if (dto.Resume != null)
                 {
                     var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "resumes");
-                    if (!Directory.Exists(uploadsFolder)) ;
+                    if (!Directory.Exists(uploadsFolder))
                         Directory.CreateDirectory(uploadsFolder);
 
-                    var uniqueFileName = $"{studentId}_{dto.InternshipID}_{Guid.NewGuid()}.pdf"
+                    var uniqueFileName = $"{studentId}_{dto.InternshipID}_{Guid.NewGuid()}.pdf";
                     var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
