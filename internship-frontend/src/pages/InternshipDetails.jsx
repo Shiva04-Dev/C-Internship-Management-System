@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { internshipAPI, applicationAPI } from '../services/api';
-import { 
-  ArrowLeft, MapPin, Calendar, Briefcase, Building2, 
-  CheckCircle, Loader2, ExternalLink 
-} from 'lucide-react';
+import { useDarkMode } from '../context/DarkmodeContext';
+import { ArrowLeft, MapPin, Calendar, Briefcase, Building2, CheckCircle, Loader2, ExternalLink, Upload, FileText, X } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast'
 
 export default function InternshipDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isDarkMode } = useDarkMode();
   const [internship, setInternship] = useState(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [resumeFile, setResumeFile] = useState(null);
 
   useEffect(() => {
     loadInternship();
