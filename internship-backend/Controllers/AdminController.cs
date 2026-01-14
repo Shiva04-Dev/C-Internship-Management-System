@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Models;
+using C__Internship_Management_Program.Models.DTOs;
 
 namespace C__Internship_Management_Program.Controllers
 {
@@ -479,10 +480,4 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
     }
-
-    public class BanReasonDto
-    {
-        public string Reason { get; set; }
-    }
-
 }

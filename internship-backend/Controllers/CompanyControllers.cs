@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Models;
 using System.Security.Claims;
+using C__Internship_Management_Program.Models.DTOs;
 
 namespace C__Internship_Management_Program.Controllers
 {
@@ -107,10 +108,5 @@ namespace C__Internship_Management_Program.Controllers
                 return StatusCode(500, new { message = "Error fetching banned students", error = ex.Message });
             }
         }
-    }
-
-    public class BanReasonDto
-    {
-        public string Reason { get; set; }
     }
 }
