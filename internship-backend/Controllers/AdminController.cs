@@ -303,185 +303,186 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
 
-        / POST: api/Admin/ban-user/{userId
-    }/{userType
-}
-[HttpPost("ban-user/{userId}/{userType}")]
-public async Task<IActionResult> BanUser(int userId, string userType, [FromBody] BanReasonDto dto)
-{
-    try
-    {
-        if (userType != "Student" && userType != "Company")
-            return BadRequest(new { message = "Invalid user type" });
-
-        // Check if already banned
-        var existingBan = userType == "Student"
-            ? await _context.UserBans.FirstOrDefaultAsync(b => b.StudentID == userId && b.IsActive)
-            : await _context.UserBans.FirstOrDefaultAsync(b => b.CompanyID == userId && b.IsActive);
-
-        if (existingBan != null)
-            return BadRequest(new { message = "User is already banned" });
-
-        var ban = new UserBan
+        // POST: api/Admin/ban-user/{userId}/{userType}
+        [HttpPost("ban-user/{userId}/{userType}")]
+        public async Task<IActionResult> BanUser(int userId, string userType, [FromBody] BanReasonDto dto)
         {
-            UserType = userType,
-            StudentID = userType == "Student" ? userId : null,
-            CompanyID = userType == "Company" ? userId : null,
-            BannedAt = DateTime.UtcNow,
-            Reason = dto.Reason,
-            IsActive = true
-        };
+            try
+            {
+                if (userType != "Student" && userType != "Company")
+                    return BadRequest(new { message = "Invalid user type" });
 
-        _context.UserBans.Add(ban);
+                // Check if already banned
+                var existingBan = userType == "Student"
+                    ? await _context.UserBans.FirstOrDefaultAsync(b => b.StudentID == userId && b.IsActive)
+                    : await _context.UserBans.FirstOrDefaultAsync(b => b.CompanyID == userId && b.IsActive);
 
-        // Revoke all refresh tokens for this user
-        if (userType == "Student")
-        {
-            var tokens = await _context.RefreshTokens.Where(t => t.StudentID == userId).ToListAsync();
-            _context.RefreshTokens.RemoveRange(tokens);
+                if (existingBan != null)
+                    return BadRequest(new { message = "User is already banned" });
+
+                var ban = new UserBan
+                {
+                    UserType = userType,
+                    StudentID = userType == "Student" ? userId : null,
+                    CompanyID = userType == "Company" ? userId : null,
+                    BannedAt = DateTime.UtcNow,
+                    Reason = dto.Reason,
+                    IsActive = true
+                };
+
+                _context.UserBans.Add(ban);
+
+                // Revoke all refresh tokens for this user
+                if (userType == "Student")
+                {
+                    var tokens = await _context.RefreshTokens.Where(t => t.StudentID == userId).ToListAsync();
+                    _context.RefreshTokens.RemoveRange(tokens);
+                }
+                else
+                {
+                    var tokens = await _context.RefreshTokens.Where(t => t.CompanyID == userId).ToListAsync();
+                    _context.RefreshTokens.RemoveRange(tokens);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "User banned successfully and logged out" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error banning user", error = ex.Message });
+            }
         }
-        else
+
+        // POST: api/Admin/unban-user/{userId}/{userType}
+        [HttpPost("unban-user/{userId}/{userType}")]
+        public async Task<IActionResult> UnbanUser(int userId, string userType)
         {
-            var tokens = await _context.RefreshTokens.Where(t => t.CompanyID == userId).ToListAsync();
-            _context.RefreshTokens.RemoveRange(tokens);
+            try
+            {
+                var ban = userType == "Student"
+                    ? await _context.UserBans.FirstOrDefaultAsync(b => b.StudentID == userId && b.IsActive)
+                    : await _context.UserBans.FirstOrDefaultAsync(b => b.CompanyID == userId && b.IsActive);
+
+                if (ban == null)
+                    return NotFound(new { message = "Ban not found" });
+
+                ban.IsActive = false;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "User unbanned successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error unbanning user", error = ex.Message });
+            }
         }
 
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "User banned successfully and logged out" });
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, new { message = "Error banning user", error = ex.Message });
-    }
-}
-
-// POST: api/Admin/unban-user/{userId}/{userType}
-[HttpPost("unban-user/{userId}/{userType}")]
-public async Task<IActionResult> UnbanUser(int userId, string userType)
-{
-    try
-    {
-        var ban = userType == "Student"
-            ? await _context.UserBans.FirstOrDefaultAsync(b => b.StudentID == userId && b.IsActive)
-            : await _context.UserBans.FirstOrDefaultAsync(b => b.CompanyID == userId && b.IsActive);
-
-        if (ban == null)
-            return NotFound(new { message = "Ban not found" });
-
-        ban.IsActive = false;
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "User unbanned successfully" });
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, new { message = "Error unbanning user", error = ex.Message });
-    }
-}
-
-// GET: api/Admin/banned-users
-[HttpGet("banned-users")]
-public async Task<IActionResult> GetBannedUsers()
-{
-    try
-    {
-        var bannedUsers = await _context.UserBans
-            .Include(b => b.Student)
-            .Include(b => b.Company)
-            .Where(b => b.IsActive)
-            .Select(b => new
-            {
-                banId = b.BanID,
-                userType = b.UserType,
-                userId = b.UserType == "Student" ? b.StudentID : b.CompanyID,
-                userName = b.UserType == "Student"
-                    ? $"{b.Student.FirstName} {b.Student.LastName}"
-                    : b.Company.CompanyName,
-                email = b.UserType == "Student" ? b.Student.Email : b.Company.Email,
-                bannedAt = b.BannedAt,
-                reason = b.Reason
-            })
-            .ToListAsync();
-
-        return Ok(bannedUsers);
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, new { message = "Error fetching banned users", error = ex.Message });
-    }
-}
-
-//GET: api/Admin/reports - Get summary reports
-[HttpGet("reports")]
-public async Task<IActionResult> GetReports()
-{
-    try
-    {
-        //Applications by status
-        var applicationsByStatus = await _context.Applications
-            .GroupBy(a => a.Status)
-            .Select(g => new { status = g.Key, count = g.Count() })
-            .ToListAsync();
-
-        //Internhips by status
-        var internshipsByStatus = await _context.Internships
-            .GroupBy(i => i.Status)
-            .Select(g => new { status = g.Key, count = g.Count() })
-            .ToListAsync();
-
-        //Top companies by internships posted
-        var topCompanies = await _context.Companies
-            .Include(c => c.Internships)
-            .OrderByDescending(c => c.Internships.Count)
-            .Take(5)
-            .Select(c => new
-            {
-                c.CompanyName,
-                internshipCount = c.Internships.Count,
-                activeInternships = c.Internships.Count(i => i.Status == "Active")
-            })
-            .ToListAsync();
-
-        //Top students by applications submitted
-        var topStudents = await _context.Students
-            .Include(s => s.Applications)
-            .OrderByDescending(s => s.Applications.Count)
-            .Take(5)
-            .Select(s => new
-            {
-                studentName = $"{s.FirstName} {s.LastName}",
-                applicationCount = s.Applications.Count,
-                acceptedCount = s.Applications.Count(a => a.Status == "Accepted")
-            })
-            .ToListAsync();
-
-        //Applications over time(-30days)
-        var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
-        var applicationsOverTime = await _context.Applications
-            .Where(a => a.AppliedAt >= thirtyDaysAgo)
-            .GroupBy(a => a.AppliedAt.Date)
-            .Select(g => new { date = g.Key, count = g.Count() })
-            .OrderBy(x => x.date)
-            .ToListAsync();
-
-        return Ok(new
+        // GET: api/Admin/banned-users
+        [HttpGet("banned-users")]
+        public async Task<IActionResult> GetBannedUsers()
         {
-            applicationsByStatus,
-            internshipsByStatus,
-            topCompanies,
-            topStudents,
-            applicationsOverTime
-        });
+            try
+            {
+                var bannedUsers = await _context.UserBans
+                    .Include(b => b.Student)
+                    .Include(b => b.Company)
+                    .Where(b => b.IsActive)
+                    .Select(b => new
+                    {
+                        banId = b.BanID,
+                        userType = b.UserType,
+                        userId = b.UserType == "Student" ? b.StudentID : b.CompanyID,
+                        userName = b.UserType == "Student"
+                            ? $"{b.Student.FirstName} {b.Student.LastName}"
+                            : b.Company.CompanyName,
+                        email = b.UserType == "Student" ? b.Student.Email : b.Company.Email,
+                        bannedAt = b.BannedAt,
+                        reason = b.Reason
+                    })
+                    .ToListAsync();
+
+                return Ok(bannedUsers);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error fetching banned users", error = ex.Message });
+            }
+        }
+
+        //GET: api/Admin/reports - Get summary reports
+        [HttpGet("reports")]
+        public async Task<IActionResult> GetReports()
+        {
+            try
+            {
+                //Applications by status
+                var applicationsByStatus = await _context.Applications
+                    .GroupBy(a => a.Status)
+                    .Select(g => new { status = g.Key, count = g.Count() })
+                    .ToListAsync();
+
+                //Internhips by status
+                var internshipsByStatus = await _context.Internships
+                    .GroupBy(i => i.Status)
+                    .Select(g => new { status = g.Key, count = g.Count() })
+                    .ToListAsync();
+
+                //Top companies by internships posted
+                var topCompanies = await _context.Companies
+                    .Include(c => c.Internships)
+                    .OrderByDescending(c => c.Internships.Count)
+                    .Take(5)
+                    .Select(c => new
+                    {
+                        c.CompanyName,
+                        internshipCount = c.Internships.Count,
+                        activeInternships = c.Internships.Count(i => i.Status == "Active")
+                    })
+                    .ToListAsync();
+
+                //Top students by applications submitted
+                var topStudents = await _context.Students
+                    .Include(s => s.Applications)
+                    .OrderByDescending(s => s.Applications.Count)
+                    .Take(5)
+                    .Select(s => new
+                    {
+                        studentName = $"{s.FirstName} {s.LastName}",
+                        applicationCount = s.Applications.Count,
+                        acceptedCount = s.Applications.Count(a => a.Status == "Accepted")
+                    })
+                    .ToListAsync();
+
+                //Applications over time(-30days)
+                var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+                var applicationsOverTime = await _context.Applications
+                    .Where(a => a.AppliedAt >= thirtyDaysAgo)
+                    .GroupBy(a => a.AppliedAt.Date)
+                    .Select(g => new { date = g.Key, count = g.Count() })
+                    .OrderBy(x => x.date)
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    applicationsByStatus,
+                    internshipsByStatus,
+                    topCompanies,
+                    topStudents,
+                    applicationsOverTime
+                });
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error generating reports", error = ex.Message });
+            }
+        }
     }
 
-    catch (Exception ex)
+    public class BanReasonDto
     {
-        return StatusCode(500, new { message = "Error generating reports", error = ex.Message });
+        public string Reason { get; set; }
     }
-}
 
-public class BanReasonDto
-{
-    public string Reason { get; set; }
 }
