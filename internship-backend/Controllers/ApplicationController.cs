@@ -112,10 +112,10 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
 
-        //POST: api/application - Submit Application (Only by Students)
-        [HttpPost]
+        //POST: api/application/with-resume - Submit Application (Only by Students)
+        [HttpPost("with-resume")]
         [Authorize(Roles = "Student")]
-        public async Task<IActionResult> SubmitApplication([FromBody] SubmitApplicationDto dto)
+        public async Task<IActionResult> SubmitApplication([FromBody] SubmitApplicationWithResumeDto dto)
         {
             try
             {
@@ -135,6 +135,24 @@ namespace C__Internship_Management_Program.Controllers
                 if (existingApplication != null)
                     return BadRequest(new { message = "You have already applied to this internship" });
 
+                string resumePath = null;
+                if (dto.Resume != null)
+                {
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "resumes");
+                    if (!Directory.Exists(uploadsFolder)) ;
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    var uniqueFileName = $"{studentId}_{dto.InternshipID}_{Guid.NewGuid()}.pdf"
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await dto.Resume.CopyToAsync(fileStream);
+                    }
+
+                    resumePath = uniqueFileName;
+                }
+
                 var application = new Application
                 {
                     InternshipID = dto.InternshipID,
@@ -142,7 +160,7 @@ namespace C__Internship_Management_Program.Controllers
                     Status = "Pending",
                     AppliedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
-                    Resume = dto.Resume
+                    Resume = resumePath
                 };
 
                 _context.Applications.Add(application);
@@ -200,6 +218,52 @@ namespace C__Internship_Management_Program.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error updating application status", error = ex.Message });
+            }
+        }
+
+
+        // GET: api/Application/download-resume/{applicationId}
+        [HttpGet("download-resume/{applicationId}")]
+        [Authorize(Roles = "Company, Admin")]
+        public async Task<IActionResult> DownloadResume(int applicationId)
+        {
+            try
+            {
+                var application = await _context.Applications
+                    .Include(a => a.Internship)
+                    .FirstOrDefaultAsync(a => a.ApplicationID == applicationId);
+
+                if (application == null)
+                    return NotFound(new { message = "Application not found" });
+
+                // Verify company owns the internship (if company role)
+                if (User.IsInRole("Company"))
+                {
+                    var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                    if (application.Internship.CompanyID != companyId)
+                        return Forbid();
+                }
+
+                if (string.IsNullOrEmpty(application.Resume))
+                    return NotFound(new { message = "Resume not found" });
+
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "resumes", application.Resume);
+
+                if (!System.IO.File.Exists(filePath))
+                    return NotFound(new { message = "Resume file not found" });
+
+                var memory = new MemoryStream();
+                using (var stream = new FileStream(filePath, FileMode.Open))
+                {
+                    await stream.CopyToAsync(memory);
+                }
+                memory.Position = 0;
+
+                return File(memory, "application/pdf", application.Resume);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error downloading resume", error = ex.Message });
             }
         }
 
@@ -283,10 +347,10 @@ namespace C__Internship_Management_Program.Controllers
     }
 
     //DTOs for Application operations
-    public class SubmitApplicationDto
+    public class SubmitApplicationWithResumeDto
     {
         public int InternshipID { get; set; }
-        public string Resume { get; set; } //Could be a URL/File Path in an actual app
+        public IFormFile Resume { get; set; }
     }
 
     public class UpdateApplicationStatusDto
