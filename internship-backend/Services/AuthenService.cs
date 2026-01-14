@@ -100,6 +100,17 @@ namespace C__Internship_Management_Program.Services
 
         public async Task<AuthenticationResponseDto> LoginAsync(LoginDto dto, string userType)
         {
+            // Check if user is banned (Admin ban)
+            var isBanned = userType.ToLower() switch
+            {
+                "student" => await _context.UserBans.AnyAsync(b => b.StudentID == userId && b.IsActive),
+                "company" => await _context.UserBans.AnyAsync(b => b.CompanyID == userId && b.IsActive),
+                _ => false
+            };
+
+            if (isBanned)
+                throw new Exception("Your account has been suspended. Please contact support.");
+
             switch (userType.ToLower())
             {
                 case "student":
