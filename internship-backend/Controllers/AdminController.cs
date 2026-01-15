@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Models;
-using C__Internship_Management_Program.Models.DTOs;
 
 namespace C__Internship_Management_Program.Controllers
 {
@@ -19,7 +18,7 @@ namespace C__Internship_Management_Program.Controllers
             _context = context;
         }
 
-        //GET: api/Admin/dashboard - Get overall system stats
+        // GET: api/Admin/dashboard - Get overall system stats
         [HttpGet("dashboard")]
         public async Task<IActionResult> GetDashboardStats()
         {
@@ -32,7 +31,7 @@ namespace C__Internship_Management_Program.Controllers
                 var totalApplications = await _context.Applications.CountAsync();
                 var pendingApplications = await _context.Applications.CountAsync(a => a.Status == "Pending");
 
-                //Recent Activity
+                // Recent Activity
                 var recentInternships = await _context.Internships
                     .Include(i => i.Company)
                     .OrderByDescending(i => i.CreatedAt)
@@ -78,14 +77,13 @@ namespace C__Internship_Management_Program.Controllers
                     recentApplications
                 });
             }
-
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error fetching dashboard", error = ex.Message });
             }
         }
 
-        //GET: api/dmin/students - Get all students
+        // GET: api/Admin/students - Get all students
         [HttpGet("students")]
         public async Task<IActionResult> GetAllStudents(
             [FromQuery] int page = 1,
@@ -123,14 +121,13 @@ namespace C__Internship_Management_Program.Controllers
                     students
                 });
             }
-
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error fetching students", error = ex.Message });
             }
         }
 
-        //GET: api/Admin/companies - Get all companies
+        // GET: api/Admin/companies - Get all companies
         [HttpGet("companies")]
         public async Task<IActionResult> GetAllCompanies(
             [FromQuery] int page = 1,
@@ -167,14 +164,13 @@ namespace C__Internship_Management_Program.Controllers
                     companies
                 });
             }
-
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error fetching companies", error = ex.Message });
             }
         }
 
-        //GET: api/Admin/Interships - Get all internships with filters
+        // GET: api/Admin/internships - Get all internships with filters
         [HttpGet("internships")]
         public async Task<IActionResult> GetAllInternships(
             [FromQuery] string? status = null,
@@ -219,14 +215,13 @@ namespace C__Internship_Management_Program.Controllers
                     internships
                 });
             }
-
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error fetching internships", error = ex.Message });
             }
         }
 
-        //GET: api/Admin/applications - Get all aplications with filters
+        // GET: api/Admin/applications - Get all applications with filters
         [HttpGet("applications")]
         public async Task<IActionResult> GetAllApplications(
             [FromQuery] string? status = null,
@@ -274,14 +269,13 @@ namespace C__Internship_Management_Program.Controllers
                     applications
                 });
             }
-
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error fetching applications", error = ex.Message });
             }
         }
 
-        //DELETE: api/Admin/internship/{id} - Force close/delete internship
+        // DELETE: api/Admin/internship/{id} - Force close/delete internship
         [HttpDelete("internship/{id}")]
         public async Task<IActionResult> ForceCloseInternship(int id)
         {
@@ -295,23 +289,108 @@ namespace C__Internship_Management_Program.Controllers
                 internship.Status = "Closed";
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Internship close by an Admin" });
+                return Ok(new { message = "Internship closed by admin" });
             }
-
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error closing internship", error = ex.Message });
             }
         }
 
+        // GET: api/Admin/reports - Get summary reports
+        [HttpGet("reports")]
+        public async Task<IActionResult> GetReports()
+        {
+            try
+            {
+                // Applications by status
+                var applicationsByStatus = await _context.Applications
+                    .GroupBy(a => a.Status)
+                    .Select(g => new { status = g.Key, count = g.Count() })
+                    .ToListAsync();
+
+                // Internships by status
+                var internshipsByStatus = await _context.Internships
+                    .GroupBy(i => i.Status)
+                    .Select(g => new { status = g.Key, count = g.Count() })
+                    .ToListAsync();
+
+                // Top companies by internships posted
+                var topCompanies = await _context.Companies
+                    .Include(c => c.Internships)
+                    .OrderByDescending(c => c.Internships.Count)
+                    .Take(5)
+                    .Select(c => new
+                    {
+                        c.CompanyName,
+                        internshipCount = c.Internships.Count,
+                        activeInternships = c.Internships.Count(i => i.Status == "Active")
+                    })
+                    .ToListAsync();
+
+                // Top students by applications submitted
+                var topStudents = await _context.Students
+                    .Include(s => s.Applications)
+                    .OrderByDescending(s => s.Applications.Count)
+                    .Take(5)
+                    .Select(s => new
+                    {
+                        studentName = $"{s.FirstName} {s.LastName}",
+                        applicationCount = s.Applications.Count,
+                        acceptedCount = s.Applications.Count(a => a.Status == "Accepted")
+                    })
+                    .ToListAsync();
+
+                // Applications over time (30 days)
+                var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+                var applicationsOverTime = await _context.Applications
+                    .Where(a => a.AppliedAt >= thirtyDaysAgo)
+                    .GroupBy(a => a.AppliedAt.Date)
+                    .Select(g => new { date = g.Key, count = g.Count() })
+                    .OrderBy(x => x.date)
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    applicationsByStatus,
+                    internshipsByStatus,
+                    topCompanies,
+                    topStudents,
+                    applicationsOverTime
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error generating reports", error = ex.Message });
+            }
+        }
+
+        // ============================================================
+        // BAN FEATURES - NEW METHODS ADDED BELOW
+        // ============================================================
+
         // POST: api/Admin/ban-user/{userId}/{userType}
         [HttpPost("ban-user/{userId}/{userType}")]
-        public async Task<IActionResult> BanUser(int userId, string userType, [FromBody] BanReasonDto dto)
+        public async Task<IActionResult> BanUser(int userId, string userType, [FromBody] AdminBanReasonDto dto)
         {
             try
             {
                 if (userType != "Student" && userType != "Company")
-                    return BadRequest(new { message = "Invalid user type" });
+                    return BadRequest(new { message = "Invalid user type. Must be 'Student' or 'Company'" });
+
+                // Check if user exists
+                if (userType == "Student")
+                {
+                    var student = await _context.Students.FindAsync(userId);
+                    if (student == null)
+                        return NotFound(new { message = "Student not found" });
+                }
+                else
+                {
+                    var company = await _context.Companies.FindAsync(userId);
+                    if (company == null)
+                        return NotFound(new { message = "Company not found" });
+                }
 
                 // Check if already banned
                 var existingBan = userType == "Student"
@@ -333,7 +412,7 @@ namespace C__Internship_Management_Program.Controllers
 
                 _context.UserBans.Add(ban);
 
-                // Revoke all refresh tokens for this user
+                // Revoke all refresh tokens for this user to force logout
                 if (userType == "Student")
                 {
                     var tokens = await _context.RefreshTokens.Where(t => t.StudentID == userId).ToListAsync();
@@ -361,6 +440,9 @@ namespace C__Internship_Management_Program.Controllers
         {
             try
             {
+                if (userType != "Student" && userType != "Company")
+                    return BadRequest(new { message = "Invalid user type. Must be 'Student' or 'Company'" });
+
                 var ban = userType == "Student"
                     ? await _context.UserBans.FirstOrDefaultAsync(b => b.StudentID == userId && b.IsActive)
                     : await _context.UserBans.FirstOrDefaultAsync(b => b.CompanyID == userId && b.IsActive);
@@ -401,6 +483,7 @@ namespace C__Internship_Management_Program.Controllers
                         bannedAt = b.BannedAt,
                         reason = b.Reason
                     })
+                    .OrderByDescending(b => b.bannedAt)
                     .ToListAsync();
 
                 return Ok(bannedUsers);
@@ -410,74 +493,11 @@ namespace C__Internship_Management_Program.Controllers
                 return StatusCode(500, new { message = "Error fetching banned users", error = ex.Message });
             }
         }
+    }
 
-        //GET: api/Admin/reports - Get summary reports
-        [HttpGet("reports")]
-        public async Task<IActionResult> GetReports()
-        {
-            try
-            {
-                //Applications by status
-                var applicationsByStatus = await _context.Applications
-                    .GroupBy(a => a.Status)
-                    .Select(g => new { status = g.Key, count = g.Count() })
-                    .ToListAsync();
-
-                //Internhips by status
-                var internshipsByStatus = await _context.Internships
-                    .GroupBy(i => i.Status)
-                    .Select(g => new { status = g.Key, count = g.Count() })
-                    .ToListAsync();
-
-                //Top companies by internships posted
-                var topCompanies = await _context.Companies
-                    .Include(c => c.Internships)
-                    .OrderByDescending(c => c.Internships.Count)
-                    .Take(5)
-                    .Select(c => new
-                    {
-                        c.CompanyName,
-                        internshipCount = c.Internships.Count,
-                        activeInternships = c.Internships.Count(i => i.Status == "Active")
-                    })
-                    .ToListAsync();
-
-                //Top students by applications submitted
-                var topStudents = await _context.Students
-                    .Include(s => s.Applications)
-                    .OrderByDescending(s => s.Applications.Count)
-                    .Take(5)
-                    .Select(s => new
-                    {
-                        studentName = $"{s.FirstName} {s.LastName}",
-                        applicationCount = s.Applications.Count,
-                        acceptedCount = s.Applications.Count(a => a.Status == "Accepted")
-                    })
-                    .ToListAsync();
-
-                //Applications over time(-30days)
-                var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
-                var applicationsOverTime = await _context.Applications
-                    .Where(a => a.AppliedAt >= thirtyDaysAgo)
-                    .GroupBy(a => a.AppliedAt.Date)
-                    .Select(g => new { date = g.Key, count = g.Count() })
-                    .OrderBy(x => x.date)
-                    .ToListAsync();
-
-                return Ok(new
-                {
-                    applicationsByStatus,
-                    internshipsByStatus,
-                    topCompanies,
-                    topStudents,
-                    applicationsOverTime
-                });
-            }
-
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Error generating reports", error = ex.Message });
-            }
-        }
+    // DTO for ban reason
+    public class AdminBanReasonDto
+    {
+        public string Reason { get; set; }
     }
 }

@@ -12,10 +12,12 @@ namespace C__Internship_Management_Program.Models
         public string UserType { get; set; } // "Student" or "Company"
 
         public int? StudentID { get; set; }
+
         [ForeignKey(nameof(StudentID))]
         public Student Student { get; set; }
 
         public int? CompanyID { get; set; }
+
         [ForeignKey(nameof(CompanyID))]
         public Company Company { get; set; }
 
