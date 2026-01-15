@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useDarkMode  } from '../context/DarkModeContext';
 import { useNavigate } from 'react-router-dom';
 import { internshipAPI, applicationAPI } from '../services/api';
-import { 
-  Briefcase, LogOut, Search, MapPin, Calendar, Building2, 
-  FileText, CheckCircle, Clock, XCircle, Loader2, ExternalLink, RefreshCw 
-} from 'lucide-react';
+import { Briefcase, LogOut, Search, MapPin, Calendar, Building2, FileText, CheckCircle, Clock, XCircle, Loader2, ExternalLink, RefreshCw, Moon, Sun } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function StudentDashboard() {
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('browse');
   const [internships, setInternships] = useState([]);
@@ -92,47 +91,81 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading your dashboard...</p>
+          <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+            Loading your dashboard...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className = {`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
       <Toaster position="top-center" />
       
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-10 animate-slideDown">
+      <header className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm border-b sticky top-0 z-10 animate-slideDown transition-colors duration-300`}>
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Briefcase className="h-8 w-8 text-purple-600" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">InternHub</h1>
-                <p className="text-sm text-gray-500">Student Dashboard</p>
+                <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  InternHub
+                </h1>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Student Dashboard
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
+            {/* Dark Mode Toggle Button */}
+              <button
+                onClick={toggleDarkMode}
+                className={`p-2 rounded-lg transition-all transform hover:scale-110 ${
+                  isDarkMode 
+                    ? 'text-yellow-400 hover:bg-gray-700' 
+                    : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
+                }`}
+                title="Toggle dark mode">
+                {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
+              <button
+              onClick = {toggleDarkMode}
+              className = {`p-2 rounded-lg transition-all transform hover:scale-110 ${ isDarkMode ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              title = {isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}>
+                {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              </button>
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all transform hover:scale-110"
-                title="Refresh dashboard"
-              >
+                className={`p-2 rounded-lg transition-all transform hover:scale-110 ${
+                  isDarkMode 
+                    ? 'text-gray-400 hover:text-purple-400 hover:bg-gray-700' 
+                    : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
+                }`}
+                title="Refresh dashboard">
+
                 <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                <p className="text-xs text-gray-500">{user.email}</p>
+                <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {user.name}
+                </p>
+                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {user.email}
+                </p>
               </div>
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all transform hover:scale-105"
-              >
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all transform hover:scale-105 ${
+                  isDarkMode 
+                   ? 'text-gray-300 hover:text-red-400 hover:bg-red-900/30' 
+                   : 'text-gray-700 hover:text-red-600 hover:bg-red-50'
+                }`}>
                 <LogOut className="h-5 w-5" />
                 <span>Logout</span>
               </button>
@@ -184,27 +217,29 @@ export default function StudentDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 animate-fadeIn">
-          <div className="border-b border-gray-200">
+        <div className={`rounded-xl shadow-sm border mb-6 animate-fadeIn ${
+          isDarkMode 
+            ? 'bg-gray-800 border-gray-700' 
+            : 'bg-white border-gray-200'
+          }`}>
+          <div className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
             <div className="flex">
               <button
                 onClick={() => setActiveTab('browse')}
                 className={`px-6 py-4 font-medium text-sm border-b-2 transition-all transform ${
-                  activeTab === 'browse'
-                    ? 'border-purple-600 text-purple-600 scale-105'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:scale-102'
-                }`}
-              >
+                activeTab === 'browse'
+                  ? 'border-purple-600 text-purple-600 scale-105'
+                  : `border-transparent ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'} hover:scale-102`
+                }`}>
                 Browse Internships ({filteredInternships.length})
               </button>
               <button
                 onClick={() => setActiveTab('applications')}
                 className={`px-6 py-4 font-medium text-sm border-b-2 transition-all transform ${
-                  activeTab === 'applications'
-                    ? 'border-purple-600 text-purple-600 scale-105'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:scale-102'
-                }`}
-              >
+                activeTab === 'applications'
+                  ? 'border-purple-600 text-purple-600 scale-105'
+                  : `border-transparent ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'} hover:scale-102`
+                }`}>
                 My Applications ({applications.length})
               </button>
             </div>
@@ -216,23 +251,31 @@ export default function StudentDashboard() {
                 {/* Search Filters */}
                 <div className="flex gap-4 mb-6 animate-slideUp">
                   <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
                     <input
                       type="text"
                       placeholder="Search by title..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all"
+                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all ${
+                        isDarkMode 
+                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      }`}
                     />
                   </div>
                   <div className="w-64 relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <MapPin className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
                     <input
                       type="text"
                       placeholder="Location..."
                       value={locationFilter}
                       onChange={(e) => setLocationFilter(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all"
+                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all ${
+                        isDarkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                      }`}
                     />
                   </div>
                 </div>
@@ -258,10 +301,13 @@ export default function StudentDashboard() {
                       const hasApplied = applications.some(a => a.internship.internshipID === internship.internshipID);
                       return (
                         <div
-                          key={internship.internshipID}
-                          className="border border-gray-200 rounded-lg p-6 hover:border-purple-300 hover:shadow-md transition-all transform hover:scale-102 animate-slideUp"
-                          style={{ animationDelay: `${index * 0.05}s` }}
-                        >
+                        key={internship.internshipID}
+                        className={`border rounded-lg p-6 transition-all transform hover:scale-102 animate-slideUp ${
+                          isDarkMode 
+                            ? 'border-gray-700 hover:border-purple-500 bg-gray-800' 
+                            : 'border-gray-200 hover:border-purple-300 hover:shadow-md'
+                        }`}
+                        style={{ animationDelay: `${index * 0.05}s` }}>
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-start space-x-3">
@@ -269,16 +315,16 @@ export default function StudentDashboard() {
                                   <Building2 className="h-6 w-6 text-white" />
                                 </div>
                                 <div className="flex-1">
-                                  <h3 className="text-lg font-bold text-gray-900 mb-1">
+                                  <h3 className={`text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                     {internship.title}
                                   </h3>
                                   <p className="text-purple-600 font-medium mb-2">
                                     {internship.company.companyName}
                                   </p>
-                                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                                  <p className={`text-sm mb-3 line-clamp-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                                     {internship.description}
                                   </p>
-                                  <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+                                  <div className={`flex flex-wrap gap-3 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                                     <span className="flex items-center">
                                       <MapPin className="h-4 w-4 mr-1" />
                                       {internship.location}
