@@ -6,8 +6,6 @@ using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Models;
 using C__Internship_Management_Program.DTOs;
 using BCrypt.Net;
-using System.CodeDom.Compiler;
-using Microsoft.Identity.Client;
 
 namespace C__Internship_Management_Program.Services
 {
@@ -34,10 +32,9 @@ namespace C__Internship_Management_Program.Services
 
         public async Task<AuthenticationResponseDto> RegisterStudentAsync(StudentRegisterDto dto)
         {
-
-            //Checking if student's email exists
+            // Check if student's email exists
             if (await _context.Students.AnyAsync(s => s.Email == dto.EmailAddress))
-                throw new Exception("Email Exists");
+                throw new Exception("Email already exists");
 
             var student = new Student
             {
@@ -60,7 +57,7 @@ namespace C__Internship_Management_Program.Services
         public async Task<AuthenticationResponseDto> RegisterCompanyAsync(CompanyRegisterDto dto)
         {
             if (await _context.Companies.AnyAsync(c => c.Email == dto.Email))
-                throw new Exception("Email Exists");
+                throw new Exception("Email already exists");
 
             var company = new Company
             {
@@ -81,7 +78,7 @@ namespace C__Internship_Management_Program.Services
         public async Task<AuthenticationResponseDto> RegisterAdminAsync(AdminRegisterDto dto)
         {
             if (await _context.Admins.AnyAsync(c => c.Email == dto.Email))
-                throw new Exception("Email Exists");
+                throw new Exception("Email already exists");
 
             var admin = new Admin
             {
@@ -100,7 +97,51 @@ namespace C__Internship_Management_Program.Services
 
         public async Task<AuthenticationResponseDto> LoginAsync(LoginDto dto, string userType)
         {
-            // Check if user is banned (Admin ban)
+            int userId = 0;
+            string email = "";
+            string name = "";
+
+            switch (userType.ToLower())
+            {
+                case "student":
+                    var student = await _context.Students.FirstOrDefaultAsync(s => s.Email == dto.Email);
+                    if (student == null || !BCrypt.Net.BCrypt.Verify(dto.Password, student.PasswordHash))
+                        throw new Exception("Invalid email or password");
+
+                    userId = student.StudentID;
+                    email = student.Email;
+                    name = $"{student.FirstName} {student.LastName}";
+                    break;
+
+                case "company":
+                    var company = await _context.Companies.FirstOrDefaultAsync(c => c.Email == dto.Email);
+                    if (company == null || !BCrypt.Net.BCrypt.Verify(dto.Password, company.PasswordHash))
+                        throw new Exception("Invalid email or password");
+
+                    userId = company.CompanyID;
+                    email = company.Email;
+                    name = company.CompanyName;
+                    break;
+
+                case "admin":
+                    var admin = await _context.Admins.FirstOrDefaultAsync(a => a.Email == dto.Email);
+                    if (admin == null || !BCrypt.Net.BCrypt.Verify(dto.Password, admin.PasswordHash))
+                        throw new Exception("Invalid email or password");
+
+                    userId = admin.AdminID;
+                    email = admin.Email;
+                    name = $"{admin.FirstName} {admin.LastName}";
+                    break;
+
+                default:
+                    throw new Exception("Invalid user type");
+            }
+
+            // ============================================================
+            // CHECK IF USER IS BANNED (ADMIN GLOBAL BAN)
+            // This check happens AFTER password verification
+            // but BEFORE generating tokens
+            // ============================================================
             var isBanned = userType.ToLower() switch
             {
                 "student" => await _context.UserBans.AnyAsync(b => b.StudentID == userId && b.IsActive),
@@ -109,31 +150,14 @@ namespace C__Internship_Management_Program.Services
             };
 
             if (isBanned)
-                throw new Exception("Your account has been suspended. Please contact support.");
-
-            switch (userType.ToLower())
             {
-                case "student":
-                    var student = await _context.Students.FirstOrDefaultAsync(s => s.Email == dto.Email);
-                    if (student == null || !BCrypt.Net.BCrypt.Verify(dto.Password, student.PasswordHash))
-                        throw new Exception("Invalid Email or Password");
-                    return await GenerateAuthenticationResponse(student.StudentID, student.Email, "Student", $"{student.FirstName} {student.LastName}");
-
-                case "company":
-                    var company = await _context.Companies.FirstOrDefaultAsync(c => c.Email == dto.Email);
-                    if (company == null || !BCrypt.Net.BCrypt.Verify(dto.Password, company.PasswordHash))
-                        throw new Exception("Invalid Email or Password");
-                    return await GenerateAuthenticationResponse(company.CompanyID, company.Email, "Company", company.CompanyName);
-
-                case "admin":
-                    var admin = await _context.Admins.FirstOrDefaultAsync(a => a.Email == dto.Email);
-                    if (admin == null || !BCrypt.Net.BCrypt.Verify(dto.Password, admin.PasswordHash))
-                        throw new Exception("Invalid Email or Password");
-                    return await GenerateAuthenticationResponse(admin.AdminID, admin.Email, "Admin", $"{admin.FirstName} {admin.LastName}");
-
-                default:
-                    throw new Exception("Invalid User Type");
+                throw new Exception("Your account has been suspended. Please contact support.");
             }
+            // ============================================================
+            // END OF BAN CHECK
+            // ============================================================
+
+            return await GenerateAuthenticationResponse(userId, email, userType, name);
         }
 
         public async Task<AuthenticationResponseDto> RefreshTokenAsync(string refreshToken)
@@ -145,12 +169,12 @@ namespace C__Internship_Management_Program.Services
                 .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
 
             if (storedToken == null || !storedToken.IsActive)
-                throw new Exception("Invalid or Exipred Token");
+                throw new Exception("Invalid or expired token");
 
-            //Revoking old token
+            // Revoke old token
             storedToken.IsRevoked = true;
 
-            //Generate new tokens based on type of user
+            // Generate new tokens based on type of user
             string name = "";
             string email = "";
             int userId = 0;
@@ -202,7 +226,7 @@ namespace C__Internship_Management_Program.Services
                 CreatedByIP = "127.0.0.1"
             };
 
-            //Sets appropriate user ID based on type
+            // Set appropriate user ID based on type
             if (userType == "Student") refreshTokenEntity.StudentID = userId;
             else if (userType == "Company") refreshTokenEntity.CompanyID = userId;
             else if (userType == "Admin") refreshTokenEntity.AdminID = userId;

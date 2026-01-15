@@ -18,7 +18,7 @@ namespace C__Internship_Management_Program.Controllers
             _context = context;
         }
 
-        //GET: api/Application/student/mine - Get all applications for logged-in student
+        // GET: api/Application/student/mine - Get all applications for logged-in student
         [HttpGet("student/mine")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> GetMyApplications()
@@ -53,21 +53,20 @@ namespace C__Internship_Management_Program.Controllers
 
                 return Ok(applications);
             }
-
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error fetching applications", error = ex.Message });
             }
         }
 
-        //GET: api/Application/internship/{internshipId} - Get all applications for a specific internship (Company/Admin only)
+        // GET: api/Application/internship/{internshipId} - Get all applications for a specific internship
         [HttpGet("internship/{internshipId}")]
         [Authorize(Roles = "Company, Admin")]
         public async Task<IActionResult> GetApplicationsForInternship(int internshipId)
         {
             try
             {
-                //Verifies if the internship is owned by the company
+                // Verify if the internship is owned by the company
                 if (User.IsInRole("Company"))
                 {
                     var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
@@ -76,7 +75,7 @@ namespace C__Internship_Management_Program.Controllers
                         .FirstOrDefaultAsync(i => i.InternshipID == internshipId && i.CompanyID == companyId);
 
                     if (internship == null)
-                        return Forbid(); //The internship does not belong to the company
+                        return Forbid();
                 }
 
                 var applications = await _context.Applications
@@ -105,36 +104,36 @@ namespace C__Internship_Management_Program.Controllers
 
                 return Ok(applications);
             }
-
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error fetching applications", error = ex.Message });
             }
         }
 
-        //POST: api/application/with-resume - Submit Application (Only by Students)
+        // POST: api/Application/with-resume - Submit application with resume
         [HttpPost("with-resume")]
         [Authorize(Roles = "Student")]
-        public async Task<IActionResult> SubmitApplication([FromBody] SubmitApplicationWithResumeDto dto)
+        public async Task<IActionResult> SubmitApplicationWithResume([FromForm] SubmitApplicationWithResumeDto dto)
         {
             try
             {
                 var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
-                //Check if the internship exists and is open
+                // Check if internship exists and is active
                 var internship = await _context.Internships
                     .FirstOrDefaultAsync(i => i.InternshipID == dto.InternshipID && i.Status == "Active");
 
                 if (internship == null)
-                    return NotFound(new { message = "Internship could not be found or is no longer active" });
+                    return NotFound(new { message = "Internship not found or is no longer active" });
 
-                //Check if the student has already applied
+                // Check if already applied
                 var existingApplication = await _context.Applications
                     .FirstOrDefaultAsync(a => a.InternshipID == dto.InternshipID && a.StudentID == studentId);
 
                 if (existingApplication != null)
                     return BadRequest(new { message = "You have already applied to this internship" });
 
+                // Save resume file
                 string resumePath = null;
                 if (dto.Resume != null)
                 {
@@ -172,14 +171,13 @@ namespace C__Internship_Management_Program.Controllers
                     applicationId = application.ApplicationID
                 });
             }
-
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Error submitting the application", error = ex.Message });
+                return StatusCode(500, new { message = "Error submitting application", error = ex.Message });
             }
         }
 
-        //PUT: api/Appliction/{id} - Update Application Status (By the Company/Admin Only)
+        // PUT: api/Application/{id}/status - Update application status
         [HttpPut("{id}/status")]
         [Authorize(Roles = "Company, Admin")]
         public async Task<IActionResult> UpdateApplicationStatus(int id, [FromBody] UpdateApplicationStatusDto dto)
@@ -198,29 +196,26 @@ namespace C__Internship_Management_Program.Controllers
                     var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
                     if (application.Internship.CompanyID != companyId)
-                        return Forbid(); //Internship does not belong to the company
+                        return Forbid();
                 }
 
-                //Validate status
+                // Validate status
                 var validStatuses = new[] { "Pending", "Accepted", "Rejected", "Withdrawn" };
-
                 if (!validStatuses.Contains(dto.Status))
-                    return BadRequest(new { message = "Invalid Status" });
+                    return BadRequest(new { message = "Invalid status" });
 
                 application.Status = dto.Status;
                 application.UpdatedAt = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = $"Application Status updated to {dto.Status}" });
+                return Ok(new { message = $"Application status updated to {dto.Status}" });
             }
-
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error updating application status", error = ex.Message });
             }
         }
-
 
         // GET: api/Application/download-resume/{applicationId}
         [HttpGet("download-resume/{applicationId}")]
@@ -267,7 +262,7 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
 
-        //DELETE: api/Application/{id} - Withdraw Application (By the Student Only, of their own applications)
+        // DELETE: api/Application/{id} - Withdraw application
         [HttpDelete("{id}")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> WithdrawApplication(int id)
@@ -282,25 +277,24 @@ namespace C__Internship_Management_Program.Controllers
                 if (application == null)
                     return NotFound(new { message = "Application not found" });
 
-                //Only pending applications can be withdrawn
+                // Only pending applications can be withdrawn
                 if (application.Status != "Pending")
-                    return BadRequest(new { message = "Only allowed to withdraw pending applications" });
+                    return BadRequest(new { message = "Only pending applications can be withdrawn" });
 
                 application.Status = "Withdrawn";
                 application.UpdatedAt = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Application Withdrawn" });
+                return Ok(new { message = "Application withdrawn" });
             }
-
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error withdrawing application", error = ex.Message });
             }
         }
 
-        //GET: api/Application/stats - Get Application Statistics (Admin Only)
+        // GET: api/Application/stats - Get application statistics
         [HttpGet("stats")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetApplicationStats()
@@ -338,15 +332,14 @@ namespace C__Internship_Management_Program.Controllers
                     recentApplications
                 });
             }
-
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Error fetching the stats", error = ex.Message });
+                return StatusCode(500, new { message = "Error fetching stats", error = ex.Message });
             }
         }
     }
 
-    //DTOs for Application operations
+    // DTOs
     public class SubmitApplicationWithResumeDto
     {
         public int InternshipID { get; set; }
