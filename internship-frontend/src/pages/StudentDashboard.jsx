@@ -124,16 +124,6 @@ export default function StudentDashboard() {
             <div className="flex items-center space-x-4">
             {/* Dark Mode Toggle Button */}
               <button
-                onClick={toggleDarkMode}
-                className={`p-2 rounded-lg transition-all transform hover:scale-110 ${
-                  isDarkMode 
-                    ? 'text-yellow-400 hover:bg-gray-700' 
-                    : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
-                }`}
-                title="Toggle dark mode">
-                {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
-              <button
               onClick = {toggleDarkMode}
               className = {`p-2 rounded-lg transition-all transform hover:scale-110 ${ isDarkMode ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
               title = {isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}>
