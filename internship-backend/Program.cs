@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Services;
 using C__Internship_Management_Program.Seeders;
@@ -14,7 +15,7 @@ builder.Services.AddControllers();
 
 // Register ApplicationDbContext with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register Services
 builder.Services.AddScoped<IJwtService, JwtService>();
