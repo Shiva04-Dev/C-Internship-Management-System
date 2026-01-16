@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Services;
 using C__Internship_Management_Program.Seeders;
@@ -13,9 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 
-// Register ApplicationDbContext with PostgreSQL
+// Register ApplicationDbContext with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register Services
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -42,7 +41,7 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-        ClockSkew = TimeSpan.Zero // Remove default 5 minute tolerance
+        ClockSkew = TimeSpan.Zero
     };
 });
 
@@ -59,7 +58,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "API for managing internships, students, and companies"
     });
 
-    // Add JWT Authentication to Swagger
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -92,11 +90,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
-            "http://localhost:3000",        //React dev server
-            "http://localhost:5173",        //Vite dev server
-            "http://localhost:4200",
-            "https://*.vercel.app",         //All Vercel Deployments
-            "https://internship-system.vercel.app"      //My production URL
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:4200"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -113,26 +109,17 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-        var logger = services.GetRequiredService<ILogger<Program>>();
 
-        //Runs migrations automatically
-        logger.LogInformation("Applying Database Migrations");
-        await context.Database.MigrateAsync();
-        logger.LogInformation("DB Migrations applies successfully");
+        // Ensure database is created
+        context.Database.EnsureCreated();
 
-        // Seed demo data (only in development)
-        if (app.Environment.IsDevelopment())
-        {
-            logger.LogInformation("Seeding demo data...");
-            await DatabaseSeeder.SeedData(context);
-            logger.LogInformation("Demo data seeded");
-        }
+        // Seed demo data
+        await DatabaseSeeder.SeedData(context);
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while seeding the database.");
-        throw;
     }
 }
 
@@ -143,19 +130,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// IMPORTANT: Order matters! Authentication must come before Authorization
+app.UseHttpsRedirection();
+
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-//Heath check
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
-
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-Console.WriteLine($"\n Internship Management API is running on {port}");
-Console.WriteLine($"Swagger UI: https://localhost:{port}/swagger");
-Console.WriteLine($"API Base URL: https://localhost:{port}/api");
+Console.WriteLine("\n?? Internship Management API is running!");
+Console.WriteLine("?? Swagger UI: https://localhost:7179/swagger");
+Console.WriteLine("?? API Base URL: https://localhost:7179/api");
 
 app.Run();
