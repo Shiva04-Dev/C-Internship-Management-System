@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 
-// Register ApplicationDbContext with SQL Server
+// Register ApplicationDbContext with PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -94,7 +94,9 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:3000",        //React dev server
             "http://localhost:5173",        //Vite dev server
-            "http://localhost:4200"
+            "http://localhost:4200",
+            "https://*.vercel.app",         //All Vercel Deployments
+            "https://internship-system.vercel.app"      //My production URL
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -111,17 +113,26 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
 
-        // Ensure database is created
-        context.Database.EnsureCreated();
+        //Runs migrations automatically
+        logger.LogInformation("Applying Database Migrations");
+        await context.Database.MigrateAsync();
+        logger.LogInformation("DB Migrations applies successfully");
 
-        // Seed demo data
-        await DatabaseSeeder.SeedData(context);
+        // Seed demo data (only in development)
+        if (app.Environment.IsDevelopment())
+        {
+            logger.LogInformation("Seeding demo data...");
+            await DatabaseSeeder.SeedData(context);
+            logger.LogInformation("Demo data seeded");
+        }
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while seeding the database.");
+        throw;
     }
 }
 
@@ -132,8 +143,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
 // IMPORTANT: Order matters! Authentication must come before Authorization
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
@@ -141,8 +150,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-Console.WriteLine("\n Internship Management API is running!");
-Console.WriteLine("Swagger UI: https://localhost:7179/swagger");
-Console.WriteLine("API Base URL: https://localhost:7179/api");
+//Heath check
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+Console.WriteLine($"\n Internship Management API is running on {port}");
+Console.WriteLine($"Swagger UI: https://localhost:{port}/swagger");
+Console.WriteLine($"API Base URL: https://localhost:{port}/api");
 
 app.Run();
