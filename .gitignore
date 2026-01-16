@@ -416,3 +416,25 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Environment variables - allow .env.production and .env.example
+.env.local
+.env.development.local
+*.env.local
+!.env.production
+!.env.example
+
+# Uploads
+uploads/
+**/uploads/
+
+# Frontend
+dist/
+.vite/
+build/
+node_modules/

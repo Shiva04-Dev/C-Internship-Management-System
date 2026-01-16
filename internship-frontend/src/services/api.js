@@ -1,100 +1,121 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5132/api';
+// API Base URL - uses environment variable in production, localhost in development
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5132/api';
 
-//Creating axios instance with default config
+console.log('🔗 API Base URL:', API_BASE_URL);
+
+// Create axios instance with default config
 const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true,
 });
 
-//Adding auth tokens to requests if it exists
-api.interceptors.request.use((config) => {
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
-});
-
-//Handle token expiration
-api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        if (error.response?.status === 401) {
-            //Token has expired, try to refresh
-            const refreshToken = localStorage.getItem('refreshToken');
-            if (refreshToken) {
-                try {
-                    const response = await axios.post(`${API_BASE_URL}/Authen/refresh`, {
-                        refreshToken,
-                    });
-
-                    localStorage.setItem('accessToken', response.data.accessToken);
-                    localStorage.setItem('refreshToken', response.data.refreshToken);
-
-                    //Then retry the original request
-                    error.config.headers.Authorization = `Bearer ${response.data.accessToken}`;
-
-                    return axios(error.config);
-                } 
-                catch {
-                    //Refresh failed, logoout
-                    localStorage.clear();
-                    window.location.href = '/login';
-                }
-            }
-        }
-        return Promise.reject(error);
-    }
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-//Authentication APIs
-export const authAPI = {
-  loginStudent: (credentials) => api.post('/Authen/login/student', credentials),
-  loginCompany: (credentials) => api.post('/Authen/login/company', credentials),
-  loginAdmin: (credentials) => api.post('/Authen/login/admin', credentials),
+// Response interceptor for token refresh
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If 401 and not already retried, try to refresh token
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          const response = await axios.post(`${API_BASE_URL}/Authen/refresh-token`, {
+            refreshToken,
+          });
+
+          const { accessToken, refreshToken: newRefreshToken } = response.data;
+          localStorage.setItem('accessToken', accessToken);
+          localStorage.setItem('refreshToken', newRefreshToken);
+
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh failed, logout user
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+// Authentication API
+export const authenAPI = {
   registerStudent: (data) => api.post('/Authen/register/student', data),
   registerCompany: (data) => api.post('/Authen/register/company', data),
+  login: (data, userType) => api.post(`/Authen/login/${userType}`, data),
+  refreshToken: (refreshToken) => api.post('/Authen/refresh-token', { refreshToken }),
   logout: (refreshToken) => api.post('/Authen/logout', { refreshToken }),
 };
 
-//Internship APIs
+// Student API
+export const studentAPI = {
+  getProfile: () => api.get('/Student/profile'),
+  updateProfile: (data) => api.put('/Student/profile', data),
+};
+
+// Company API
+export const companyAPI = {
+  getProfile: () => api.get('/Company/profile'),
+  updateProfile: (data) => api.put('/Company/profile', data),
+  banStudent: (studentId, data) => api.post(`/Company/ban-student/${studentId}`, data),
+  unbanStudent: (studentId) => api.post(`/Company/unban-student/${studentId}`),
+  getBannedStudents: () => api.get('/Company/banned-students'),
+};
+
+// Internship API
 export const internshipAPI = {
   getAll: (params) => api.get('/Internship', { params }),
   getById: (id) => api.get(`/Internship/${id}`),
-  getMine: () => api.get('/Internship/company/mine'),
   create: (data) => api.post('/Internship', data),
   update: (id, data) => api.put(`/Internship/${id}`, data),
-  delete: (id) => api.delete(`/Internship/${id}`),
+  close: (id) => api.delete(`/Internship/${id}`),
+  getMyInternships: () => api.get('/Internship/company/mine'),
 };
 
-//Application APIs
+// Application API
 export const applicationAPI = {
   getMine: () => api.get('/Application/student/mine'),
-  getForInternship: (id) => api.get(`/Application/internship/${id}`),
+  getForInternship: (internshipId) => api.get(`/Application/internship/${internshipId}`),
   submit: (data) => api.post('/Application', data),
   submitWithResume: (formData) => api.post('/Application/with-resume', formData, {
-    headers: {'Content-Type': 'multipart/form-data'}
+    headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  updateStatus: (id, status) => api.put(`/Application/${id}/status`, { status }),
+  updateStatus: (id, data) => api.put(`/Application/${id}/status`, data),
   withdraw: (id) => api.delete(`/Application/${id}`),
-  getStats: () => api.get('/Application/stats'),
   downloadResume: (applicationId) => api.get(`/Application/download-resume/${applicationId}`, {
-    responseType: 'blob'
+    responseType: 'blob',
   }),
 };
 
-//Company APIs
-export const companyAPI = {
-    banStudent: (studentId) => api.post(`/Company/ban-student/${studentId}`),
-    unbanStudent: (studentId) => api.post(`/Company/unban-student/${studentId}`),
-    getBannedStudents: () => api.get('/Company/banned-students'),
-};
-
-//Admin APIs
+// Admin API
 export const adminAPI = {
   getDashboard: () => api.get('/Admin/dashboard'),
   getStudents: (params) => api.get('/Admin/students', { params }),
@@ -102,8 +123,8 @@ export const adminAPI = {
   getInternships: (params) => api.get('/Admin/internships', { params }),
   getApplications: (params) => api.get('/Admin/applications', { params }),
   getReports: () => api.get('/Admin/reports'),
-  closeInternship: (id) => api.delete(`/Admin/internship/${id}`),
-  banUser: (userId, userType) => api.post(`/Admin/ban-user/${userId}/${userType}`),
+  forceCloseInternship: (id) => api.delete(`/Admin/internship/${id}`),
+  banUser: (userId, userType, data) => api.post(`/Admin/ban-user/${userId}/${userType}`, data),
   unbanUser: (userId, userType) => api.post(`/Admin/unban-user/${userId}/${userType}`),
   getBannedUsers: () => api.get('/Admin/banned-users'),
 };
