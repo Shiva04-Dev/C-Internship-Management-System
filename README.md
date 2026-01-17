@@ -21,4 +21,4 @@ Key Features
 🚀 Currently Focusing on Deploying through Azure (Waiting for my GitHub Student package)
 
 
-Feel Free to look at my LinkedIn for a visual demonstration of the program: **LinkedIn:** [linkedin.com/in/shiva-ganesh](https://www.linkedin.com/public-profile/settings?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_self_edit_contact-info%3BSYFyGgG1R%2FKU89OQy4v%2BDQ%3D%3D)
+Feel Free to look at my LinkedIn for a visual demonstration of the program: [linkedin.com/in/shiva-ganesh](https://www.linkedin.com/public-profile/settings?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_self_edit_contact-info%3BSYFyGgG1R%2FKU89OQy4v%2BDQ%3D%3D)
