@@ -17,3 +17,5 @@ Key Features
 🗂️ Normalized SQL Server Database
 
 💡 Scalable Architecture using ASP.NET Core MVC & Entity Framework Core
+
+🚀 Currently Focusing on Deploying through Azure (Waiting for my GitHub Student package)
