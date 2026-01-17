@@ -2,7 +2,7 @@ C-Internship-Management-System
 
 A full-stack web application built with ASP.NET Core MVC and SQL Server to manage the end-to-end internship process for students, companies, and administrators.
 
-Students can browse and apply for internships, companies can post and manage opportunities, and administrators oversee approvals and reporting — all within a secure, role-based system.
+Students can browse and apply for internships, companies can post and manage opportunities, and administrators oversee approvals and reporting; all within a secure, role-based system.
 
 Key Features
 
