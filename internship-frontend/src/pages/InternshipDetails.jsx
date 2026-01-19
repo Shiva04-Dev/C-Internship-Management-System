@@ -4,7 +4,8 @@ import { internshipAPI, applicationAPI } from '../services/api';
 import { useDarkMode } from '../context/DarkmodeContext';
 import { 
   ArrowLeft, MapPin, Calendar, Briefcase, Building2, 
-  CheckCircle, Loader2, ExternalLink, Upload, FileText, X
+  CheckCircle, Loader2, ExternalLink, Upload, FileText, X,
+  Clock, DollarSign, Users, Award
 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -40,7 +41,7 @@ export default function InternshipDetails() {
   const checkIfApplied = async () => {
     try {
       const response = await applicationAPI.getMine();
-      const hasApplied = response.data.some(app => app.internship.internshipID === parseInt(id));
+      const hasApplied = response.data.some(app => app.internshipID === parseInt(id));
       setApplied(hasApplied);
     } catch (error) {
       console.error('Error checking application status:', error);
@@ -54,7 +55,7 @@ export default function InternshipDetails() {
         toast.error('Please upload a PDF file');
         return;
       }
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
         toast.error('File size must be less than 5MB');
         return;
       }
@@ -98,10 +99,17 @@ export default function InternshipDetails() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} flex items-center justify-center`}>
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
-          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>Loading internship details...</p>
+      <div className={isDarkMode ? 'min-h-screen bg-black' : 'min-h-screen bg-gray-50'}>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="relative">
+              <Loader2 className="h-16 w-16 animate-spin text-blue-500 mx-auto mb-4" />
+              <div className="absolute inset-0 bg-blue-500 blur-2xl opacity-20"></div>
+            </div>
+            <p className={isDarkMode ? 'text-gray-400 text-lg' : 'text-gray-600 text-lg'}>
+              Loading internship details...
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -109,169 +117,195 @@ export default function InternshipDetails() {
 
   if (!internship) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} flex items-center justify-center`}>
-        <div className="text-center">
-          <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-4`}>Internship not found</p>
-          <button
-            onClick={() => navigate('/student')}
-            className="text-purple-600 hover:text-purple-700 font-medium"
-          >
-            Back to Dashboard
-          </button>
+      <div className={isDarkMode ? 'min-h-screen bg-black' : 'min-h-screen bg-gray-50'}>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <Briefcase className={`h-16 w-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-700' : 'text-gray-300'}`} />
+            <p className={isDarkMode ? 'text-gray-400 text-lg mb-4' : 'text-gray-600 text-lg mb-4'}>
+              Internship not found
+            </p>
+            <button
+              onClick={() => navigate('/student')}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-blue-500/50 transition-all">
+              Back to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
-      <Toaster position="top-center" />
+    <div className={isDarkMode ? 'min-h-screen bg-black' : 'min-h-screen bg-gray-50'}>
+      <Toaster position="top-right" />
       
       {/* Header */}
-      <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b transition-colors duration-300`}>
-        <div className="max-w-4xl mx-auto px-6 py-6">
+      <div className={isDarkMode 
+        ? 'bg-black/50 backdrop-blur-xl border-b border-white/10' 
+        : 'bg-white/50 backdrop-blur-xl border-b border-gray-200'
+      }>
+        <div className="max-w-5xl mx-auto px-6 py-6">
           <button
             onClick={() => navigate('/student')}
-            className={`flex items-center space-x-2 ${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'} mb-6 transform hover:scale-105 transition-all`}
-          >
+            className={`flex items-center space-x-2 ${
+              isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+            } transition-colors`}>
             <ArrowLeft className="h-5 w-5" />
             <span>Back to Dashboard</span>
           </button>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* Internship Card */}
-        <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl shadow-lg overflow-hidden border transition-all duration-300 animate-slideUp`}>
-          {/* Header Section */}
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-8 text-white">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold mb-3">{internship.title}</h1>
-                <div className="flex items-center space-x-2 text-purple-100 mb-4">
-                  <Building2 className="h-5 w-5" />
-                  <span className="text-lg font-medium">{internship.company.companyName}</span>
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        {/* Main Card */}
+        <div className={isDarkMode
+          ? 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl overflow-hidden'
+          : 'bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-xl'
+        }>
+          {/* Hero Section with Gradient */}
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-8 md:p-12 text-white relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+              <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+            </div>
+
+            <div className="relative z-10">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex-1">
+                  <h1 className="text-4xl md:text-5xl font-bold mb-4">{internship.title}</h1>
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-white/20 backdrop-blur rounded-lg">
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <span className="text-xl font-medium">{internship.companyName}</span>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <span className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {internship.location}
-                  </span>
-                  <span className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-1" />
+                <div className="hidden md:block p-4 bg-white/20 backdrop-blur-sm rounded-2xl">
+                  <Briefcase className="h-12 w-12" />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-6 text-white/90">
+                <div className="flex items-center space-x-2">
+                  <MapPin className="h-5 w-5" />
+                  <span>{internship.location}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-5 w-5" />
+                  <span>
                     {new Date(internship.startDate).toLocaleDateString()} - {new Date(internship.endDate).toLocaleDateString()}
                   </span>
                 </div>
-              </div>
-              <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                <Briefcase className="h-8 w-8" />
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-5 w-5" />
+                  <span>{internship.duration || 'Full-time'}</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Content Section */}
-          <div className="p-8">
-            {/* Description */}
-            <div className="mb-8">
-              <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>About this Internship</h2>
-              <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>{internship.description}</p>
+          <div className="p-8 md:p-12 space-y-8">
+            {/* About Section */}
+            <div>
+              <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                About this Internship
+              </h2>
+              <p className={`text-lg leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {internship.description}
+              </p>
             </div>
 
-            {/* Requirements */}
-            <div className="mb-8">
-              <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>Requirements</h2>
-              <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>{internship.requirements}</p>
+            {/* Divider */}
+            <div className={`h-px ${isDarkMode ? 'bg-white/10' : 'bg-gray-200'}`}></div>
+
+            {/* Requirements Section */}
+            <div>
+              <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Requirements
+              </h2>
+              <div className={`text-lg leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {internship.requirements}
+              </div>
             </div>
 
-            {/* Duration */}
-            <div className="mb-8">
-              <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-3`}>Duration</h2>
-              <div className={`flex items-center space-x-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                <div>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Start Date</p>
-                  <p className="font-medium">{new Date(internship.startDate).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}</p>
+            {/* Divider */}
+            <div className={`h-px ${isDarkMode ? 'bg-white/10' : 'bg-gray-200'}`}></div>
+
+            {/* Duration Details */}
+            <div>
+              <h2 className={`text-2xl font-bold mb-6 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Duration & Timeline
+              </h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className={isDarkMode
+                  ? 'p-6 bg-white/5 border border-white/10 rounded-2xl'
+                  : 'p-6 bg-gray-50 border border-gray-200 rounded-2xl'
+                }>
+                  <p className={`text-sm mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Start Date
+                  </p>
+                  <p className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {new Date(internship.startDate).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
                 </div>
-                <div className={`h-8 w-px ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
-                <div>
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-1`}>End Date</p>
-                  <p className="font-medium">{new Date(internship.endDate).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}</p>
+
+                <div className={isDarkMode
+                  ? 'p-6 bg-white/5 border border-white/10 rounded-2xl'
+                  : 'p-6 bg-gray-50 border border-gray-200 rounded-2xl'
+                }>
+                  <p className={`text-sm mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    End Date
+                  </p>
+                  <p className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {new Date(internship.endDate).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Company Info */}
-            <div className={`mb-8 p-6 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl transition-colors duration-300`}>
-              <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>About the Company</h2>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Company Name</span>
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{internship.company.companyName}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Email</span>
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{internship.company.email}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Phone</span>
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{internship.company.phoneNumber}</span>
-                </div>
-                {internship.company.website && (
-                  <div className="flex items-center justify-between">
-                    <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Website</span>
-                    <a 
-                      href={internship.company.website} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="font-medium text-purple-600 hover:text-purple-700 flex items-center space-x-1"
-                    >
-                      <span>Visit Website</span>
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
+            {/* Apply Button Section */}
+            <div className={isDarkMode
+              ? 'p-8 bg-gradient-to-r from-blue-500/10 to-purple-600/10 border border-white/10 rounded-2xl'
+              : 'p-8 bg-gradient-to-r from-blue-50 to-purple-50 border border-gray-200 rounded-2xl'
+            }>
+              {applied ? (
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 rounded-full mb-4">
+                    <CheckCircle className="h-8 w-8 text-white" />
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Apply Button */}
-            <div className={`flex items-center justify-between p-6 bg-gradient-to-r ${isDarkMode ? 'from-purple-900/50 to-pink-900/50' : 'from-purple-50 to-pink-50'} rounded-xl border ${isDarkMode ? 'border-purple-800' : 'border-purple-100'} transition-colors duration-300`}>
-              <div>
-                <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-1`}>Ready to Apply?</h3>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {applied 
-                    ? "You've already applied to this internship" 
-                    : "Upload your resume and submit your application"
-                  }
-                </p>
-              </div>
-              <button
-                onClick={() => applied ? null : setShowApplyModal(true)}
-                disabled={applied}
-                className={`px-8 py-3 rounded-lg font-semibold transition-all flex items-center space-x-2 transform ${
-                  applied
-                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
-                    : 'bg-purple-600 text-white hover:bg-purple-700 hover:scale-105 shadow-lg active:scale-95'
-                }`}
-              >
-                {applied ? (
-                  <>
-                    <CheckCircle className="h-5 w-5" />
-                    <span>Applied</span>
-                  </>
-                ) : (
-                  <>
+                  <h3 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Application Submitted!
+                  </h3>
+                  <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                    You've already applied to this internship. Check your dashboard for updates.
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <h3 className={`text-2xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Ready to Apply?
+                  </h3>
+                  <p className={`mb-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Submit your application with your resume to get started
+                  </p>
+                  <button
+                    onClick={() => setShowApplyModal(true)}
+                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold text-lg hover:shadow-xl hover:shadow-blue-500/50 transition-all hover:scale-105 inline-flex items-center space-x-3">
+                    <Upload className="h-5 w-5" />
                     <span>Apply Now</span>
-                    <ArrowLeft className="h-5 w-5 rotate-180" />
-                  </>
-                )}
-              </button>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -279,88 +313,112 @@ export default function InternshipDetails() {
 
       {/* Apply Modal */}
       {showApplyModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50 animate-fadeIn">
-          <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl max-w-md w-full border shadow-2xl animate-slideUp`}>
-            <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} flex items-center justify-between`}>
-              <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Apply for Internship</h2>
-              <button onClick={() => setShowApplyModal(false)} className={`${isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}>
-                <X className="h-6 w-6" />
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className={isDarkMode
+            ? 'bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-md w-full'
+            : 'bg-white border border-gray-200 rounded-3xl p-8 max-w-md w-full'
+          }>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={isDarkMode ? 'text-2xl font-bold text-white' : 'text-2xl font-bold text-gray-900'}>
+                Apply to Internship
+              </h2>
+              <button
+                onClick={() => {
+                  setShowApplyModal(false);
+                  setResumeFile(null);
+                }}
+                className={isDarkMode ? 'p-2 hover:bg-white/10 rounded-lg transition-colors' : 'p-2 hover:bg-gray-100 rounded-lg transition-colors'}>
+                <X className={isDarkMode ? 'h-5 w-5 text-gray-400' : 'h-5 w-5 text-gray-600'} />
               </button>
             </div>
-            <div className="p-6">
-              <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
-                Please upload your resume (PDF format, max 5MB) to complete your application.
+
+            <div className="mb-6">
+              <p className={isDarkMode ? 'text-gray-300 mb-4' : 'text-gray-700 mb-4'}>
+                Upload your resume to complete your application for:
               </p>
+              <div className={isDarkMode
+                ? 'p-4 bg-white/5 border border-white/10 rounded-xl'
+                : 'p-4 bg-gray-50 border border-gray-200 rounded-xl'
+              }>
+                <h3 className={`font-semibold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {internship.title}
+                </h3>
+                <p className={isDarkMode ? 'text-sm text-gray-400' : 'text-sm text-gray-600'}>
+                  {internship.companyName}
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className={isDarkMode ? 'block text-sm font-medium text-gray-300 mb-3' : 'block text-sm font-medium text-gray-700 mb-3'}>
+                Upload Resume (PDF, max 5MB)
+              </label>
               
-              <div className={`border-2 border-dashed ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'} rounded-lg p-8 text-center mb-6 transition-all hover:border-purple-500`}>
+              <div className={`relative ${isDarkMode
+                ? 'border-2 border-dashed border-white/20 rounded-xl p-8 hover:border-white/40'
+                : 'border-2 border-dashed border-gray-300 rounded-xl p-8 hover:border-gray-400'
+              } transition-colors cursor-pointer`}>
                 <input
                   type="file"
                   accept=".pdf"
                   onChange={handleFileSelect}
-                  className="hidden"
-                  id="resume-upload"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
-                <label htmlFor="resume-upload" className="cursor-pointer">
+                <div className="text-center">
                   {resumeFile ? (
-                    <div className="animate-fadeIn">
-                      <FileText className="h-12 w-12 text-green-500 mx-auto mb-3" />
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{resumeFile.name}</p>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{(resumeFile.size / 1024).toFixed(2)} KB</p>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setResumeFile(null);
-                        }}
-                        className="mt-2 text-red-600 hover:text-red-700 text-sm font-medium"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      <Upload className={`h-12 w-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-400'} mx-auto mb-3`} />
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-1`}>Click to upload resume</p>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>PDF only, max 5MB</p>
-                    </div>
-                  )}
-                </label>
-              </div>
-
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => setShowApplyModal(false)}
-                  className={`flex-1 px-6 py-3 border ${isDarkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'} rounded-lg font-semibold transition-all`}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleApply}
-                  disabled={!resumeFile || applying}
-                  className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 transform hover:scale-105 active:scale-95"
-                >
-                  {applying ? (
                     <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>Submitting...</span>
+                      <FileText className={`h-12 w-12 mx-auto mb-3 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
+                      <p className={isDarkMode ? 'text-green-400 font-medium' : 'text-green-600 font-medium'}>
+                        {resumeFile.name}
+                      </p>
+                      <p className={isDarkMode ? 'text-xs text-gray-500 mt-1' : 'text-xs text-gray-600 mt-1'}>
+                        Click to change file
+                      </p>
                     </>
                   ) : (
-                    <span>Submit Application</span>
+                    <>
+                      <Upload className={`h-12 w-12 mx-auto mb-3 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                      <p className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
+                        Click to upload or drag and drop
+                      </p>
+                      <p className={isDarkMode ? 'text-xs text-gray-500 mt-1' : 'text-xs text-gray-600 mt-1'}>
+                        PDF only, up to 5MB
+                      </p>
+                    </>
                   )}
-                </button>
+                </div>
               </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowApplyModal(false);
+                  setResumeFile(null);
+                }}
+                className={isDarkMode
+                  ? 'flex-1 py-3 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition-all'
+                  : 'flex-1 py-3 bg-gray-100 border border-gray-300 text-gray-900 rounded-xl hover:bg-gray-200 transition-all'
+                }>
+                Cancel
+              </button>
+              <button
+                onClick={handleApply}
+                disabled={!resumeFile || applying}
+                className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-blue-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+                {applying ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Submitting...</span>
+                  </div>
+                ) : (
+                  'Submit Application'
+                )}
+              </button>
             </div>
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slideUp { animation: slideUp 0.4s ease-out; }
-      `}</style>
     </div>
   );
 }
