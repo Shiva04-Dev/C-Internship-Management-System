@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useDarkMode  } from '../context/DarkModeContext';
+import { useDarkMode } from '../context/DarkmodeContext';
 import { useNavigate } from 'react-router-dom';
 import { internshipAPI, applicationAPI } from '../services/api';
-import { Briefcase, LogOut, Search, MapPin, Calendar, Building2, FileText, CheckCircle, Clock, XCircle, Loader2, ExternalLink, RefreshCw, Moon, Sun } from 'lucide-react';
+import { 
+  Briefcase, LogOut, Search, MapPin, Calendar, Building2, FileText, 
+  CheckCircle, Clock, XCircle, Loader2, ExternalLink, RefreshCw, 
+  Moon, Sun, Sparkles, TrendingUp, Users, Target, Filter
+} from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function StudentDashboard() {
@@ -64,10 +68,18 @@ export default function StudentDashboard() {
 
   const getStatusBadge = (status) => {
     const styles = {
-      Pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      Accepted: 'bg-green-100 text-green-800 border-green-200',
-      Rejected: 'bg-red-100 text-red-800 border-red-200',
-      Withdrawn: 'bg-gray-100 text-gray-800 border-gray-200',
+      Pending: isDarkMode 
+        ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' 
+        : 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      Accepted: isDarkMode 
+        ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+        : 'bg-green-100 text-green-800 border-green-200',
+      Rejected: isDarkMode 
+        ? 'bg-red-500/10 text-red-400 border-red-500/20' 
+        : 'bg-red-100 text-red-800 border-red-200',
+      Withdrawn: isDarkMode 
+        ? 'bg-gray-500/10 text-gray-400 border-gray-500/20' 
+        : 'bg-gray-100 text-gray-800 border-gray-200',
     };
     const icons = {
       Pending: Clock,
@@ -77,8 +89,8 @@ export default function StudentDashboard() {
     };
     const Icon = icons[status];
     return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${styles[status]} animate-fadeIn`}>
-        <Icon className="h-4 w-4 mr-1" />
+      <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border ${styles[status]}`}>
+        <Icon className="h-4 w-4 mr-1.5" />
         {status}
       </span>
     );
@@ -89,75 +101,108 @@ export default function StudentDashboard() {
     (locationFilter === '' || i.location.toLowerCase().includes(locationFilter.toLowerCase()))
   );
 
+  const stats = [
+    { 
+      label: 'Total Applications', 
+      value: applications.length, 
+      icon: FileText,
+      gradient: 'from-blue-500 to-cyan-500'
+    },
+    { 
+      label: 'Pending', 
+      value: applications.filter(a => a.status === 'Pending').length, 
+      icon: Clock,
+      gradient: 'from-yellow-500 to-orange-500'
+    },
+    { 
+      label: 'Accepted', 
+      value: applications.filter(a => a.status === 'Accepted').length, 
+      icon: CheckCircle,
+      gradient: 'from-green-500 to-emerald-500'
+    },
+    { 
+      label: 'Available', 
+      value: internships.length, 
+      icon: Briefcase,
+      gradient: 'from-purple-500 to-pink-500'
+    },
+  ];
+
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
-          <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-            Loading your dashboard...
-          </p>
+      <div className={isDarkMode ? 'min-h-screen bg-black' : 'min-h-screen bg-gray-50'}>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="relative">
+              <Loader2 className="h-16 w-16 animate-spin text-blue-500 mx-auto mb-4" />
+              <div className="absolute inset-0 bg-blue-500 blur-2xl opacity-20"></div>
+            </div>
+            <p className={isDarkMode ? 'text-gray-400 text-lg' : 'text-gray-600 text-lg'}>
+              Loading your dashboard...
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className = {`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
-      <Toaster position="top-center" />
-      
+    <div className={isDarkMode ? 'min-h-screen bg-black' : 'min-h-screen bg-gray-50'}>
+      <Toaster position="top-right" />
+
       {/* Header */}
-      <header className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm border-b sticky top-0 z-10 animate-slideDown transition-colors duration-300`}>
+      <header className={isDarkMode 
+        ? 'bg-black/50 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50' 
+        : 'bg-white/50 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-50'
+      }>
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Briefcase className="h-8 w-8 text-purple-600" />
+            {/* Logo */}
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Briefcase className="h-8 w-8 text-blue-500" />
+                <div className="absolute inset-0 bg-blue-500 blur-xl opacity-50"></div>
+              </div>
               <div>
-                <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <h1 className={isDarkMode ? 'text-xl font-bold text-white' : 'text-xl font-bold text-gray-900'}>
                   InternHub
                 </h1>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <p className={isDarkMode ? 'text-xs text-gray-500' : 'text-xs text-gray-600'}>
                   Student Dashboard
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-            {/* Dark Mode Toggle Button */}
-              <button
-              onClick = {toggleDarkMode}
-              className = {`p-2 rounded-lg transition-all transform hover:scale-110 ${ isDarkMode ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-              title = {isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}>
-                {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
+
+            {/* Actions */}
+            <div className="flex items-center space-x-3">
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className={`p-2 rounded-lg transition-all transform hover:scale-110 ${
-                  isDarkMode 
-                    ? 'text-gray-400 hover:text-purple-400 hover:bg-gray-700' 
-                    : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
-                }`}
-                title="Refresh dashboard">
-
-                <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+                className={isDarkMode
+                  ? 'p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all'
+                  : 'p-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all'
+                }>
+                <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''} ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} />
               </button>
-              <div className="text-right">
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  {user.name}
-                </p>
-                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {user.email}
-                </p>
-              </div>
+
+              <button
+                onClick={toggleDarkMode}
+                className={isDarkMode
+                  ? 'p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all'
+                  : 'p-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all'
+                }>
+                {isDarkMode ? (
+                  <Sun className="h-5 w-5 text-yellow-400" />
+                ) : (
+                  <Moon className="h-5 w-5 text-gray-600" />
+                )}
+              </button>
+
               <button
                 onClick={handleLogout}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all transform hover:scale-105 ${
-                  isDarkMode 
-                   ? 'text-gray-300 hover:text-red-400 hover:bg-red-900/30' 
-                   : 'text-gray-700 hover:text-red-600 hover:bg-red-50'
-                }`}>
-                <LogOut className="h-5 w-5" />
-                <span>Logout</span>
+                className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl hover:shadow-lg hover:shadow-red-500/50 transition-all">
+                <LogOut className="h-4 w-4" />
+                <span className="font-medium">Logout</span>
               </button>
             </div>
           </div>
@@ -165,273 +210,226 @@ export default function StudentDashboard() {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h2 className={isDarkMode ? 'text-4xl font-bold text-white mb-2' : 'text-4xl font-bold text-gray-900 mb-2'}>
+            Welcome back, {user?.name}
+          </h2>
+          <p className={isDarkMode ? 'text-gray-400 text-lg' : 'text-gray-600 text-lg'}>
+            Discover your next opportunity
+          </p>
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all animate-slideUp">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm mb-1">Total Applications</p>
-                <p className="text-4xl font-bold">{applications.length}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat, index) => (
+            <div 
+              key={index}
+              className={isDarkMode
+                ? 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all group'
+                : 'bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all group'
+              }>
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 bg-gradient-to-r ${stat.gradient} rounded-xl`}>
+                  <stat.icon className="h-6 w-6 text-white" />
+                </div>
               </div>
-              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur">
-                <FileText className="h-6 w-6" />
+              <div className={isDarkMode ? 'text-3xl font-bold text-white mb-1' : 'text-3xl font-bold text-gray-900 mb-1'}>
+                {stat.value}
               </div>
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all animate-slideUp" style={{ animationDelay: '0.1s' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-100 text-sm mb-1">Pending</p>
-                <p className="text-4xl font-bold">
-                  {applications.filter(a => a.status === 'Pending').length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur">
-                <Clock className="h-6 w-6" />
+              <div className={isDarkMode ? 'text-sm text-gray-400' : 'text-sm text-gray-600'}>
+                {stat.label}
               </div>
             </div>
-          </div>
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all animate-slideUp" style={{ animationDelay: '0.2s' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm mb-1">Accepted</p>
-                <p className="text-4xl font-bold">
-                  {applications.filter(a => a.status === 'Accepted').length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur">
-                <CheckCircle className="h-6 w-6" />
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Tabs */}
-        <div className={`rounded-xl shadow-sm border mb-6 animate-fadeIn ${
-          isDarkMode 
-            ? 'bg-gray-800 border-gray-700' 
-            : 'bg-white border-gray-200'
-          }`}>
-          <div className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-            <div className="flex">
-              <button
-                onClick={() => setActiveTab('browse')}
-                className={`px-6 py-4 font-medium text-sm border-b-2 transition-all transform ${
+        <div className="mb-6">
+          <div className={isDarkMode
+            ? 'inline-flex rounded-xl bg-white/5 p-1 border border-white/10'
+            : 'inline-flex rounded-xl bg-gray-100 p-1'
+          }>
+            <button
+              onClick={() => setActiveTab('browse')}
+              className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
                 activeTab === 'browse'
-                  ? 'border-purple-600 text-purple-600 scale-105'
-                  : `border-transparent ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'} hover:scale-102`
-                }`}>
-                Browse Internships ({filteredInternships.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('applications')}
-                className={`px-6 py-4 font-medium text-sm border-b-2 transition-all transform ${
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                  : isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+              }`}>
+              Browse Internships
+            </button>
+            <button
+              onClick={() => setActiveTab('applications')}
+              className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
                 activeTab === 'applications'
-                  ? 'border-purple-600 text-purple-600 scale-105'
-                  : `border-transparent ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'} hover:scale-102`
-                }`}>
-                My Applications ({applications.length})
-              </button>
-            </div>
-          </div>
-
-          <div className="p-6">
-            {activeTab === 'browse' && (
-              <>
-                {/* Search Filters */}
-                <div className="flex gap-4 mb-6 animate-slideUp">
-                  <div className="flex-1 relative">
-                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-                    <input
-                      type="text"
-                      placeholder="Search by title..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all ${
-                        isDarkMode 
-                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                      }`}
-                    />
-                  </div>
-                  <div className="w-64 relative">
-                    <MapPin className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-                    <input
-                      type="text"
-                      placeholder="Location..."
-                      value={locationFilter}
-                      onChange={(e) => setLocationFilter(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all ${
-                        isDarkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* Internships List */}
-                <div className="space-y-4">
-                  {filteredInternships.length === 0 ? (
-                    <div className="text-center py-12 animate-fadeIn">
-                      <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                      <p className="text-gray-600">No internships found</p>
-                      <button
-                        onClick={() => {
-                          setSearchTerm('');
-                          setLocationFilter('');
-                        }}
-                        className="mt-4 text-purple-600 hover:text-purple-700 font-medium"
-                      >
-                        Clear filters
-                      </button>
-                    </div>
-                  ) : (
-                    filteredInternships.map((internship, index) => {
-                      const hasApplied = applications.some(a => a.internship.internshipID === internship.internshipID);
-                      return (
-                        <div
-                        key={internship.internshipID}
-                        className={`border rounded-lg p-6 transition-all transform hover:scale-102 animate-slideUp ${
-                          isDarkMode 
-                            ? 'border-gray-700 hover:border-purple-500 bg-gray-800' 
-                            : 'border-gray-200 hover:border-purple-300 hover:shadow-md'
-                        }`}
-                        style={{ animationDelay: `${index * 0.05}s` }}>
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-start space-x-3">
-                                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                                  <Building2 className="h-6 w-6 text-white" />
-                                </div>
-                                <div className="flex-1">
-                                  <h3 className={`text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                    {internship.title}
-                                  </h3>
-                                  <p className="text-purple-600 font-medium mb-2">
-                                    {internship.company.companyName}
-                                  </p>
-                                  <p className={`text-sm mb-3 line-clamp-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                    {internship.description}
-                                  </p>
-                                  <div className={`flex flex-wrap gap-3 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                    <span className="flex items-center">
-                                      <MapPin className="h-4 w-4 mr-1" />
-                                      {internship.location}
-                                    </span>
-                                    <span className="flex items-center">
-                                      <Calendar className="h-4 w-4 mr-1" />
-                                      {new Date(internship.startDate).toLocaleDateString()} - {new Date(internship.endDate).toLocaleDateString()}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => handleApply(internship.internshipID)}
-                              disabled={hasApplied}
-                              className={`ml-4 px-6 py-2 rounded-lg font-medium flex items-center space-x-2 transition-all ${
-                                hasApplied
-                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                  : 'bg-purple-600 text-white hover:bg-purple-700 transform hover:scale-105 active:scale-95 shadow-md'
-                              }`}
-                            >
-                              {hasApplied ? (
-                                <>
-                                  <CheckCircle className="h-4 w-4" />
-                                  <span>Applied</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span>Apply Now</span>
-                                  <ExternalLink className="h-4 w-4" />
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </>
-            )}
-
-            {activeTab === 'applications' && (
-              <div className="space-y-4">
-                {applications.length === 0 ? (
-                  <div className="text-center py-12 animate-fadeIn">
-                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-600 mb-2">No applications yet</p>
-                    <button
-                      onClick={() => setActiveTab('browse')}
-                      className="text-purple-600 hover:text-purple-700 font-medium hover:underline"
-                    >
-                      Browse internships to get started
-                    </button>
-                  </div>
-                ) : (
-                  applications.map((application, index) => (
-                    <div
-                      key={application.applicationID}
-                      className="border border-gray-200 rounded-lg p-6 transform hover:scale-102 transition-all animate-slideUp"
-                      style={{ animationDelay: `${index * 0.05}s` }}
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-bold text-gray-900 mb-1">
-                            {application.internship.title}
-                          </h3>
-                          <p className="text-gray-600 mb-2">{application.internship.companyName}</p>
-                          <div className="flex items-center space-x-4 text-sm text-gray-500">
-                            <span className="flex items-center">
-                              <MapPin className="h-4 w-4 mr-1" />
-                              {application.internship.location}
-                            </span>
-                            <span className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              Applied {new Date(application.appliedAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                        {getStatusBadge(application.status)}
-                      </div>
-                      {application.status === 'Pending' && (
-                        <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 animate-fadeIn">
-                          <p className="text-sm text-blue-800">
-                            <Clock className="h-4 w-4 inline mr-1" />
-                            Your application is under review. You'll be notified once there's an update.
-                          </p>
-                        </div>
-                      )}
-                      {application.status === 'Accepted' && (
-                        <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-100 animate-fadeIn">
-                          <p className="text-sm text-green-800 font-medium">
-                            🎉 Congratulations! Your application has been accepted. The company will contact you soon.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                  : isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+              }`}>
+              My Applications
+            </button>
           </div>
         </div>
-      </div>
 
-      <style jsx>{`
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slideDown { animation: slideDown 0.4s ease-out; }
-        .animate-slideUp { animation: slideUp 0.4s ease-out; animation-fill-mode: both; }
-      `}</style>
+        {/* Browse Tab */}
+        {activeTab === 'browse' && (
+          <div>
+            {/* Search and Filters */}
+            <div className="mb-6 space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Search internships..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className={isDarkMode
+                      ? 'w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all'
+                      : 'w-full pl-12 pr-4 py-3.5 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all'
+                    }
+                  />
+                </div>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Filter by location..."
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
+                    className={isDarkMode
+                      ? 'w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all'
+                      : 'w-full pl-12 pr-4 py-3.5 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all'
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Internships Grid */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {filteredInternships.length === 0 ? (
+                <div className="col-span-2 text-center py-16">
+                  <Briefcase className={`h-16 w-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-700' : 'text-gray-300'}`} />
+                  <p className={isDarkMode ? 'text-gray-400 text-lg' : 'text-gray-600 text-lg'}>
+                    No internships found
+                  </p>
+                </div>
+              ) : (
+                filteredInternships.map((internship) => (
+                  <div
+                    key={internship.internshipID}
+                    className={isDarkMode
+                      ? 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all group'
+                      : 'bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all group'
+                    }>
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
+                          <Building2 className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className={isDarkMode ? 'font-semibold text-white text-lg' : 'font-semibold text-gray-900 text-lg'}>
+                            {internship.title}
+                          </h3>
+                          <p className={isDarkMode ? 'text-sm text-gray-400' : 'text-sm text-gray-600'}>
+                            {internship.companyName}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className={isDarkMode ? 'text-gray-400 mb-4 line-clamp-2' : 'text-gray-600 mb-4 line-clamp-2'}>
+                      {internship.description}
+                    </p>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center space-x-2 text-sm">
+                        <MapPin className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                          {internship.location}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm">
+                        <Calendar className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                          {internship.duration} | Deadline: {new Date(internship.applicationDeadline).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleApply(internship.internshipID)}
+                      className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-blue-500/50 transition-all hover:scale-[1.02] flex items-center justify-center space-x-2">
+                      <span>View Details</span>
+                      <ExternalLink className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Applications Tab */}
+        {activeTab === 'applications' && (
+          <div>
+            <div className="space-y-4">
+              {applications.length === 0 ? (
+                <div className="text-center py-16">
+                  <FileText className={`h-16 w-16 mx-auto mb-4 ${isDarkMode ? 'text-gray-700' : 'text-gray-300'}`} />
+                  <p className={isDarkMode ? 'text-gray-400 text-lg' : 'text-gray-600 text-lg'}>
+                    No applications yet
+                  </p>
+                  <button
+                    onClick={() => setActiveTab('browse')}
+                    className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-blue-500/50 transition-all">
+                    Browse Internships
+                  </button>
+                </div>
+              ) : (
+                applications.map((application) => (
+                  <div
+                    key={application.applicationID}
+                    className={isDarkMode
+                      ? 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all'
+                      : 'bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all'
+                    }>
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className={isDarkMode ? 'font-semibold text-white text-lg mb-1' : 'font-semibold text-gray-900 text-lg mb-1'}>
+                          {application.internshipTitle}
+                        </h3>
+                        <p className={isDarkMode ? 'text-sm text-gray-400' : 'text-sm text-gray-600'}>
+                          {application.companyName}
+                        </p>
+                      </div>
+                      {getStatusBadge(application.status)}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2 text-sm">
+                        <Calendar className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                          Applied: {new Date(application.appliedDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {application.resumePath && (
+                        <div className="flex items-center space-x-2 text-sm">
+                          <FileText className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                            Resume attached
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
