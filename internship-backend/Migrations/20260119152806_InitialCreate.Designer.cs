@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace C__Internship_Management_Program.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251007163019_AddJWTAuthentication")]
-    partial class AddJWTAuthentication
+    [Migration("20260119152806_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -145,6 +145,36 @@ namespace C__Internship_Management_Program.Migrations
                     b.ToTable("Companies");
                 });
 
+            modelBuilder.Entity("C__Internship_Management_Program.Models.CompanyBan", b =>
+                {
+                    b.Property<int>("BanID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BanID"));
+
+                    b.Property<DateTime>("BannedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CompanyID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StudentID")
+                        .HasColumnType("int");
+
+                    b.HasKey("BanID");
+
+                    b.HasIndex("CompanyID");
+
+                    b.HasIndex("StudentID");
+
+                    b.ToTable("CompanyBans");
+                });
+
             modelBuilder.Entity("C__Internship_Management_Program.Models.Feedback", b =>
                 {
                     b.Property<int>("FeedbackID")
@@ -274,17 +304,16 @@ namespace C__Internship_Management_Program.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RefreshTokenID"));
 
-                    b.Property<int>("AdminID")
+                    b.Property<int?>("AdminID")
                         .HasColumnType("int");
 
-                    b.Property<int>("CompanyID")
+                    b.Property<int?>("CompanyID")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedByIP")
-                        .IsRequired()
                         .HasMaxLength(45)
                         .HasColumnType("nvarchar(45)");
 
@@ -294,13 +323,13 @@ namespace C__Internship_Management_Program.Migrations
                     b.Property<bool>("IsRevoked")
                         .HasColumnType("bit");
 
-                    b.Property<int>("StudentID")
+                    b.Property<int?>("StudentID")
                         .HasColumnType("int");
 
                     b.Property<string>("Token")
                         .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("UserType")
                         .IsRequired()
@@ -387,6 +416,43 @@ namespace C__Internship_Management_Program.Migrations
                     b.ToTable("Students");
                 });
 
+            modelBuilder.Entity("C__Internship_Management_Program.Models.UserBan", b =>
+                {
+                    b.Property<int>("BanID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BanID"));
+
+                    b.Property<DateTime>("BannedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CompanyID")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("StudentID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("BanID");
+
+                    b.HasIndex("CompanyID");
+
+                    b.HasIndex("StudentID");
+
+                    b.ToTable("UserBans");
+                });
+
             modelBuilder.Entity("C__Internship_Management_Program.Models.Application", b =>
                 {
                     b.HasOne("C__Internship_Management_Program.Models.Internship", "Internship")
@@ -402,6 +468,25 @@ namespace C__Internship_Management_Program.Migrations
                         .IsRequired();
 
                     b.Navigation("Internship");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("C__Internship_Management_Program.Models.CompanyBan", b =>
+                {
+                    b.HasOne("C__Internship_Management_Program.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("C__Internship_Management_Program.Models.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
 
                     b.Navigation("Student");
                 });
@@ -460,22 +545,34 @@ namespace C__Internship_Management_Program.Migrations
                     b.HasOne("C__Internship_Management_Program.Models.Admin", "Admin")
                         .WithMany("RefreshTokens")
                         .HasForeignKey("AdminID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("C__Internship_Management_Program.Models.Company", "Company")
                         .WithMany("RefreshTokens")
                         .HasForeignKey("CompanyID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("C__Internship_Management_Program.Models.Student", "Student")
                         .WithMany("RefreshTokens")
                         .HasForeignKey("StudentID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Admin");
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("C__Internship_Management_Program.Models.UserBan", b =>
+                {
+                    b.HasOne("C__Internship_Management_Program.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyID");
+
+                    b.HasOne("C__Internship_Management_Program.Models.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentID");
 
                     b.Navigation("Company");
 

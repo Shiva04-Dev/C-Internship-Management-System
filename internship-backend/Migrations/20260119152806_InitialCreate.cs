@@ -20,7 +20,7 @@ namespace C__Internship_Management_Program.Migrations
                     FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -36,7 +36,7 @@ namespace C__Internship_Management_Program.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CompanyName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
                     Website = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -83,7 +83,7 @@ namespace C__Internship_Management_Program.Migrations
                     FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
                     University = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Degree = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -146,6 +146,101 @@ namespace C__Internship_Management_Program.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CompanyBans",
+                columns: table => new
+                {
+                    BanID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CompanyID = table.Column<int>(type: "int", nullable: false),
+                    StudentID = table.Column<int>(type: "int", nullable: false),
+                    BannedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CompanyBans", x => x.BanID);
+                    table.ForeignKey(
+                        name: "FK_CompanyBans_Companies_CompanyID",
+                        column: x => x.CompanyID,
+                        principalTable: "Companies",
+                        principalColumn: "CompanyID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CompanyBans_Students_StudentID",
+                        column: x => x.StudentID,
+                        principalTable: "Students",
+                        principalColumn: "StudentID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RefreshTokens",
+                columns: table => new
+                {
+                    RefreshTokenID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Token = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsRevoked = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedByIP = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: true),
+                    UserType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    StudentID = table.Column<int>(type: "int", nullable: true),
+                    CompanyID = table.Column<int>(type: "int", nullable: true),
+                    AdminID = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshTokens", x => x.RefreshTokenID);
+                    table.ForeignKey(
+                        name: "FK_RefreshTokens_Admins_AdminID",
+                        column: x => x.AdminID,
+                        principalTable: "Admins",
+                        principalColumn: "AdminID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RefreshTokens_Companies_CompanyID",
+                        column: x => x.CompanyID,
+                        principalTable: "Companies",
+                        principalColumn: "CompanyID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RefreshTokens_Students_StudentID",
+                        column: x => x.StudentID,
+                        principalTable: "Students",
+                        principalColumn: "StudentID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserBans",
+                columns: table => new
+                {
+                    BanID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StudentID = table.Column<int>(type: "int", nullable: true),
+                    CompanyID = table.Column<int>(type: "int", nullable: true),
+                    BannedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserBans", x => x.BanID);
+                    table.ForeignKey(
+                        name: "FK_UserBans_Companies_CompanyID",
+                        column: x => x.CompanyID,
+                        principalTable: "Companies",
+                        principalColumn: "CompanyID");
+                    table.ForeignKey(
+                        name: "FK_UserBans_Students_StudentID",
+                        column: x => x.StudentID,
+                        principalTable: "Students",
+                        principalColumn: "StudentID");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Applications",
                 columns: table => new
                 {
@@ -205,6 +300,12 @@ namespace C__Internship_Management_Program.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Admins_Email",
+                table: "Admins",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Applications_InternshipID",
                 table: "Applications",
                 column: "InternshipID");
@@ -212,6 +313,22 @@ namespace C__Internship_Management_Program.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Applications_StudentID",
                 table: "Applications",
+                column: "StudentID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Companies_Email",
+                table: "Companies",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CompanyBans_CompanyID",
+                table: "CompanyBans",
+                column: "CompanyID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CompanyBans_StudentID",
+                table: "CompanyBans",
                 column: "StudentID");
 
             migrationBuilder.CreateIndex(
@@ -233,16 +350,47 @@ namespace C__Internship_Management_Program.Migrations
                 name: "IX_NotificationRoles_RoleID",
                 table: "NotificationRoles",
                 column: "RoleID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_AdminID",
+                table: "RefreshTokens",
+                column: "AdminID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_CompanyID",
+                table: "RefreshTokens",
+                column: "CompanyID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_StudentID",
+                table: "RefreshTokens",
+                column: "StudentID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Students_Email",
+                table: "Students",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserBans_CompanyID",
+                table: "UserBans",
+                column: "CompanyID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserBans_StudentID",
+                table: "UserBans",
+                column: "StudentID");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Admins");
+                name: "Applications");
 
             migrationBuilder.DropTable(
-                name: "Applications");
+                name: "CompanyBans");
 
             migrationBuilder.DropTable(
                 name: "Feedbacks");
@@ -251,16 +399,25 @@ namespace C__Internship_Management_Program.Migrations
                 name: "NotificationRoles");
 
             migrationBuilder.DropTable(
-                name: "Internships");
+                name: "RefreshTokens");
 
             migrationBuilder.DropTable(
-                name: "Students");
+                name: "UserBans");
+
+            migrationBuilder.DropTable(
+                name: "Internships");
 
             migrationBuilder.DropTable(
                 name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "Roles");
+
+            migrationBuilder.DropTable(
+                name: "Admins");
+
+            migrationBuilder.DropTable(
+                name: "Students");
 
             migrationBuilder.DropTable(
                 name: "Companies");
