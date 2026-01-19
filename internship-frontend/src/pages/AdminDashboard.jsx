@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useDarkMode } from '../context/DarkModeContext';
+import { useDarkMode } from '../context/DarkmodeContext';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../services/api';
 import toast, { Toaster } from 'react-hot-toast';
 import { 
   Briefcase, LogOut, Users, Building2, FileText, TrendingUp,
   Loader2, CheckCircle, Clock, Activity, Moon, Sun,
-  RefreshCw, Ban, ShieldAlert, ShieldCheck, X
+  RefreshCw, Ban, ShieldAlert, ShieldCheck, X, UserX,
+  BarChart3, PieChart, Award
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -104,75 +105,122 @@ export default function AdminDashboard() {
     setShowUsersModal(true);
   };
 
+  const stats = [
+    { 
+      label: 'Total Students', 
+      value: dashboard?.stats.totalStudents || 0, 
+      icon: Users,
+      gradient: 'from-blue-500 to-cyan-500',
+      onClick: () => openUsersModal('students')
+    },
+    { 
+      label: 'Total Companies', 
+      value: dashboard?.stats.totalCompanies || 0, 
+      icon: Building2,
+      gradient: 'from-purple-500 to-pink-500',
+      onClick: () => openUsersModal('companies')
+    },
+    { 
+      label: 'Active Internships', 
+      value: dashboard?.stats.activeInternships || 0, 
+      icon: Briefcase,
+      gradient: 'from-green-500 to-emerald-500'
+    },
+    { 
+      label: 'Total Applications', 
+      value: dashboard?.stats.totalApplications || 0, 
+      icon: FileText,
+      gradient: 'from-orange-500 to-red-500'
+    },
+  ];
+
   if (loading) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} flex items-center justify-center transition-colors duration-300`}>
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
-          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>Loading admin dashboard...</p>
+      <div className={isDarkMode ? 'min-h-screen bg-black' : 'min-h-screen bg-gray-50'}>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="relative">
+              <Loader2 className="h-16 w-16 animate-spin text-purple-500 mx-auto mb-4" />
+              <div className="absolute inset-0 bg-purple-500 blur-2xl opacity-20"></div>
+            </div>
+            <p className={isDarkMode ? 'text-gray-400 text-lg' : 'text-gray-600 text-lg'}>
+              Loading admin dashboard...
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
-      <Toaster position="top-center" />
+    <div className={isDarkMode ? 'min-h-screen bg-black' : 'min-h-screen bg-gray-50'}>
+      <Toaster position="top-right" />
       
       {/* Header */}
-      <header className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm border-b sticky top-0 z-10 transition-colors duration-300`}>
+      <header className={isDarkMode 
+        ? 'bg-black/50 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50' 
+        : 'bg-white/50 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-50'
+      }>
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Briefcase className="h-8 w-8 text-purple-600" />
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <ShieldCheck className="h-8 w-8 text-purple-500" />
+                <div className="absolute inset-0 bg-purple-500 blur-xl opacity-50"></div>
+              </div>
               <div>
-                <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>InternHub</h1>
-                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Admin Dashboard</p>
+                <h1 className={isDarkMode ? 'text-xl font-bold text-white' : 'text-xl font-bold text-gray-900'}>
+                  InternHub
+                </h1>
+                <p className={isDarkMode ? 'text-xs text-gray-500' : 'text-xs text-gray-600'}>
+                  Admin Dashboard
+                </p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={toggleDarkMode}
-                className={`p-2 rounded-lg transition-all transform hover:scale-110 ${
-                  isDarkMode ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
+
+            <div className="flex items-center space-x-3">
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className={`p-2 rounded-lg transition-all transform hover:scale-110 ${
-                  isDarkMode ? 'text-gray-300 hover:text-white hover:bg-gray-700' : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
-                }`}
-              >
-                <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+                className={isDarkMode
+                  ? 'p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all'
+                  : 'p-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all'
+                }>
+                <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''} ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} />
               </button>
+
+              <button
+                onClick={toggleDarkMode}
+                className={isDarkMode
+                  ? 'p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all'
+                  : 'p-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all'
+                }>
+                {isDarkMode ? (
+                  <Sun className="h-5 w-5 text-yellow-400" />
+                ) : (
+                  <Moon className="h-5 w-5 text-gray-600" />
+                )}
+              </button>
+
               <button
                 onClick={() => setShowBannedUsersModal(true)}
-                className={`relative p-2 rounded-lg transition-all transform hover:scale-110 ${
-                  isDarkMode ? 'text-gray-300 hover:text-red-400 hover:bg-gray-700' : 'text-gray-600 hover:text-red-600 hover:bg-red-50'
-                }`}
-              >
-                <ShieldAlert className="h-5 w-5" />
+                className={isDarkMode
+                  ? 'relative p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all'
+                  : 'relative p-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all'
+                }>
+                <ShieldAlert className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} />
                 {bannedUsers.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                     {bannedUsers.length}
                   </span>
                 )}
               </button>
-              <div className="text-right">
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{user.name}</p>
-                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{user.email}</p>
-              </div>
+
               <button
                 onClick={handleLogout}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all transform hover:scale-105 ${
-                  isDarkMode ? 'text-gray-300 hover:text-red-400 hover:bg-gray-700' : 'text-gray-700 hover:text-red-600 hover:bg-red-50'
-                }`}
-              >
-                <LogOut className="h-5 w-5" />
-                <span>Logout</span>
+                className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl hover:shadow-lg hover:shadow-red-500/50 transition-all">
+                <LogOut className="h-4 w-4" />
+                <span className="font-medium">Logout</span>
               </button>
             </div>
           </div>
@@ -180,298 +228,321 @@ export default function AdminDashboard() {
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-6`}>System Overview</h2>
-        
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h2 className={isDarkMode ? 'text-4xl font-bold text-white mb-2' : 'text-4xl font-bold text-gray-900 mb-2'}>
+            System Overview
+          </h2>
+          <p className={isDarkMode ? 'text-gray-400 text-lg' : 'text-gray-600 text-lg'}>
+            Monitor and manage the entire platform
+          </p>
+        </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div 
-            className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all cursor-pointer"
-            onClick={() => openUsersModal('students')}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <Users className="h-10 w-10 opacity-80" />
-              <Activity className="h-5 w-5 opacity-60" />
+          {stats.map((stat, index) => (
+            <div 
+              key={index}
+              onClick={stat.onClick}
+              className={`${isDarkMode
+                ? 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all'
+                : 'bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all'
+              } ${stat.onClick ? 'cursor-pointer hover:scale-105' : ''}`}>
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 bg-gradient-to-r ${stat.gradient} rounded-xl`}>
+                  <stat.icon className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className={isDarkMode ? 'text-3xl font-bold text-white mb-1' : 'text-3xl font-bold text-gray-900 mb-1'}>
+                {stat.value}
+              </div>
+              <div className={isDarkMode ? 'text-sm text-gray-400' : 'text-sm text-gray-600'}>
+                {stat.label}
+              </div>
+              {stat.onClick && (
+                <p className={isDarkMode ? 'text-xs text-gray-500 mt-2' : 'text-xs text-gray-500 mt-2'}>
+                  Click to view all →
+                </p>
+              )}
             </div>
-            <p className="text-blue-100 text-sm mb-1">Total Students</p>
-            <p className="text-4xl font-bold">{dashboard?.stats.totalStudents}</p>
-            <p className="text-blue-100 text-xs mt-2">Click to view all →</p>
-          </div>
-
-          <div 
-            className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all cursor-pointer"
-            onClick={() => openUsersModal('companies')}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <Building2 className="h-10 w-10 opacity-80" />
-              <Activity className="h-5 w-5 opacity-60" />
-            </div>
-            <p className="text-purple-100 text-sm mb-1">Total Companies</p>
-            <p className="text-4xl font-bold">{dashboard?.stats.totalCompanies}</p>
-            <p className="text-purple-100 text-xs mt-2">Click to view all →</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all">
-            <div className="flex items-center justify-between mb-4">
-              <Briefcase className="h-10 w-10 opacity-80" />
-              <TrendingUp className="h-5 w-5 opacity-60" />
-            </div>
-            <p className="text-green-100 text-sm mb-1">Total Internships</p>
-            <p className="text-4xl font-bold">{dashboard?.stats.totalInternships}</p>
-            <p className="text-green-100 text-xs mt-2">{dashboard?.stats.activeInternships} active</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-all">
-            <div className="flex items-center justify-between mb-4">
-              <FileText className="h-10 w-10 opacity-80" />
-              <Clock className="h-5 w-5 opacity-60" />
-            </div>
-            <p className="text-orange-100 text-sm mb-1">Total Applications</p>
-            <p className="text-4xl font-bold">{dashboard?.stats.totalApplications}</p>
-            <p className="text-orange-100 text-xs mt-2">{dashboard?.stats.pendingApplications} pending</p>
-          </div>
+          ))}
         </div>
+
+        {/* Reports Section */}
+        {reports && (
+          <div className="mb-8">
+            <h3 className={isDarkMode ? 'text-2xl font-bold text-white mb-4' : 'text-2xl font-bold text-gray-900 mb-4'}>
+              Reports & Analytics
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Top Companies */}
+              <div className={isDarkMode
+                ? 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6'
+                : 'bg-white border border-gray-200 rounded-2xl p-6'
+              }>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl">
+                    <Award className="h-5 w-5 text-white" />
+                  </div>
+                  <h4 className={isDarkMode ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-gray-900'}>
+                    Top Companies
+                  </h4>
+                </div>
+                <div className="space-y-3">
+                  {reports.topCompanies?.slice(0, 5).map((company, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={isDarkMode ? 'text-gray-500 font-bold' : 'text-gray-400 font-bold'}>
+                          #{index + 1}
+                        </div>
+                        <div>
+                          <p className={isDarkMode ? 'text-white font-medium' : 'text-gray-900 font-medium'}>
+                            {company.companyName}
+                          </p>
+                          <p className={isDarkMode ? 'text-xs text-gray-500' : 'text-xs text-gray-600'}>
+                            {company.internshipCount} internships
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Application Status */}
+              <div className={isDarkMode
+                ? 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6'
+                : 'bg-white border border-gray-200 rounded-2xl p-6'
+              }>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl">
+                    <PieChart className="h-5 w-5 text-white" />
+                  </div>
+                  <h4 className={isDarkMode ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-gray-900'}>
+                    Application Status
+                  </h4>
+                </div>
+                <div className="space-y-3">
+                  {reports.applicationStats && Object.entries(reports.applicationStats).map(([status, count], index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`h-3 w-3 rounded-full ${
+                          status === 'Pending' ? 'bg-yellow-400' :
+                          status === 'Accepted' ? 'bg-green-400' :
+                          'bg-red-400'
+                        }`}></div>
+                        <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>{status}</span>
+                      </div>
+                      <span className={isDarkMode ? 'text-white font-semibold' : 'text-gray-900 font-semibold'}>
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-sm border transition-colors duration-300`}>
-            <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Recent Internships</h3>
-            </div>
-            <div className="p-6">
+        {reports?.recentActivity && (
+          <div>
+            <h3 className={isDarkMode ? 'text-2xl font-bold text-white mb-4' : 'text-2xl font-bold text-gray-900 mb-4'}>
+              Recent Activity
+            </h3>
+            <div className={isDarkMode
+              ? 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6'
+              : 'bg-white border border-gray-200 rounded-2xl p-6'
+            }>
               <div className="space-y-4">
-                {dashboard?.recentInternships.map((internship) => (
-                  <div key={internship.internshipID} className={`flex items-center justify-between p-4 rounded-lg ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <div>
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{internship.title}</p>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{internship.companyName}</p>
-                      <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>{new Date(internship.createdAt).toLocaleDateString()}</p>
+                {reports.recentActivity.slice(0, 10).map((activity, index) => (
+                  <div key={index} className="flex items-start space-x-4">
+                    <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
+                      <Activity className={`h-4 w-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} />
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      internship.status === 'Active' 
-                        ? isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800'
-                        : isDarkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {internship.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-sm border transition-colors duration-300`}>
-            <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Recent Applications</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {dashboard?.recentApplications.map((app) => (
-                  <div key={app.applicationID} className={`flex items-center justify-between p-4 rounded-lg ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <div>
-                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{app.studentName}</p>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{app.internshipTitle}</p>
-                      <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>{new Date(app.appliedAt).toLocaleDateString()}</p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      app.status === 'Pending' ? isDarkMode ? 'bg-yellow-900 text-yellow-200' : 'bg-yellow-100 text-yellow-800' :
-                      app.status === 'Accepted' ? isDarkMode ? 'bg-green-900 text-green-200' : 'bg-green-100 text-green-800' :
-                      isDarkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {app.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Reports */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-sm border transition-colors duration-300`}>
-            <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Top Companies</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-3">
-                {reports?.topCompanies.map((company, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${isDarkMode ? 'bg-purple-900 text-purple-200' : 'bg-purple-100 text-purple-600'}`}>
-                        #{index + 1}
-                      </div>
-                      <div>
-                        <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{company.companyName}</p>
-                        <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{company.activeInternships} active</p>
-                      </div>
-                    </div>
-                    <span className={`text-sm font-bold ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>{company.internshipCount}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-xl shadow-sm border transition-colors duration-300`}>
-            <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-              <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Application Status</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {reports?.applicationsByStatus.map((item, index) => (
-                  <div key={index}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{item.status}</span>
-                      <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{item.count}</span>
-                    </div>
-                    <div className={`w-full h-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
-                      <div 
-                        className={`h-full rounded-full ${item.status === 'Pending' ? 'bg-yellow-500' : item.status === 'Accepted' ? 'bg-green-500' : 'bg-red-500'}`}
-                        style={{ width: `${(item.count / dashboard?.stats.totalApplications) * 100}%` }}
-                      />
+                    <div className="flex-1">
+                      <p className={isDarkMode ? 'text-white' : 'text-gray-900'}>
+                        {activity.description}
+                      </p>
+                      <p className={isDarkMode ? 'text-xs text-gray-500 mt-1' : 'text-xs text-gray-600 mt-1'}>
+                        {new Date(activity.timestamp).toLocaleString()}
+                      </p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Modals */}
-      {showBannedUsersModal && (
-        <BannedUsersModal
-          isDarkMode={isDarkMode}
-          bannedUsers={bannedUsers}
-          onClose={() => setShowBannedUsersModal(false)}
-          onUnban={handleUnbanUser}
-        />
-      )}
-
+      {/* Users Modal */}
       {showUsersModal && (
-        <UsersListModal
-          isDarkMode={isDarkMode}
-          userType={userModalType}
-          users={userModalType === 'students' ? students : companies}
-          bannedUsers={bannedUsers}
-          onClose={() => setShowUsersModal(false)}
-          onBan={handleBanUser}
-        />
-      )}
-    </div>
-  );
-}
-
-// Banned Users Modal
-function BannedUsersModal({ isDarkMode, bannedUsers, onClose, onUnban }) {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
-      <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border shadow-2xl`}>
-        <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} flex items-center justify-between sticky top-0 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div>
-            <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Banned Users</h2>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{bannedUsers.length} users banned</p>
-          </div>
-          <button onClick={onClose} className={isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}>
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-        <div className="p-6">
-          {bannedUsers.length === 0 ? (
-            <div className="text-center py-12">
-              <ShieldCheck className={`h-12 w-12 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'} mx-auto mb-3`} />
-              <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>No banned users</p>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className={isDarkMode
+            ? 'bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto'
+            : 'bg-white border border-gray-200 rounded-3xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto'
+          }>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className={`p-3 bg-gradient-to-r ${userModalType === 'students' ? 'from-blue-500 to-cyan-500' : 'from-purple-500 to-pink-500'} rounded-xl`}>
+                  {userModalType === 'students' ? (
+                    <Users className="h-6 w-6 text-white" />
+                  ) : (
+                    <Building2 className="h-6 w-6 text-white" />
+                  )}
+                </div>
+                <div>
+                  <h2 className={isDarkMode ? 'text-2xl font-bold text-white' : 'text-2xl font-bold text-gray-900'}>
+                    {userModalType === 'students' ? 'All Students' : 'All Companies'}
+                  </h2>
+                  <p className={isDarkMode ? 'text-sm text-gray-400' : 'text-sm text-gray-600'}>
+                    {userModalType === 'students' ? students.length : companies.length} total
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowUsersModal(false)}
+                className={isDarkMode ? 'p-2 hover:bg-white/10 rounded-lg transition-colors' : 'p-2 hover:bg-gray-100 rounded-lg transition-colors'}>
+                <X className={isDarkMode ? 'h-5 w-5 text-gray-400' : 'h-5 w-5 text-gray-600'} />
+              </button>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {bannedUsers.map((ban) => (
-                <div key={ban.banId} className={`border rounded-lg p-6 ${isDarkMode ? 'border-gray-700 bg-gray-700/50' : 'border-gray-200'}`}>
-                  <div className="flex items-start justify-between">
+
+            <div className="space-y-3">
+              {(userModalType === 'students' ? students : companies).map((item) => (
+                <div
+                  key={userModalType === 'students' ? item.studentID : item.companyID}
+                  className={isDarkMode
+                    ? 'bg-white/5 border border-white/10 rounded-xl p-5'
+                    : 'bg-gray-50 border border-gray-200 rounded-xl p-5'
+                  }>
+                  <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{ban.userName}</h3>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          ban.userType === 'Student' ? isDarkMode ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800' :
-                          isDarkMode ? 'bg-purple-900 text-purple-200' : 'bg-purple-100 text-purple-800'
-                        }`}>{ban.userType}</span>
-                      </div>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-2`}>{ban.email}</p>
-                      {ban.reason && <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-2`}><span className="font-medium">Reason:</span> {ban.reason}</p>}
-                      <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Banned: {new Date(ban.bannedAt).toLocaleDateString()}</p>
+                      <h3 className={isDarkMode ? 'font-semibold text-white mb-1' : 'font-semibold text-gray-900 mb-1'}>
+                        {userModalType === 'students' 
+                          ? `${item.firstName} ${item.lastName}` 
+                          : item.companyName}
+                      </h3>
+                      <p className={isDarkMode ? 'text-sm text-gray-400' : 'text-sm text-gray-600'}>
+                        {item.email}
+                      </p>
+                      {userModalType === 'students' && (
+                        <p className={isDarkMode ? 'text-xs text-gray-500 mt-1' : 'text-xs text-gray-600 mt-1'}>
+                          {item.university} - {item.degree}
+                        </p>
+                      )}
                     </div>
                     <button
-                      onClick={() => onUnban(ban.userId, ban.userType, ban.userName)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105 ${
-                        isDarkMode ? 'bg-green-900/50 text-green-300 hover:bg-green-900' : 'bg-green-50 text-green-600 hover:bg-green-100'
-                      }`}
-                    >
-                      Unban
+                      onClick={() => handleBanUser(
+                        userModalType === 'students' ? item.studentID : item.companyID,
+                        userModalType === 'students' ? 'Student' : 'Company',
+                        userModalType === 'students' ? `${item.firstName} ${item.lastName}` : item.companyName
+                      )}
+                      className={isDarkMode
+                        ? 'px-4 py-2 bg-white/5 border border-white/10 text-white rounded-lg hover:bg-white/10 transition-all text-sm flex items-center space-x-2'
+                        : 'px-4 py-2 bg-gray-100 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-200 transition-all text-sm flex items-center space-x-2'
+                      }>
+                      <Ban className="h-4 w-4" />
+                      <span>Ban</span>
                     </button>
                   </div>
                 </div>
               ))}
             </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Users List Modal
-function UsersListModal({ isDarkMode, userType, users, bannedUsers, onClose, onBan }) {
-  const title = userType === 'students' ? 'All Students' : 'All Companies';
-  const bannedIds = bannedUsers.filter(b => b.userType === (userType === 'students' ? 'Student' : 'Company')).map(b => b.userId);
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
-      <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border shadow-2xl`}>
-        <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'} flex items-center justify-between sticky top-0 ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div>
-            <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{title}</h2>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{users.length} total • {bannedIds.length} banned</p>
           </div>
-          <button onClick={onClose} className={isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}>
-            <X className="h-6 w-6" />
-          </button>
         </div>
-        <div className="p-6">
-          <div className="space-y-4">
-            {users.map((user) => {
-              const userId = userType === 'students' ? user.studentID : user.companyID;
-              const userName = userType === 'students' ? `${user.firstName} ${user.lastName}` : user.companyName;
-              const isBanned = bannedIds.includes(userId);
-              
-              return (
-                <div key={userId} className={`border rounded-lg p-6 ${isDarkMode ? 'border-gray-700 bg-gray-700/50' : 'border-gray-200'} ${isBanned ? 'opacity-60' : ''}`}>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{userName}</h3>
-                        {isBanned && <span className={`px-2 py-1 rounded text-xs font-medium ${isDarkMode ? 'bg-red-900 text-red-200' : 'bg-red-100 text-red-800'}`}>BANNED</span>}
-                      </div>
-                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{user.email}</p>
-                      {userType === 'students' && <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>{user.university} • {user.degree}</p>}
-                      {userType === 'companies' && <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>{user.internshipCount} internships • {user.activeInternships} active</p>}
-                    </div>
-                    {!isBanned && (
-                      <button
-                        onClick={() => onBan(userId, userType === 'students' ? 'Student' : 'Company', userName)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center space-x-2 ${
-                          isDarkMode ? 'bg-red-900/50 text-red-300 hover:bg-red-900 border border-red-700' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
-                        }`}
-                      >
-                        <Ban className="h-4 w-4" />
-                        <span>Ban User</span>
-                      </button>
-                    )}
-                  </div>
+      )}
+
+      {/* Banned Users Modal */}
+      {showBannedUsersModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className={isDarkMode
+            ? 'bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto'
+            : 'bg-white border border-gray-200 rounded-3xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto'
+          }>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl">
+                  <ShieldAlert className="h-6 w-6 text-white" />
                 </div>
-              );
-            })}
+                <div>
+                  <h2 className={isDarkMode ? 'text-2xl font-bold text-white' : 'text-2xl font-bold text-gray-900'}>
+                    Banned Users
+                  </h2>
+                  <p className={isDarkMode ? 'text-sm text-gray-400' : 'text-sm text-gray-600'}>
+                    {bannedUsers.length} users banned
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowBannedUsersModal(false)}
+                className={isDarkMode ? 'p-2 hover:bg-white/10 rounded-lg transition-colors' : 'p-2 hover:bg-gray-100 rounded-lg transition-colors'}>
+                <X className={isDarkMode ? 'h-5 w-5 text-gray-400' : 'h-5 w-5 text-gray-600'} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {bannedUsers.length === 0 ? (
+                <div className="text-center py-12">
+                  <UserX className={`h-12 w-12 mx-auto mb-3 ${isDarkMode ? 'text-gray-700' : 'text-gray-300'}`} />
+                  <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                    No banned users
+                  </p>
+                </div>
+              ) : (
+                bannedUsers.map((ban) => (
+                  <div
+                    key={ban.banID}
+                    className={isDarkMode
+                      ? 'bg-white/5 border border-white/10 rounded-xl p-5'
+                      : 'bg-gray-50 border border-gray-200 rounded-xl p-5'
+                    }>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className={isDarkMode ? 'font-semibold text-white' : 'font-semibold text-gray-900'}>
+                            {ban.userName}
+                          </h3>
+                          <span className={`px-2 py-0.5 rounded-full text-xs ${
+                            ban.userType === 'Student' 
+                              ? isDarkMode ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-800'
+                              : isDarkMode ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {ban.userType}
+                          </span>
+                        </div>
+                        <p className={isDarkMode ? 'text-sm text-gray-400 mb-2' : 'text-sm text-gray-600 mb-2'}>
+                          {ban.email}
+                        </p>
+                        {ban.reason && (
+                          <p className={isDarkMode ? 'text-sm text-gray-500' : 'text-sm text-gray-500'}>
+                            Reason: {ban.reason}
+                          </p>
+                        )}
+                        <p className={isDarkMode ? 'text-xs text-gray-600 mt-1' : 'text-xs text-gray-500 mt-1'}>
+                          Banned on: {new Date(ban.bannedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleUnbanUser(
+                          ban.userType === 'Student' ? ban.studentID : ban.companyID,
+                          ban.userType,
+                          ban.userName
+                        )}
+                        className={isDarkMode
+                          ? 'px-4 py-2 bg-white/5 border border-white/10 text-white rounded-lg hover:bg-white/10 transition-all text-sm'
+                          : 'px-4 py-2 bg-gray-100 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-200 transition-all text-sm'
+                        }>
+                        Unban
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -26,13 +26,8 @@ export default function LandingPage() {
                         <div className="flex items-center space-x-4">
                             <Link
                                 to="/login"
-                                className="px-6 py-2.5 text-white hover:text-blue-400 transition-all">
-                                Sign In
-                            </Link>
-                            <Link
-                                to="/register"
                                 className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover:shadow-lg hover:shadow-blue-500/50 transition-all hover:scale-105 font-medium">
-                                Get Started
+                                Sign In
                             </Link>
                         </div>
                     </div>
@@ -55,20 +50,6 @@ export default function LandingPage() {
                             Streamline your internship journey.
                         </p>
 
-                        {/* Search Bar */}
-                        <div className="max-w-2xl mx-auto mb-12">
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Search for internships..."
-                                    className="w-full px-8 py-5 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                />
-                                <button className="absolute right-2 top-1/2 -translate-y-1/2 px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full hover:shadow-lg hover:shadow-blue-500/50 transition-all">
-                                    <ArrowRight className="h-5 w-5 text-white" />
-                                </button>
-                            </div>
-                        </div>
-
                         {/* CTA Buttons */}
                         <div className="flex flex-col sm:flex-row justify-center gap-6">
                             <Link
@@ -82,27 +63,10 @@ export default function LandingPage() {
                                 to="/register?type=company"
                                 className="group px-10 py-5 bg-white/5 backdrop-blur-sm border border-white/10 text-white rounded-full font-semibold hover:bg-white/10 transition-all hover:scale-105 flex items-center justify-center space-x-3">
                                 <Building2 className="h-6 w-6" />
-                                <span>I'm a Company</span>
+                                <span>We are a Company</span>
                                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </div>
-                    </div>
-                </div>
-
-                {/* Stats Section */}
-                <div className="container mx-auto px-6 pb-20">
-                    <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-                        {[
-                            { number: '10K+', label: 'Students' },
-                            { number: '500+', label: 'Companies' },
-                            { number: '2K+', label: 'Internships' },
-                            { number: '95%', label: 'Success Rate' }
-                        ].map((stat, index) => (
-                            <div key={index} className="text-center">
-                                <div className="text-4xl md:text-5xl font-bold text-white mb-2">{stat.number}</div>
-                                <div className="text-gray-400 text-sm uppercase tracking-wide">{stat.label}</div>
-                            </div>
-                        ))}
                     </div>
                 </div>
 
