@@ -89,7 +89,7 @@ export const applicationAPI = {
 
 //Company APIs
 export const companyAPI = {
-    banStudent: (studentId) => api.post(`/Company/ban-student/${studentId}`),
+    banStudent: (studentId, reason) => api.post(`/Company/ban-student/${studentId}`, { Reason: reason }),
     unbanStudent: (studentId) => api.post(`/Company/unban-student/${studentId}`),
     getBannedStudents: () => api.get('/Company/banned-students'),
 };
@@ -103,7 +103,7 @@ export const adminAPI = {
   getApplications: (params) => api.get('/Admin/applications', { params }),
   getReports: () => api.get('/Admin/reports'),
   closeInternship: (id) => api.delete(`/Admin/internship/${id}`),
-  banUser: (userId, userType) => api.post(`/Admin/ban-user/${userId}/${userType}`),
+  banUser: (userId, userType, reason) => api.post(`/Admin/ban-user/${userId}/${userType}`, { Reason: reason}),
   unbanUser: (userId, userType) => api.post(`/Admin/unban-user/${userId}/${userType}`),
   getBannedUsers: () => api.get('/Admin/banned-users'),
 };

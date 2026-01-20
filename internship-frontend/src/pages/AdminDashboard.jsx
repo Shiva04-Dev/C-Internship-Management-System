@@ -26,6 +26,36 @@ export default function AdminDashboard() {
   const [showUsersModal, setShowUsersModal] = useState(false);
   const [userModalType, setUserModalType] = useState('');
 
+  // Simple date formatter
+  const formatDate = (dateValue) => {
+    if (!dateValue) return 'N/A';
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return 'N/A';
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return 'N/A';
+    }
+  };
+
+  const formatDateTime = (dateValue) => {
+    if (!dateValue) return 'N/A';
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return 'N/A';
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return 'N/A';
+    }
+  };
+
   useEffect(() => {
     loadAllData();
   }, []);
@@ -67,7 +97,7 @@ export default function AdminDashboard() {
 
     const loadingToast = toast.loading(`Banning ${userName}...`);
     try {
-      await adminAPI.banUser(userId, userType, { reason });
+      await adminAPI.banUser(userId, userType, reason);
       toast.dismiss(loadingToast);
       toast.success(`${userName} has been banned and logged out`);
       loadAllData();
@@ -323,18 +353,18 @@ export default function AdminDashboard() {
                   </h4>
                 </div>
                 <div className="space-y-3">
-                  {reports.applicationStats && Object.entries(reports.applicationStats).map(([status, count], index) => (
+                  {reports.applicationsByStatus && reports.applicationsByStatus.map((item, index) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className={`h-3 w-3 rounded-full ${
-                          status === 'Pending' ? 'bg-yellow-400' :
-                          status === 'Accepted' ? 'bg-green-400' :
+                          item.status === 'Pending' ? 'bg-yellow-400' :
+                          item.status === 'Accepted' ? 'bg-green-400' :
                           'bg-red-400'
                         }`}></div>
-                        <span className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>{status}</span>
+                        <span className={isDarkMode ? 'text-white font-medium' : 'text-gray-700'}>{item.status}</span>
                       </div>
-                      <span className={isDarkMode ? 'text-white font-semibold' : 'text-gray-900 font-semibold'}>
-                        {count}
+                      <span className={isDarkMode ? 'text-white font-bold text-lg' : 'text-gray-900 font-semibold'}>
+                        {item.count}
                       </span>
                     </div>
                   ))}
@@ -344,32 +374,72 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Recent Activity */}
-        {reports?.recentActivity && (
-          <div>
-            <h3 className={isDarkMode ? 'text-2xl font-bold text-white mb-4' : 'text-2xl font-bold text-gray-900 mb-4'}>
-              Recent Activity
-            </h3>
-            <div className={isDarkMode
-              ? 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6'
-              : 'bg-white border border-gray-200 rounded-2xl p-6'
-            }>
-              <div className="space-y-4">
-                {reports.recentActivity.slice(0, 10).map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-4">
-                    <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
-                      <Activity className={`h-4 w-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-                    </div>
-                    <div className="flex-1">
-                      <p className={isDarkMode ? 'text-white' : 'text-gray-900'}>
-                        {activity.description}
-                      </p>
-                      <p className={isDarkMode ? 'text-xs text-gray-500 mt-1' : 'text-xs text-gray-600 mt-1'}>
-                        {new Date(activity.timestamp).toLocaleString()}
-                      </p>
-                    </div>
+        {/* Second Row - More Reports */}
+        {reports && (
+          <div className="mb-8">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Top Students */}
+              <div className={isDarkMode
+                ? 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6'
+                : 'bg-white border border-gray-200 rounded-2xl p-6'
+              }>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl">
+                    <Users className="h-5 w-5 text-white" />
                   </div>
-                ))}
+                  <h4 className={isDarkMode ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-gray-900'}>
+                    Top Students
+                  </h4>
+                </div>
+                <div className="space-y-3">
+                  {reports.topStudents?.slice(0, 5).map((student, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={isDarkMode ? 'text-gray-500 font-bold' : 'text-gray-400 font-bold'}>
+                          #{index + 1}
+                        </div>
+                        <div>
+                          <p className={isDarkMode ? 'text-white font-medium' : 'text-gray-900 font-medium'}>
+                            {student.studentName}
+                          </p>
+                          <p className={isDarkMode ? 'text-xs text-gray-400' : 'text-xs text-gray-600'}>
+                            {student.applicationCount} applications · {student.acceptedCount} accepted
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Internship Status */}
+              <div className={isDarkMode
+                ? 'bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6'
+                : 'bg-white border border-gray-200 rounded-2xl p-6'
+              }>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl">
+                    <BarChart3 className="h-5 w-5 text-white" />
+                  </div>
+                  <h4 className={isDarkMode ? 'text-lg font-semibold text-white' : 'text-lg font-semibold text-gray-900'}>
+                    Internship Status
+                  </h4>
+                </div>
+                <div className="space-y-3">
+                  {reports.internshipsByStatus && reports.internshipsByStatus.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`h-3 w-3 rounded-full ${
+                          item.status === 'Active' ? 'bg-green-400' : 'bg-gray-400'
+                        }`}></div>
+                        <span className={isDarkMode ? 'text-white font-medium' : 'text-gray-700'}>{item.status}</span>
+                      </div>
+                      <span className={isDarkMode ? 'text-white font-bold text-lg' : 'text-gray-900 font-semibold'}>
+                        {item.count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -492,7 +562,7 @@ export default function AdminDashboard() {
               ) : (
                 bannedUsers.map((ban) => (
                   <div
-                    key={ban.banID}
+                    key={ban.banId}
                     className={isDarkMode
                       ? 'bg-white/5 border border-white/10 rounded-xl p-5'
                       : 'bg-gray-50 border border-gray-200 rounded-xl p-5'
@@ -520,12 +590,12 @@ export default function AdminDashboard() {
                           </p>
                         )}
                         <p className={isDarkMode ? 'text-xs text-gray-600 mt-1' : 'text-xs text-gray-500 mt-1'}>
-                          Banned on: {new Date(ban.bannedAt).toLocaleDateString()}
+                          Banned on: {formatDate(ban.bannedAt)}
                         </p>
                       </div>
                       <button
                         onClick={() => handleUnbanUser(
-                          ban.userType === 'Student' ? ban.studentID : ban.companyID,
+                          ban.userId,
                           ban.userType,
                           ban.userName
                         )}
