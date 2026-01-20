@@ -107,7 +107,7 @@ export default function CompanyDashboard() {
 
     const loadingToast = toast.loading('Banning student...');
     try {
-      await companyAPI.banStudent(studentId);
+      await companyAPI.banStudent(studentId, reason);
       toast.dismiss(loadingToast);
       toast.success(`${studentName} has been banned from your internships`);
       loadData();
@@ -739,7 +739,7 @@ export default function CompanyDashboard() {
                     <div className="flex items-center space-x-2 text-sm mb-4">
                       <Calendar className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
                       <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-                        Applied: {new Date(application.appliedDate).toLocaleDateString()}
+                        Applied: {new Date(application.appliedAt).toLocaleDateString()}
                       </span>
                     </div>
 
@@ -835,7 +835,7 @@ export default function CompanyDashboard() {
               ) : (
                 bannedStudents.map((ban) => (
                   <div
-                    key={ban.banID}
+                    key={ban.banId}
                     className={isDarkMode
                       ? 'bg-white/5 border border-white/10 rounded-xl p-5'
                       : 'bg-gray-50 border border-gray-200 rounded-xl p-5'
@@ -846,7 +846,7 @@ export default function CompanyDashboard() {
                           {ban.studentName}
                         </h3>
                         <p className={isDarkMode ? 'text-sm text-gray-400 mb-2' : 'text-sm text-gray-600 mb-2'}>
-                          {ban.email}
+                          {ban.studentEmail}
                         </p>
                         {ban.reason && (
                           <p className={isDarkMode ? 'text-sm text-gray-500' : 'text-sm text-gray-500'}>
@@ -858,7 +858,7 @@ export default function CompanyDashboard() {
                         </p>
                       </div>
                       <button
-                        onClick={() => handleUnbanStudent(ban.studentID, ban.studentName)}
+                        onClick={() => handleUnbanStudent(ban.studentId, ban.studentName)}
                         className={isDarkMode
                           ? 'px-4 py-2 bg-white/5 border border-white/10 text-white rounded-lg hover:bg-white/10 transition-all text-sm'
                           : 'px-4 py-2 bg-gray-100 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-200 transition-all text-sm'

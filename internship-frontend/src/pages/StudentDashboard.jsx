@@ -350,12 +350,6 @@ export default function StudentDashboard() {
                           {internship.location}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-2 text-sm">
-                        <Calendar className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-                        <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-                          {internship.duration} | Deadline: {new Date(internship.applicationDeadline).toLocaleDateString()}
-                        </span>
-                      </div>
                     </div>
 
                     <button
@@ -411,7 +405,7 @@ export default function StudentDashboard() {
                       <div className="flex items-center space-x-2 text-sm">
                         <Calendar className={`h-4 w-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
                         <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-                          Applied: {new Date(application.appliedDate).toLocaleDateString()}
+                          Applied: {new Date(application.appliedAt).toLocaleDateString()}
                         </span>
                       </div>
                       {application.resumePath && (
