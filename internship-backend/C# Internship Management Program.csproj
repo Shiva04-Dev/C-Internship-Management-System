@@ -4,8 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-	  <AssemblyName>InternshipManagementProgram</AssemblyName>
-	  <RootNamespace>InternshipManagementProgram</RootNamespace>
+    <RootNamespace>C__Internship_Management_Program</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
