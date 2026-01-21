@@ -6,15 +6,28 @@ using System.Text;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Services;
 using C__Internship_Management_Program.Seeders;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
 
-// Register ApplicationDbContext with SQL Server
+// Auto-detect database type based on connection string
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (connectionString != null && (connectionString.Contains("PostgreSQL") ||
+        connectionString.Contains("postgres") ||
+        connectionString.Contains("@") && connectionString.Contains("railway.app")))
+    {
+        options.UseNpgsql(connectionString); // Railway
+    }
+    else
+    {
+        options.UseSqlServer(connectionString); // Local
+    }
+});
 
 // Register Services
 builder.Services.AddScoped<IJwtService, JwtService>();
