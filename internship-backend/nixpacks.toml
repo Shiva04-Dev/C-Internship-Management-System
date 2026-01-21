@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["dotnet-sdk_8"]
+
+[phases.install]
+cmds = ["dotnet restore \"C# Internship Management Program.csproj\""]
+
+[phases.build]
+cmds = ["dotnet publish \"C# Internship Management Program.csproj\" --no-restore -c Release -o out"]
+
+[start]
+cmd = "dotnet out/C# Internship Management Program.dll"
