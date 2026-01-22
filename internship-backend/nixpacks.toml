@@ -8,4 +8,4 @@ cmds = ["dotnet restore \"C# Internship Management Program.csproj\""]
 cmds = ["dotnet publish \"C# Internship Management Program.csproj\" --no-restore -c Release -o out"]
 
 [start]
-cmd = "dotnet out/C# Internship Management Program.dll"
+cmd = "dotnet \"out/C# Internship Management Program.dll\""
