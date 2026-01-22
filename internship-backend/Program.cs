@@ -106,7 +106,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:3000",        //React dev server
             "http://localhost:5173",        //Vite dev server
-            "http://localhost:4200"
+            "http://localhost:4200",
+            "https://*.vercel.app"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -116,24 +117,29 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Seed the database with demo data
-using (var scope = app.Services.CreateScope())
+// Auto-run migrations and seed in production
+if (app.Environment.IsProduction())
 {
-    var services = scope.ServiceProvider;
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
+        var services = scope.ServiceProvider;
+        try
+        {
+            var context = services.GetRequiredService<ApplicationDbContext>();
 
-        // Ensure database is created
-        context.Database.EnsureCreated();
+            // Apply migrations
+            context.Database.Migrate();
 
-        // Seed demo data
-        await DatabaseSeeder.SeedData(context);
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+            // Seed demo data
+            await DatabaseSeeder.SeedData(context);
+
+            Console.WriteLine("Database migrations and seeding completed!");
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "Error during database setup");
+        }
     }
 }
 
