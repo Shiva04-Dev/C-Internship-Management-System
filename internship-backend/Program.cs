@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -14,29 +15,41 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // Auto-detect database type based on connection string
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+string connectionString;
+
+if (builder.Environment.IsProduction())
 {
-    if (connectionString != null && (connectionString.Contains("PostgreSQL") ||
-        connectionString.Contains("postgres") ||
-        connectionString.Contains("@") && connectionString.Contains("railway.app")))
-    {
-        options.UseNpgsql(connectionString); // Railway
-    }
-    else
-    {
-        options.UseSqlServer(connectionString); // Local
-    }
-});
+    // Railway provides DATABASE_URL environment variable
+    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    connectionString = ConvertPostgresUrlToConnectionString(databaseUrl);
+
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(connectionString));
+}
+else
+{
+    // Local development - use appsettings.json
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseSqlServer(connectionString));
+}
 
 // Register Services
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthenService, AuthenService>();
 
 // Configure JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"];
-var jwtIssuer = builder.Configuration["Jwt:Issuer"];
-var jwtAudience = builder.Configuration["Jwt:Audience"];
+var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
+    ?? builder.Configuration["Jwt:Key"];
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+    ?? builder.Configuration["Jwt:Issuer"];
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+    ?? builder.Configuration["Jwt:Audience"];
+
+if (string.IsNullOrEmpty(jwtKey))
+{
+    throw new InvalidOperationException("JWT Key is not configured!");
+}
 
 builder.Services.AddAuthentication(options =>
 {
@@ -93,7 +106,7 @@ builder.Services.AddSwaggerGen(options =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
 });
@@ -115,52 +128,97 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
-// Auto-run migrations and seed in production
-if (app.Environment.IsProduction())
+app.UseForwardedHeaders();
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    using (var scope = app.Services.CreateScope())
-    {
-        var services = scope.ServiceProvider;
-        try
-        {
-            var context = services.GetRequiredService<ApplicationDbContext>();
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Internship Management API v1");
+    c.RoutePrefix = "swagger";
+});
 
-            // Apply migrations
-            context.Database.Migrate();
-
-            // Seed demo data
-            await DatabaseSeeder.SeedData(context);
-
-            Console.WriteLine("Database migrations and seeding completed!");
-        }
-        catch (Exception ex)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "Error during database setup");
-        }
-    }
-}
-
-// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
-
-// IMPORTANT: Order matters! Authentication must come before Authorization
 app.UseCors("AllowFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-Console.WriteLine("\n Internship Management API is running!");
-Console.WriteLine("Swagger UI: https://localhost:7179/swagger");
-Console.WriteLine("API Base URL: https://localhost:7179/api");
+if (app.Environment.IsProduction())
+{
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+
+        logger.LogInformation("Applying database migrations...");
+        await context.Database.MigrateAsync();
+
+        logger.LogInformation("Seeding database...");
+        await DatabaseSeeder.SeedData(context);
+
+        logger.LogInformation("Database setup completed successfully!");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error during database setup");
+    }
+}
+
+var railwayUrl = Environment.GetEnvironmentVariable("RAILWAY_PUBLIC_DOMAIN");
+var baseUrl = !string.IsNullOrEmpty(railwayUrl)
+    ? $"https://{railwayUrl}"
+    : (app.Environment.IsDevelopment() ? "https://localhost:7179" : "http://localhost:8080");
+
+Console.WriteLine(" Internship Management API is running!");
+Console.WriteLine($" Environment: {app.Environment.EnvironmentName}");
+Console.WriteLine($" Swagger UI:  {baseUrl}/swagger");
+Console.WriteLine($" API Base:    {baseUrl}/api");
 
 app.Run();
+
+static string ConvertPostgresUrlToConnectionString(string? databaseUrl)
+{
+    if (string.IsNullOrEmpty(databaseUrl))
+    {
+        throw new InvalidOperationException(
+            "DATABASE_URL environment variable is not set. " +
+            "Make sure you have a PostgreSQL database attached in Railway.");
+    }
+
+    try
+    {
+        // Railway format: postgresql://username:password@host:port/database
+        // or: postgres://username:password@host:port/database
+        var uri = new Uri(databaseUrl);
+        var userInfo = uri.UserInfo.Split(':');
+        var username = userInfo[0];
+        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+        var host = uri.Host;
+        var port = uri.Port > 0 ? uri.Port : 5432;
+        var database = uri.AbsolutePath.TrimStart('/');
+
+        return $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+    }
+    catch (Exception ex)
+    {
+        throw new InvalidOperationException(
+            $"Failed to parse DATABASE_URL: {databaseUrl}. Error: {ex.Message}");
+    }
+}
