@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Briefcase, Mail, Lock, User, Building2, GraduationCap, Eye, EyeOff, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { Briefcase, Mail, Lock, User, Building2, GraduationCap, Eye, EyeOff, ArrowLeft, CheckCircle, XCircle, Phone, Globe } from 'lucide-react';
 import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -15,7 +15,9 @@ export default function RegisterPage() {
         confirmPassword: '',
         firstName: '',
         lastName: '',
+        phoneNumber: '',      // Added
         companyName: '',
+        website: '',          // Added
         university: '',
         degree: ''
     });
@@ -69,23 +71,35 @@ export default function RegisterPage() {
             return;
         }
 
+        // Validate phone number
+        if (!formData.phoneNumber.trim()) {
+            toast.error('Phone number is required');
+            return;
+        }
+
         setLoading(true);
 
         try {
+            // ✅ FIXED: Match the backend DTO field names exactly
             const registrationData = userType === 'student'
                 ? {
-                    email: formData.email,
-                    password: formData.password,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
+                    emailAddress: formData.email,
+                    password: formData.password,
+                    phoneNumber: formData.phoneNumber,
                     university: formData.university,
                     degree: formData.degree
                 }
                 : {
+                    companyName: formData.companyName,
                     email: formData.email,
                     password: formData.password,
-                    companyName: formData.companyName
+                    phoneNumber: formData.phoneNumber,
+                    website: formData.website || ''
                 };
+
+            console.log('Sending registration data:', registrationData); // Debug log
 
             if (userType === 'student') {
                 await authAPI.registerStudent(registrationData);
@@ -96,6 +110,7 @@ export default function RegisterPage() {
             toast.success('Account created successfully!');
             navigate(`/login?type=${userType}`);
         } catch (error) {
+            console.error('Registration error:', error.response?.data); // Debug log
             toast.error(error.response?.data?.message || 'Registration failed');
         } finally {
             setLoading(false);
@@ -170,30 +185,50 @@ export default function RegisterPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                                            First Name
+                                            First Name *
                                         </label>
                                         <input
                                             type="text"
                                             name="firstName"
                                             value={formData.firstName}
                                             onChange={handleChange}
-                                            placeholder="Shiva"
+                                            placeholder="John"
                                             required
                                             className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                                            Last Name
+                                            Last Name *
                                         </label>
                                         <input
                                             type="text"
                                             name="lastName"
                                             value={formData.lastName}
                                             onChange={handleChange}
-                                            placeholder="Nagadan"
+                                            placeholder="Doe"
                                             required
                                             className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Phone Number - NEW REQUIRED FIELD */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Phone Number *
+                                    </label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                                        <input
+                                            type="tel"
+                                            name="phoneNumber"
+                                            value={formData.phoneNumber}
+                                            onChange={handleChange}
+                                            placeholder="+27-82-123-4567"
+                                            required
+                                            maxLength={15}
+                                            className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                         />
                                     </div>
                                 </div>
@@ -208,7 +243,6 @@ export default function RegisterPage() {
                                         value={formData.university}
                                         onChange={handleChange}
                                         placeholder="Your University"
-                                        required
                                         className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                     />
                                 </div>
@@ -223,7 +257,6 @@ export default function RegisterPage() {
                                         value={formData.degree}
                                         onChange={handleChange}
                                         placeholder="Computer Science"
-                                        required
                                         className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                     />
                                 </div>
@@ -232,29 +265,69 @@ export default function RegisterPage() {
 
                         {/* Company Fields */}
                         {userType === 'company' && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Company Name
-                                </label>
-                                <div className="relative">
-                                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                                    <input
-                                        type="text"
-                                        name="companyName"
-                                        value={formData.companyName}
-                                        onChange={handleChange}
-                                        placeholder="Your Company"
-                                        required
-                                        className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                    />
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Company Name *
+                                    </label>
+                                    <div className="relative">
+                                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                                        <input
+                                            type="text"
+                                            name="companyName"
+                                            value={formData.companyName}
+                                            onChange={handleChange}
+                                            placeholder="Your Company"
+                                            required
+                                            className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+
+                                {/* Phone Number - NEW REQUIRED FIELD */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Phone Number *
+                                    </label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                                        <input
+                                            type="tel"
+                                            name="phoneNumber"
+                                            value={formData.phoneNumber}
+                                            onChange={handleChange}
+                                            placeholder="+27-11-123-4567"
+                                            required
+                                            maxLength={15}
+                                            className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Website - OPTIONAL FIELD */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Website
+                                    </label>
+                                    <div className="relative">
+                                        <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                                        <input
+                                            type="url"
+                                            name="website"
+                                            value={formData.website}
+                                            onChange={handleChange}
+                                            placeholder="https://yourcompany.com"
+                                            className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                        />
+                                    </div>
+                                </div>
+                            </>
                         )}
 
                         {/* Email */}
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Email Address
+                                Email Address *
                             </label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
@@ -273,7 +346,7 @@ export default function RegisterPage() {
                         {/* Password */}
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Password
+                                Password *
                             </label>
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
@@ -333,7 +406,7 @@ export default function RegisterPage() {
                         {/* Confirm Password */}
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Confirm Password
+                                Confirm Password *
                             </label>
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
