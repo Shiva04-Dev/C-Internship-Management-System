@@ -23,7 +23,7 @@ if (builder.Environment.IsProduction())
     connectionString = ConvertPostgresUrlToConnectionString(databaseUrl);
     usePostgres = true;
 
-    Console.WriteLine("? Using PostgreSQL (Railway)");
+    Console.WriteLine("Using PostgreSQL (Railway)");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(connectionString));
 }
@@ -31,7 +31,7 @@ else
 {
     connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
 
-    Console.WriteLine("? Using SQL Server (Local)");
+    Console.WriteLine("Using SQL Server (Local)");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(connectionString));
 }
@@ -164,7 +164,6 @@ app.MapGet("/", () => Results.Ok(new
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
-// ============ DATABASE SETUP ============
 Console.WriteLine("\n" + new string('=', 60));
 Console.WriteLine("  DATABASE SETUP");
 Console.WriteLine(new string('=', 60));
@@ -177,39 +176,34 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        // Step 1: Test connection
-        logger.LogInformation("?? Step 1: Testing database connection...");
+        logger.LogInformation("Testing database connection...");
         if (!await context.Database.CanConnectAsync())
         {
             throw new Exception("Cannot connect to database");
         }
-        logger.LogInformation("   ? Connection successful!");
+        logger.LogInformation("Connection successful!");
 
-        // Step 2: Drop all tables (fresh start)
-        logger.LogInformation("???  Step 2: Dropping existing tables...");
+        logger.LogInformation("Dropping existing tables...");
         await context.Database.EnsureDeletedAsync();
-        logger.LogInformation("   ? Database cleared!");
+        logger.LogInformation("Database cleared!");
 
-        // Step 3: Create tables from models
-        logger.LogInformation("?? Step 3: Creating tables from models...");
+        logger.LogInformation("Creating tables from models...");
         await context.Database.EnsureCreatedAsync();
-        logger.LogInformation("   ? Tables created!");
+        logger.LogInformation("Tables created!");
 
-        // Step 4: Verify tables
-        logger.LogInformation("?? Step 4: Verifying tables...");
+        logger.LogInformation("Verifying tables...");
 
-        // Quick verification queries
         var adminCount = await context.Admins.CountAsync();
         var studentCount = await context.Students.CountAsync();
         var companyCount = await context.Companies.CountAsync();
         var internshipCount = await context.Internships.CountAsync();
 
-        logger.LogInformation("   ? All tables verified!");
+        logger.LogInformation("All tables verified!");
 
-        // Step 5: Seed data
-        logger.LogInformation("?? Step 5: Seeding demo data...");
+        //Seed data
+        logger.LogInformation("Seeding demo data...");
         await DatabaseSeeder.SeedData(context);
-        logger.LogInformation("   ? Seeding complete!");
+        logger.LogInformation("Seeding complete!");
 
         // Final counts
         adminCount = await context.Admins.CountAsync();
@@ -218,18 +212,18 @@ using (var scope = app.Services.CreateScope())
         internshipCount = await context.Internships.CountAsync();
         var applicationCount = await context.Applications.CountAsync();
 
-        logger.LogInformation("?? Final counts:");
+        logger.LogInformation("   Final counts:");
         logger.LogInformation("   Admins: {Count}", adminCount);
         logger.LogInformation("   Students: {Count}", studentCount);
         logger.LogInformation("   Companies: {Count}", companyCount);
         logger.LogInformation("   Internships: {Count}", internshipCount);
         logger.LogInformation("   Applications: {Count}", applicationCount);
 
-        Console.WriteLine("\n? DATABASE SETUP COMPLETED SUCCESSFULLY!");
+        Console.WriteLine("\n Database has been setup");
     }
     catch (Exception ex)
     {
-        logger.LogError("? DATABASE SETUP FAILED!");
+        logger.LogError("Database Setup failed");
         logger.LogError("   Error: {Message}", ex.Message);
         if (ex.InnerException != null)
         {
@@ -248,7 +242,7 @@ var baseUrl = !string.IsNullOrEmpty(railwayUrl)
     : (app.Environment.IsDevelopment() ? "https://localhost:7179" : "http://localhost:8080");
 
 Console.WriteLine(new string('=', 60));
-Console.WriteLine("  ?? Internship Management API is running!");
+Console.WriteLine("Internship Management API is running!");
 Console.WriteLine(new string('=', 60));
 Console.WriteLine($"  Environment:  {app.Environment.EnvironmentName}");
 Console.WriteLine($"  Database:     {(usePostgres ? "PostgreSQL" : "SQL Server")}");
@@ -257,31 +251,3 @@ Console.WriteLine($"  Health:       {baseUrl}/health");
 Console.WriteLine(new string('=', 60) + "\n");
 
 app.Run();
-
-// Helper method
-static string ConvertPostgresUrlToConnectionString(string? databaseUrl)
-{
-    if (string.IsNullOrEmpty(databaseUrl))
-    {
-        throw new InvalidOperationException(
-            "DATABASE_URL environment variable is not set. " +
-            "Make sure you have a PostgreSQL database attached in Railway.");
-    }
-
-    try
-    {
-        var uri = new Uri(databaseUrl);
-        var userInfo = uri.UserInfo.Split(':');
-        var username = userInfo[0];
-        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
-        var host = uri.Host;
-        var port = uri.Port > 0 ? uri.Port : 5432;
-        var database = uri.AbsolutePath.TrimStart('/');
-
-        return $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
-    }
-    catch (Exception ex)
-    {
-        throw new InvalidOperationException($"Failed to parse DATABASE_URL. Error: {ex.Message}");
-    }
-}
