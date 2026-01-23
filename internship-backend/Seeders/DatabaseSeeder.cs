@@ -9,11 +9,17 @@ namespace C__Internship_Management_Program.Seeders
     {
         public static async Task SeedData(ApplicationDbContext context)
         {
-            var canConnect = await context.Database.CanConnectAsync();
-            if (!canConnect)
+            try
             {
-                Console.WriteLine("?? Cannot connect to database, skipping seeding");
-                return;
+                if (await context.Students.AnyAsync())
+                {
+                    Console.WriteLine("Database already seeded, skipping");
+                    return;
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Fresh database, proceeding with seeding...");
             }
 
             Console.WriteLine("Seeding database with demo data...");
