@@ -7,32 +7,31 @@ using System.Text;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Services;
 using C__Internship_Management_Program.Seeders;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
 
-// Auto-detect database type based on connection string
+// Database configuration
 string connectionString;
+bool usePostgres = false;
 
 if (builder.Environment.IsProduction())
 {
-    // Railway provides DATABASE_URL environment variable
     var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
     connectionString = ConvertPostgresUrlToConnectionString(databaseUrl);
+    usePostgres = true;
 
-    Console.WriteLine("Using PostgreSQL (Railway)");
+    Console.WriteLine("? Using PostgreSQL (Railway)");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(connectionString));
 }
 else
 {
-    // Local development - use appsettings.json
     connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
 
-    Console.WriteLine("Using SQL Server (Local)");
+    Console.WriteLine("? Using SQL Server (Local)");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(connectionString));
 }
@@ -43,16 +42,16 @@ builder.Services.AddScoped<IAuthenService, AuthenService>();
 
 // Configure JWT Authentication
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
-    ?? builder.Configuration["Jwt:Key"];
-var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
-    ?? builder.Configuration["Jwt:Issuer"];
-var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
-    ?? builder.Configuration["Jwt:Audience"];
+    ?? builder.Configuration["Jwt:Key"]
+    ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!";
 
-if (string.IsNullOrEmpty(jwtKey))
-{
-    throw new InvalidOperationException("JWT Key is not configured!");
-}
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+    ?? builder.Configuration["Jwt:Issuer"]
+    ?? "InternshipManagementAPI";
+
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+    ?? builder.Configuration["Jwt:Audience"]
+    ?? "InternshipManagementClient";
 
 builder.Services.AddAuthentication(options =>
 {
@@ -70,13 +69,13 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-        ClockSkew = TimeSpan.Zero // Remove default 5 minute tolerance
+        ClockSkew = TimeSpan.Zero
     };
 });
 
 builder.Services.AddAuthorization();
 
-// Configure Swagger/OpenAPI with JWT support
+// Configure Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -87,7 +86,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "API for managing internships, students, and companies"
     });
 
-    // Add JWT Authentication to Swagger
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -95,7 +93,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Enter 'Bearer' [space] and then your valid token"
+        Description = "Enter your JWT token"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -117,29 +115,15 @@ builder.Services.AddSwaggerGen(options =>
 // Configure CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins(
-            "http://localhost:3000",        // React dev server
-            "http://localhost:5173",        // Vite dev server
-            "http://localhost:4200"         // Angular dev server
-            )
-            .SetIsOriginAllowedToAllowWildcardSubdomains()
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-
-        // Also allow Vercel deployments
-        policy.SetIsOriginAllowed(origin =>
-        {
-            return origin.Contains("localhost") ||
-                   origin.Contains("vercel.app") ||
-                   origin.Contains("railway.app");
-        });
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
-// Configure forwarded headers for Railway reverse proxy
+// Configure forwarded headers
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -149,10 +133,9 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 var app = builder.Build();
 
-// Use forwarded headers (Railway uses a reverse proxy)
+// Middleware
 app.UseForwardedHeaders();
 
-// Always enable Swagger (useful for production debugging)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -160,64 +143,122 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-// Only use HTTPS redirection in development
 if (app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
 
-// CORS must come before Authentication/Authorization
-app.UseCors("AllowFrontend");
-
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
-// Database setup for production
-if (app.Environment.IsProduction())
+// Health check endpoints
+app.MapGet("/", () => Results.Ok(new
 {
-    using var scope = app.Services.CreateScope();
+    status = "running",
+    message = "Internship Management API",
+    swagger = "/swagger",
+    timestamp = DateTime.UtcNow
+}));
+
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
+
+// ============ DATABASE SETUP ============
+Console.WriteLine("\n" + new string('=', 60));
+Console.WriteLine("  DATABASE SETUP");
+Console.WriteLine(new string('=', 60));
+
+using (var scope = app.Services.CreateScope())
+{
     var services = scope.ServiceProvider;
     var logger = services.GetRequiredService<ILogger<Program>>();
+    var context = services.GetRequiredService<ApplicationDbContext>();
 
     try
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
+        // Step 1: Test connection
+        logger.LogInformation("?? Step 1: Testing database connection...");
+        if (!await context.Database.CanConnectAsync())
+        {
+            throw new Exception("Cannot connect to database");
+        }
+        logger.LogInformation("   ? Connection successful!");
 
-        logger.LogInformation("Creating database and tables...");
+        // Step 2: Drop all tables (fresh start)
+        logger.LogInformation("???  Step 2: Dropping existing tables...");
+        await context.Database.EnsureDeletedAsync();
+        logger.LogInformation("   ? Database cleared!");
 
+        // Step 3: Create tables from models
+        logger.LogInformation("?? Step 3: Creating tables from models...");
         await context.Database.EnsureCreatedAsync();
+        logger.LogInformation("   ? Tables created!");
 
-        logger.LogInformation("Seeding database with demo data...");
+        // Step 4: Verify tables
+        logger.LogInformation("?? Step 4: Verifying tables...");
+
+        // Quick verification queries
+        var adminCount = await context.Admins.CountAsync();
+        var studentCount = await context.Students.CountAsync();
+        var companyCount = await context.Companies.CountAsync();
+        var internshipCount = await context.Internships.CountAsync();
+
+        logger.LogInformation("   ? All tables verified!");
+
+        // Step 5: Seed data
+        logger.LogInformation("?? Step 5: Seeding demo data...");
         await DatabaseSeeder.SeedData(context);
+        logger.LogInformation("   ? Seeding complete!");
 
-        logger.LogInformation("Database setup completed successfully!");
+        // Final counts
+        adminCount = await context.Admins.CountAsync();
+        studentCount = await context.Students.CountAsync();
+        companyCount = await context.Companies.CountAsync();
+        internshipCount = await context.Internships.CountAsync();
+        var applicationCount = await context.Applications.CountAsync();
+
+        logger.LogInformation("?? Final counts:");
+        logger.LogInformation("   Admins: {Count}", adminCount);
+        logger.LogInformation("   Students: {Count}", studentCount);
+        logger.LogInformation("   Companies: {Count}", companyCount);
+        logger.LogInformation("   Internships: {Count}", internshipCount);
+        logger.LogInformation("   Applications: {Count}", applicationCount);
+
+        Console.WriteLine("\n? DATABASE SETUP COMPLETED SUCCESSFULLY!");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Error during database setup");
-        // Don't throw - let the app start anyway so we can see errors in logs
+        logger.LogError("? DATABASE SETUP FAILED!");
+        logger.LogError("   Error: {Message}", ex.Message);
+        if (ex.InnerException != null)
+        {
+            logger.LogError("   Inner: {Inner}", ex.InnerException.Message);
+        }
+        logger.LogError("   Stack: {Stack}", ex.StackTrace);
     }
 }
 
-// Display startup information
+Console.WriteLine(new string('=', 60) + "\n");
+
+// Startup info
 var railwayUrl = Environment.GetEnvironmentVariable("RAILWAY_PUBLIC_DOMAIN");
 var baseUrl = !string.IsNullOrEmpty(railwayUrl)
     ? $"https://{railwayUrl}"
     : (app.Environment.IsDevelopment() ? "https://localhost:7179" : "http://localhost:8080");
 
-Console.WriteLine("\n" + new string('=', 60));
-Console.WriteLine("Internship Management API is running!");
 Console.WriteLine(new string('=', 60));
-Console.WriteLine($"Environment:  {app.Environment.EnvironmentName}");
-Console.WriteLine($"Swagger UI:   {baseUrl}/swagger");
-Console.WriteLine($"API Base:     {baseUrl}/api");
+Console.WriteLine("  ?? Internship Management API is running!");
+Console.WriteLine(new string('=', 60));
+Console.WriteLine($"  Environment:  {app.Environment.EnvironmentName}");
+Console.WriteLine($"  Database:     {(usePostgres ? "PostgreSQL" : "SQL Server")}");
+Console.WriteLine($"  Swagger UI:   {baseUrl}/swagger");
+Console.WriteLine($"  Health:       {baseUrl}/health");
 Console.WriteLine(new string('=', 60) + "\n");
 
 app.Run();
 
-// Helper method to convert Railway DATABASE_URL to connection string
+// Helper method
 static string ConvertPostgresUrlToConnectionString(string? databaseUrl)
 {
     if (string.IsNullOrEmpty(databaseUrl))
@@ -229,8 +270,6 @@ static string ConvertPostgresUrlToConnectionString(string? databaseUrl)
 
     try
     {
-        // Railway format: postgresql://username:password@host:port/database
-        // or: postgres://username:password@host:port/database
         var uri = new Uri(databaseUrl);
         var userInfo = uri.UserInfo.Split(':');
         var username = userInfo[0];
@@ -243,7 +282,6 @@ static string ConvertPostgresUrlToConnectionString(string? databaseUrl)
     }
     catch (Exception ex)
     {
-        throw new InvalidOperationException(
-            $"Failed to parse DATABASE_URL: {databaseUrl}. Error: {ex.Message}");
+        throw new InvalidOperationException($"Failed to parse DATABASE_URL. Error: {ex.Message}");
     }
 }
