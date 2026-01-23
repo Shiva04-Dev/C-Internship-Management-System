@@ -185,20 +185,18 @@ if (app.Environment.IsProduction())
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
 
-        logger.LogInformation("?? Creating database and tables...");
+        logger.LogInformation("Creating database and tables...");
 
-        // Use EnsureCreated instead of Migrate - creates tables from models
-        // This avoids SQL Server vs PostgreSQL migration compatibility issues
         await context.Database.EnsureCreatedAsync();
 
-        logger.LogInformation("?? Seeding database with demo data...");
+        logger.LogInformation("Seeding database with demo data...");
         await DatabaseSeeder.SeedData(context);
 
-        logger.LogInformation("? Database setup completed successfully!");
+        logger.LogInformation("Database setup completed successfully!");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "? Error during database setup");
+        logger.LogError(ex, "Error during database setup");
         // Don't throw - let the app start anyway so we can see errors in logs
     }
 }

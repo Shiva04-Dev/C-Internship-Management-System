@@ -1,6 +1,7 @@
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Models;
 using BCrypt.Net;
+using Microsoft.EntityFrameworkCore;
 
 namespace C__Internship_Management_Program.Seeders
 {
@@ -8,10 +9,10 @@ namespace C__Internship_Management_Program.Seeders
     {
         public static async Task SeedData(ApplicationDbContext context)
         {
-            // Check if data already exists
-            if (context.Students.Any() || context.Companies.Any() || context.Admins.Any())
+            var canConnect = await context.Database.CanConnectAsync();
+            if (!canConnect)
             {
-                Console.WriteLine("Database already seeded.");
+                Console.WriteLine("?? Cannot connect to database, skipping seeding");
                 return;
             }
 
