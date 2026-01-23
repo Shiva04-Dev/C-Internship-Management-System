@@ -23,6 +23,7 @@ if (builder.Environment.IsProduction())
     var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
     connectionString = ConvertPostgresUrlToConnectionString(databaseUrl);
 
+    Console.WriteLine("Using PostgreSQL (Railway)");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(connectionString));
 }
@@ -30,6 +31,8 @@ else
 {
     // Local development - use appsettings.json
     connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
+
+    Console.WriteLine("Using SQL Server (Local)");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(connectionString));
 }
@@ -117,17 +120,26 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
-            "http://localhost:3000",        //React dev server
-            "http://localhost:5173",        //Vite dev server
-            "http://localhost:4200",
-            "https://*.vercel.app"
+            "http://localhost:3000",        // React dev server
+            "http://localhost:5173",        // Vite dev server
+            "http://localhost:4200"         // Angular dev server
             )
+            .SetIsOriginAllowedToAllowWildcardSubdomains()
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
+
+        // Also allow Vercel deployments
+        policy.SetIsOriginAllowed(origin =>
+        {
+            return origin.Contains("localhost") ||
+                   origin.Contains("vercel.app") ||
+                   origin.Contains("railway.app");
+        });
     });
 });
 
+// Configure forwarded headers for Railway reverse proxy
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -137,8 +149,10 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 var app = builder.Build();
 
+// Use forwarded headers (Railway uses a reverse proxy)
 app.UseForwardedHeaders();
 
+// Always enable Swagger (useful for production debugging)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -146,11 +160,13 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
+// Only use HTTPS redirection in development
 if (app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
 
+// CORS must come before Authentication/Authorization
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
@@ -158,41 +174,52 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Database setup for production
 if (app.Environment.IsProduction())
 {
     using var scope = app.Services.CreateScope();
     var services = scope.ServiceProvider;
     var logger = services.GetRequiredService<ILogger<Program>>();
+
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
 
-        logger.LogInformation("Applying database migrations...");
-        await context.Database.MigrateAsync();
+        logger.LogInformation("?? Creating database and tables...");
 
-        logger.LogInformation("Seeding database...");
+        // Use EnsureCreated instead of Migrate - creates tables from models
+        // This avoids SQL Server vs PostgreSQL migration compatibility issues
+        await context.Database.EnsureCreatedAsync();
+
+        logger.LogInformation("?? Seeding database with demo data...");
         await DatabaseSeeder.SeedData(context);
 
-        logger.LogInformation("Database setup completed successfully!");
+        logger.LogInformation("? Database setup completed successfully!");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Error during database setup");
+        logger.LogError(ex, "? Error during database setup");
+        // Don't throw - let the app start anyway so we can see errors in logs
     }
 }
 
+// Display startup information
 var railwayUrl = Environment.GetEnvironmentVariable("RAILWAY_PUBLIC_DOMAIN");
 var baseUrl = !string.IsNullOrEmpty(railwayUrl)
     ? $"https://{railwayUrl}"
     : (app.Environment.IsDevelopment() ? "https://localhost:7179" : "http://localhost:8080");
 
-Console.WriteLine(" Internship Management API is running!");
-Console.WriteLine($" Environment: {app.Environment.EnvironmentName}");
-Console.WriteLine($" Swagger UI:  {baseUrl}/swagger");
-Console.WriteLine($" API Base:    {baseUrl}/api");
+Console.WriteLine("\n" + new string('=', 60));
+Console.WriteLine("Internship Management API is running!");
+Console.WriteLine(new string('=', 60));
+Console.WriteLine($"Environment:  {app.Environment.EnvironmentName}");
+Console.WriteLine($"Swagger UI:   {baseUrl}/swagger");
+Console.WriteLine($"API Base:     {baseUrl}/api");
+Console.WriteLine(new string('=', 60) + "\n");
 
 app.Run();
 
+// Helper method to convert Railway DATABASE_URL to connection string
 static string ConvertPostgresUrlToConnectionString(string? databaseUrl)
 {
     if (string.IsNullOrEmpty(databaseUrl))
