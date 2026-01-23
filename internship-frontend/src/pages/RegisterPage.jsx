@@ -177,7 +177,7 @@ export default function RegisterPage() {
                                             name="firstName"
                                             value={formData.firstName}
                                             onChange={handleChange}
-                                            placeholder="John"
+                                            placeholder="Shiva"
                                             required
                                             className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                         />
@@ -191,7 +191,7 @@ export default function RegisterPage() {
                                             name="lastName"
                                             value={formData.lastName}
                                             onChange={handleChange}
-                                            placeholder="Doe"
+                                            placeholder="Nagadan"
                                             required
                                             className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                         />
