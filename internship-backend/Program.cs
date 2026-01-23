@@ -183,10 +183,6 @@ using (var scope = app.Services.CreateScope())
         }
         logger.LogInformation("Connection successful!");
 
-        logger.LogInformation("Dropping existing tables...");
-        await context.Database.EnsureDeletedAsync();
-        logger.LogInformation("Database cleared!");
-
         logger.LogInformation("Creating tables from models...");
         await context.Database.EnsureCreatedAsync();
         logger.LogInformation("Tables created!");
@@ -251,3 +247,23 @@ Console.WriteLine($"  Health:       {baseUrl}/health");
 Console.WriteLine(new string('=', 60) + "\n");
 
 app.Run();
+
+static string ConvertPostgresUrlToConnectionString(string? databaseUrl)
+{
+    if (string.IsNullOrEmpty(databaseUrl))
+    {
+        throw new InvalidOperationException(
+            "DATABASE_URL environment variable is not set. " +
+            "Make sure you have a PostgreSQL database attached in Railway.");
+    }
+
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+    var username = userInfo[0];
+    var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+    var host = uri.Host;
+    var port = uri.Port > 0 ? uri.Port : 5432;
+    var database = uri.AbsolutePath.TrimStart('/');
+
+    return $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+}
