@@ -21,7 +21,7 @@ export default function LandingPage() {
                                 <Briefcase className="h-10 w-10 text-blue-400" />
                                 <div className="absolute inset-0 bg-blue-400 blur-xl opacity-50"></div>
                             </div>
-                            <span className="text-3xl font-bold text-white tracking-tight">InternHub</span>
+                            <span className="text-3xl font-bold text-white tracking-tight">IMS</span>
                         </div>
                         <div className="flex items-center space-x-4">
                             <Link
@@ -42,7 +42,7 @@ export default function LandingPage() {
                         </div>
                         
                         <h1 className="text-7xl md:text-8xl font-bold text-white mb-8 leading-tight">
-                            Welcome.
+                            Helping You.
                         </h1>
                         
                         <p className="text-2xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
