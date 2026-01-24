@@ -200,7 +200,7 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <h1 className={isDarkMode ? 'text-xl font-bold text-white' : 'text-xl font-bold text-gray-900'}>
-                  InternHub
+                  IMS
                 </h1>
                 <p className={isDarkMode ? 'text-xs text-gray-500' : 'text-xs text-gray-600'}>
                   Admin Dashboard

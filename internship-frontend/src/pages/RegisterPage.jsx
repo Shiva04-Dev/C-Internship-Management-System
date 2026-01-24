@@ -145,10 +145,9 @@ export default function RegisterPage() {
                                 <Briefcase className="h-12 w-12 text-blue-400" />
                                 <div className="absolute inset-0 bg-blue-400 blur-xl opacity-50"></div>
                             </div>
-                            <span className="text-3xl font-bold text-white">InternHub</span>
+                            <span className="text-3xl font-bold text-white">IMS</span>
                         </div>
                         <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-                        <p className="text-gray-400">Join thousands of users already on InternHub</p>
                     </div>
 
                     {/* User Type Selector */}

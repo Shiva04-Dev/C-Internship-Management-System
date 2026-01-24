@@ -165,7 +165,7 @@ export default function StudentDashboard() {
               </div>
               <div>
                 <h1 className={isDarkMode ? 'text-xl font-bold text-white' : 'text-xl font-bold text-gray-900'}>
-                  InternHub
+                  IMS
                 </h1>
                 <p className={isDarkMode ? 'text-xs text-gray-500' : 'text-xs text-gray-600'}>
                   Student Dashboard
@@ -392,10 +392,10 @@ export default function StudentDashboard() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <h3 className={isDarkMode ? 'font-semibold text-white text-lg mb-1' : 'font-semibold text-gray-900 text-lg mb-1'}>
-                          {application.internshipTitle}
+                          {application.internship?.title || 'Internship'}
                         </h3>
                         <p className={isDarkMode ? 'text-sm text-gray-400' : 'text-sm text-gray-600'}>
-                          {application.companyName}
+                          {application.internship?.companyName || 'Company'}
                         </p>
                       </div>
                       {getStatusBadge(application.status)}
