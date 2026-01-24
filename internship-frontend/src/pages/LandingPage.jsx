@@ -172,7 +172,6 @@ export default function LandingPage() {
                     <div className="max-w-4xl mx-auto text-center">
                         <div className="p-12 bg-gradient-to-r from-blue-500/10 to-purple-600/10 backdrop-blur-sm border border-white/10 rounded-3xl">
                             <h2 className="text-5xl font-bold text-white mb-6">Ready to Get Started?</h2>
-                            <p className="text-xl text-gray-400 mb-8">Join thousands of students and companies already using InternHub</p>
                             <Link
                                 to="/register"
                                 className="inline-flex items-center space-x-3 px-10 py-5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-semibold hover:shadow-xl hover:shadow-blue-500/50 transition-all hover:scale-105">
