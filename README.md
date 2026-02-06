@@ -18,6 +18,8 @@ Key Features
 
 💡 Scalable Architecture using ASP.NET Core MVC & Entity Framework Core
 
-Live App: [IMS](https://imsinternships.vercel.app)
 
-**LIVE APP WILL ONLY BE ONLINE FOR 24HRS UPON REQUEST(Backend Payment Restrctions)**
+
+**Live App: [IMS](https://imsinternships.vercel.app)**
+
+**LIVE APP WILL ONLY BE ONLINE FOR 24HRS UPON REQUEST THROUGH LINKEDIN(Backend Payment Restrctions)**
