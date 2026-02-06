@@ -20,6 +20,6 @@ Key Features
 
 
 
-**Live App: [IMS](https://imsinternships.vercel.app)**
+**LIVE APP: [IMS](https://imsinternships.vercel.app)**
 
 **LIVE APP WILL ONLY BE ONLINE FOR 24HRS UPON REQUEST THROUGH LINKEDIN(Backend Payment Restrctions)**
