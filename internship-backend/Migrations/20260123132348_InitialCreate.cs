@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -16,13 +15,13 @@ namespace C__Internship_Management_Program.Migrations
                 name: "Admins",
                 columns: table => new
                 {
-                    AdminID = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    FirstName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    LastName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Email = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    PasswordHash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    AdminID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -33,14 +32,14 @@ namespace C__Internship_Management_Program.Migrations
                 name: "Companies",
                 columns: table => new
                 {
-                    CompanyID = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CompanyName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Email = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    PasswordHash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    PhoneNumber = table.Column<string>(type: "character varying(15)", maxLength: 15, nullable: false),
-                    Website = table.Column<string>(type: "text", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CompanyID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CompanyName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
+                    Website = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -51,11 +50,11 @@ namespace C__Internship_Management_Program.Migrations
                 name: "Notifications",
                 columns: table => new
                 {
-                    NotificationID = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Message = table.Column<string>(type: "text", nullable: false),
-                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    NotificationID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -66,9 +65,9 @@ namespace C__Internship_Management_Program.Migrations
                 name: "Roles",
                 columns: table => new
                 {
-                    RoleID = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    RoleName = table.Column<string>(type: "text", nullable: false)
+                    RoleID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RoleName = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -79,16 +78,16 @@ namespace C__Internship_Management_Program.Migrations
                 name: "Students",
                 columns: table => new
                 {
-                    StudentID = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    FirstName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    LastName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Email = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    PasswordHash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    PhoneNumber = table.Column<string>(type: "character varying(15)", maxLength: 15, nullable: false),
-                    University = table.Column<string>(type: "text", nullable: false),
-                    Degree = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    StudentID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
+                    University = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Degree = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -99,17 +98,17 @@ namespace C__Internship_Management_Program.Migrations
                 name: "Internships",
                 columns: table => new
                 {
-                    InternshipID = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CompanyID = table.Column<int>(type: "integer", nullable: false),
-                    Title = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
-                    Location = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Requirements = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false),
-                    Status = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    InternshipID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CompanyID = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Location = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Requirements = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -126,8 +125,8 @@ namespace C__Internship_Management_Program.Migrations
                 name: "NotificationRoles",
                 columns: table => new
                 {
-                    NotificationID = table.Column<int>(type: "integer", nullable: false),
-                    RoleID = table.Column<int>(type: "integer", nullable: false)
+                    NotificationID = table.Column<int>(type: "int", nullable: false),
+                    RoleID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -150,12 +149,12 @@ namespace C__Internship_Management_Program.Migrations
                 name: "CompanyBans",
                 columns: table => new
                 {
-                    BanID = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CompanyID = table.Column<int>(type: "integer", nullable: false),
-                    StudentID = table.Column<int>(type: "integer", nullable: false),
-                    BannedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Reason = table.Column<string>(type: "text", nullable: false)
+                    BanID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CompanyID = table.Column<int>(type: "int", nullable: false),
+                    StudentID = table.Column<int>(type: "int", nullable: false),
+                    BannedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -178,17 +177,17 @@ namespace C__Internship_Management_Program.Migrations
                 name: "RefreshTokens",
                 columns: table => new
                 {
-                    RefreshTokenID = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Token = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    IsRevoked = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedByIP = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
-                    UserType = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    StudentID = table.Column<int>(type: "integer", nullable: true),
-                    CompanyID = table.Column<int>(type: "integer", nullable: true),
-                    AdminID = table.Column<int>(type: "integer", nullable: true)
+                    RefreshTokenID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Token = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsRevoked = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedByIP = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: true),
+                    UserType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    StudentID = table.Column<int>(type: "int", nullable: true),
+                    CompanyID = table.Column<int>(type: "int", nullable: true),
+                    AdminID = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -217,14 +216,14 @@ namespace C__Internship_Management_Program.Migrations
                 name: "UserBans",
                 columns: table => new
                 {
-                    BanID = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    UserType = table.Column<string>(type: "text", nullable: false),
-                    StudentID = table.Column<int>(type: "integer", nullable: true),
-                    CompanyID = table.Column<int>(type: "integer", nullable: true),
-                    BannedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Reason = table.Column<string>(type: "text", nullable: false),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                    BanID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StudentID = table.Column<int>(type: "int", nullable: true),
+                    CompanyID = table.Column<int>(type: "int", nullable: true),
+                    BannedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -245,14 +244,14 @@ namespace C__Internship_Management_Program.Migrations
                 name: "Applications",
                 columns: table => new
                 {
-                    ApplicationID = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    InternshipID = table.Column<int>(type: "integer", nullable: false),
-                    StudentID = table.Column<int>(type: "integer", nullable: false),
-                    Status = table.Column<string>(type: "text", nullable: false),
-                    AppliedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Resume = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false)
+                    ApplicationID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    InternshipID = table.Column<int>(type: "int", nullable: false),
+                    StudentID = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AppliedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Resume = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -275,13 +274,13 @@ namespace C__Internship_Management_Program.Migrations
                 name: "Feedbacks",
                 columns: table => new
                 {
-                    FeedbackID = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    InternshipID = table.Column<int>(type: "integer", nullable: false),
-                    StudentID = table.Column<int>(type: "integer", nullable: false),
-                    Rating = table.Column<int>(type: "integer", nullable: false),
-                    Comment = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    FeedbackID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    InternshipID = table.Column<int>(type: "int", nullable: false),
+                    StudentID = table.Column<int>(type: "int", nullable: false),
+                    Rating = table.Column<int>(type: "int", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -300,128 +299,40 @@ namespace C__Internship_Management_Program.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Admins_Email",
-                table: "Admins",
-                column: "Email",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Applications_InternshipID",
-                table: "Applications",
-                column: "InternshipID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Applications_StudentID",
-                table: "Applications",
-                column: "StudentID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Companies_Email",
-                table: "Companies",
-                column: "Email",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CompanyBans_CompanyID",
-                table: "CompanyBans",
-                column: "CompanyID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CompanyBans_StudentID",
-                table: "CompanyBans",
-                column: "StudentID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Feedbacks_InternshipID",
-                table: "Feedbacks",
-                column: "InternshipID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Feedbacks_StudentID",
-                table: "Feedbacks",
-                column: "StudentID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Internships_CompanyID",
-                table: "Internships",
-                column: "CompanyID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_NotificationRoles_RoleID",
-                table: "NotificationRoles",
-                column: "RoleID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RefreshTokens_AdminID",
-                table: "RefreshTokens",
-                column: "AdminID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RefreshTokens_CompanyID",
-                table: "RefreshTokens",
-                column: "CompanyID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RefreshTokens_StudentID",
-                table: "RefreshTokens",
-                column: "StudentID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Students_Email",
-                table: "Students",
-                column: "Email",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserBans_CompanyID",
-                table: "UserBans",
-                column: "CompanyID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserBans_StudentID",
-                table: "UserBans",
-                column: "StudentID");
+            // Indexes
+            migrationBuilder.CreateIndex(name: "IX_Admins_Email", table: "Admins", column: "Email", unique: true);
+            migrationBuilder.CreateIndex(name: "IX_Applications_InternshipID", table: "Applications", column: "InternshipID");
+            migrationBuilder.CreateIndex(name: "IX_Applications_StudentID", table: "Applications", column: "StudentID");
+            migrationBuilder.CreateIndex(name: "IX_Companies_Email", table: "Companies", column: "Email", unique: true);
+            migrationBuilder.CreateIndex(name: "IX_CompanyBans_CompanyID", table: "CompanyBans", column: "CompanyID");
+            migrationBuilder.CreateIndex(name: "IX_CompanyBans_StudentID", table: "CompanyBans", column: "StudentID");
+            migrationBuilder.CreateIndex(name: "IX_Feedbacks_InternshipID", table: "Feedbacks", column: "InternshipID");
+            migrationBuilder.CreateIndex(name: "IX_Feedbacks_StudentID", table: "Feedbacks", column: "StudentID");
+            migrationBuilder.CreateIndex(name: "IX_Internships_CompanyID", table: "Internships", column: "CompanyID");
+            migrationBuilder.CreateIndex(name: "IX_NotificationRoles_RoleID", table: "NotificationRoles", column: "RoleID");
+            migrationBuilder.CreateIndex(name: "IX_RefreshTokens_AdminID", table: "RefreshTokens", column: "AdminID");
+            migrationBuilder.CreateIndex(name: "IX_RefreshTokens_CompanyID", table: "RefreshTokens", column: "CompanyID");
+            migrationBuilder.CreateIndex(name: "IX_RefreshTokens_StudentID", table: "RefreshTokens", column: "StudentID");
+            migrationBuilder.CreateIndex(name: "IX_Students_Email", table: "Students", column: "Email", unique: true);
+            migrationBuilder.CreateIndex(name: "IX_UserBans_CompanyID", table: "UserBans", column: "CompanyID");
+            migrationBuilder.CreateIndex(name: "IX_UserBans_StudentID", table: "UserBans", column: "StudentID");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Applications");
-
-            migrationBuilder.DropTable(
-                name: "CompanyBans");
-
-            migrationBuilder.DropTable(
-                name: "Feedbacks");
-
-            migrationBuilder.DropTable(
-                name: "NotificationRoles");
-
-            migrationBuilder.DropTable(
-                name: "RefreshTokens");
-
-            migrationBuilder.DropTable(
-                name: "UserBans");
-
-            migrationBuilder.DropTable(
-                name: "Internships");
-
-            migrationBuilder.DropTable(
-                name: "Notifications");
-
-            migrationBuilder.DropTable(
-                name: "Roles");
-
-            migrationBuilder.DropTable(
-                name: "Admins");
-
-            migrationBuilder.DropTable(
-                name: "Students");
-
-            migrationBuilder.DropTable(
-                name: "Companies");
+            migrationBuilder.DropTable(name: "Applications");
+            migrationBuilder.DropTable(name: "CompanyBans");
+            migrationBuilder.DropTable(name: "Feedbacks");
+            migrationBuilder.DropTable(name: "NotificationRoles");
+            migrationBuilder.DropTable(name: "RefreshTokens");
+            migrationBuilder.DropTable(name: "UserBans");
+            migrationBuilder.DropTable(name: "Internships");
+            migrationBuilder.DropTable(name: "Notifications");
+            migrationBuilder.DropTable(name: "Roles");
+            migrationBuilder.DropTable(name: "Admins");
+            migrationBuilder.DropTable(name: "Students");
+            migrationBuilder.DropTable(name: "Companies");
         }
     }
 }
