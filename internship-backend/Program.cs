@@ -13,28 +13,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 
-// Database configuration
-string connectionString;
-bool usePostgres = false;
+// Database configuration - SQL Server only
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
 
-if (builder.Environment.IsProduction())
-{
-    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-    connectionString = ConvertPostgresUrlToConnectionString(databaseUrl);
-    usePostgres = true;
-
-    Console.WriteLine("Using PostgreSQL (Railway)");
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseNpgsql(connectionString));
-}
-else
-{
-    connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
-
-    Console.WriteLine("Using SQL Server (Local)");
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(connectionString));
-}
+Console.WriteLine("Using SQL Server");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 // Register Services
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -143,10 +127,7 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 app.UseAuthentication();
@@ -196,7 +177,7 @@ using (var scope = app.Services.CreateScope())
 
         logger.LogInformation("All tables verified!");
 
-        //Seed data
+        // Seed data
         logger.LogInformation("Seeding demo data...");
         await DatabaseSeeder.SeedData(context);
         logger.LogInformation("Seeding complete!");
@@ -231,39 +212,13 @@ using (var scope = app.Services.CreateScope())
 
 Console.WriteLine(new string('=', 60) + "\n");
 
-// Startup info
-var railwayUrl = Environment.GetEnvironmentVariable("RAILWAY_PUBLIC_DOMAIN");
-var baseUrl = !string.IsNullOrEmpty(railwayUrl)
-    ? $"https://{railwayUrl}"
-    : (app.Environment.IsDevelopment() ? "https://localhost:7179" : "http://localhost:8080");
-
 Console.WriteLine(new string('=', 60));
 Console.WriteLine("Internship Management API is running!");
 Console.WriteLine(new string('=', 60));
 Console.WriteLine($"  Environment:  {app.Environment.EnvironmentName}");
-Console.WriteLine($"  Database:     {(usePostgres ? "PostgreSQL" : "SQL Server")}");
-Console.WriteLine($"  Swagger UI:   {baseUrl}/swagger");
-Console.WriteLine($"  Health:       {baseUrl}/health");
+Console.WriteLine($"  Database:     SQL Server");
+Console.WriteLine($"  Swagger UI:   https://localhost:7179/swagger");
+Console.WriteLine($"  Health:       https://localhost:7179/health");
 Console.WriteLine(new string('=', 60) + "\n");
 
 app.Run();
-
-static string ConvertPostgresUrlToConnectionString(string? databaseUrl)
-{
-    if (string.IsNullOrEmpty(databaseUrl))
-    {
-        throw new InvalidOperationException(
-            "DATABASE_URL environment variable is not set. " +
-            "Make sure you have a PostgreSQL database attached in Railway.");
-    }
-
-    var uri = new Uri(databaseUrl);
-    var userInfo = uri.UserInfo.Split(':');
-    var username = userInfo[0];
-    var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
-    var host = uri.Host;
-    var port = uri.Port > 0 ? uri.Port : 5432;
-    var database = uri.AbsolutePath.TrimStart('/');
-
-    return $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
-}
