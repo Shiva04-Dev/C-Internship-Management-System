@@ -1,504 +1,232 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Briefcase, Mail, Lock, User, Building2, GraduationCap, Eye, EyeOff, ArrowLeft, CheckCircle, XCircle, Phone, Globe } from 'lucide-react';
+import { Briefcase, Mail, Lock, User, Building2, GraduationCap, Eye, EyeOff, ArrowLeft, CheckCircle, XCircle, Phone, Globe, Zap } from 'lucide-react';
 import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
-    const [searchParams] = useSearchParams();
-    const userType = searchParams.get('type') || 'student';
-    const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const userType = searchParams.get('type') || 'student';
+  const navigate = useNavigate();
 
-    const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-        confirmPassword: '',
-        firstName: '',
-        lastName: '',
-        phoneNumber: '',
-        companyName: '',
-        website: '',
-        university: '',
-        degree: ''
-    });
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '', password: '', confirmPassword: '',
+    firstName: '', lastName: '', phoneNumber: '',
+    companyName: '', website: '', university: '', degree: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    const passwordStrength = () => {
-        const password = formData.password;
-        let strength = 0;
-        if (password.length >= 8) strength++;
-        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-        if (/\d/.test(password)) strength++;
-        if (/[!@#$%^&*]/.test(password)) strength++;
-        return strength;
-    };
+  const passwordStrength = () => {
+    const p = formData.password;
+    let s = 0;
+    if (p.length >= 8) s++;
+    if (/[a-z]/.test(p) && /[A-Z]/.test(p)) s++;
+    if (/\d/.test(p)) s++;
+    if (/[!@#$%^&*]/.test(p)) s++;
+    return s;
+  };
 
-    const getPasswordStrengthText = () => {
-        const strength = passwordStrength();
-        if (strength === 0) return { text: 'Very Weak', color: 'text-red-500' };
-        if (strength === 1) return { text: 'Weak', color: 'text-orange-500' };
-        if (strength === 2) return { text: 'Fair', color: 'text-yellow-500' };
-        if (strength === 3) return { text: 'Good', color: 'text-blue-500' };
-        return { text: 'Strong', color: 'text-green-500' };
-    };
+  const strengthInfo = () => {
+    const s = passwordStrength();
+    if (s === 0) return { text: 'Very Weak', color: '#ff4444' };
+    if (s === 1) return { text: 'Weak', color: '#ff9d00' };
+    if (s === 2) return { text: 'Fair', color: '#ffdd00' };
+    if (s === 3) return { text: 'Good', color: '#00aaff' };
+    return { text: 'Strong', color: '#00ff78' };
+  };
 
-    const passwordRequirements = [
-        { met: formData.password.length >= 8, text: 'At least 8 characters' },
-        { met: /[a-z]/.test(formData.password) && /[A-Z]/.test(formData.password), text: 'Upper & lowercase letters' },
-        { met: /\d/.test(formData.password), text: 'At least one number' },
-        { met: /[!@#$%^&*]/.test(formData.password), text: 'Special character (!@#$%^&*)' }
-    ];
+  const requirements = [
+    { met: formData.password.length >= 8, text: 'At least 8 characters' },
+    { met: /[a-z]/.test(formData.password) && /[A-Z]/.test(formData.password), text: 'Upper & lowercase letters' },
+    { met: /\d/.test(formData.password), text: 'At least one number' },
+    { met: /[!@#$%^&*]/.test(formData.password), text: 'Special character (!@#$%^&*)' }
+  ];
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.password !== formData.confirmPassword) { toast.error('Passwords do not match'); return; }
+    if (passwordStrength() < 3) { toast.error('Password too weak'); return; }
+    if (!formData.phoneNumber.trim()) { toast.error('Phone number is required'); return; }
+    setLoading(true);
+    try {
+      const data = userType === 'student'
+        ? { firstName: formData.firstName, lastName: formData.lastName, emailAddress: formData.email, password: formData.password, phoneNumber: formData.phoneNumber, university: formData.university, degree: formData.degree }
+        : { companyName: formData.companyName, email: formData.email, password: formData.password, phoneNumber: formData.phoneNumber, website: formData.website || '' };
+      if (userType === 'student') await authAPI.registerStudent(data);
+      else await authAPI.registerCompany(data);
+      toast.success('Account created successfully!');
+      navigate(`/login?type=${userType}`);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        if (formData.password !== formData.confirmPassword) {
-            toast.error('Passwords do not match');
-            return;
-        }
+  const inputStyle = { paddingLeft: '2.5rem' };
 
-        if (passwordStrength() < 3) {
-            toast.error('Please use a stronger password');
-            return;
-        }
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative" style={{background:'#050510'}}>
+      <div className="absolute inset-0 grid-bg opacity-40" />
+      <div className="absolute inset-0" style={{background:'radial-gradient(ellipse at 50% 50%, rgba(100,0,200,0.07) 0%, transparent 65%)'}} />
 
-        // Validate phone number
-        if (!formData.phoneNumber.trim()) {
-            toast.error('Phone number is required');
-            return;
-        }
+      <div className="relative z-10 w-full max-w-md animate-fade-in-up">
+        <Link to="/" className="inline-flex items-center gap-2 mb-8 transition-colors" style={{color:'rgba(0,243,255,0.5)', fontFamily:'Orbitron, sans-serif', fontSize:'0.6rem', letterSpacing:'0.15em', textTransform:'uppercase', textDecoration:'none'}}>
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </Link>
 
-        setLoading(true);
+        <div className="retro-panel" style={{padding:'2.5rem'}}>
+          <div className="text-center mb-7">
+            <div className="w-14 h-14 mx-auto mb-4 flex items-center justify-center border" style={{background:'rgba(176,38,255,0.05)', borderColor:'rgba(176,38,255,0.3)', boxShadow:'0 0 20px rgba(176,38,255,0.12)'}}>
+              <Briefcase className="h-7 w-7" style={{color:'var(--neon-purple)'}} />
+            </div>
+            <h1 className="text-2xl text-white mb-1" style={{fontFamily:'Orbitron, sans-serif', fontSize:'1rem', letterSpacing:'0.15em'}}>CREATE ACCOUNT</h1>
+            <p className="font-['Share_Tech_Mono'] text-xs" style={{color:'rgba(176,38,255,0.5)', letterSpacing:'0.1em'}}>Register new operator profile</p>
+          </div>
 
-        try {
-            // ✅ FIXED: Match the backend DTO field names exactly
-            const registrationData = userType === 'student'
-                ? {
-                    firstName: formData.firstName,
-                    lastName: formData.lastName,
-                    emailAddress: formData.email,
-                    password: formData.password,
-                    phoneNumber: formData.phoneNumber,
-                    university: formData.university,
-                    degree: formData.degree
-                }
-                : {
-                    companyName: formData.companyName,
-                    email: formData.email,
-                    password: formData.password,
-                    phoneNumber: formData.phoneNumber,
-                    website: formData.website || ''
-                };
+          {/* Type selector */}
+          <div className="flex gap-1 mb-7 p-1" style={{background:'rgba(0,0,20,0.6)', border:'1px solid rgba(0,243,255,0.15)'}}>
+            {['student','company'].map(type => (
+              <Link key={type} to={`/register?type=${type}`}
+                style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'0.4rem', flex:1, textDecoration:'none', ...(userType===type ? {background:'linear-gradient(135deg, rgba(0,100,200,0.4), rgba(100,0,200,0.4))', border:'1px solid var(--neon-cyan)', color:'#fff', fontFamily:'Orbitron, sans-serif', fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', padding:'0.55rem', cursor:'pointer', boxShadow:'0 0 12px rgba(0,243,255,0.2)'} : {background:'transparent', border:'1px solid rgba(0,243,255,0.15)', color:'rgba(180,200,220,0.5)', fontFamily:'Orbitron, sans-serif', fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', padding:'0.55rem', cursor:'pointer'})}}>
+                {type==='student' ? <GraduationCap className="h-3.5 w-3.5" /> : <Building2 className="h-3.5 w-3.5" />}
+                {type.charAt(0).toUpperCase()+type.slice(1)}
+              </Link>
+            ))}
+          </div>
 
-            console.log('Sending registration data:', registrationData); // Debug log
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {userType === 'student' && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="retro-label">First Name *</label>
+                    <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Shiva" required className="retro-input" />
+                  </div>
+                  <div>
+                    <label className="retro-label">Last Name *</label>
+                    <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Nagadan" required className="retro-input" />
+                  </div>
+                </div>
+                <div>
+                  <label className="retro-label">Phone Number *</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{color:'rgba(0,243,255,0.4)'}} />
+                    <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+27-82-123-4567" required maxLength={15} className="retro-input" style={inputStyle} />
+                  </div>
+                </div>
+                <div>
+                  <label className="retro-label">University</label>
+                  <input type="text" name="university" value={formData.university} onChange={handleChange} placeholder="Your University" className="retro-input" />
+                </div>
+                <div>
+                  <label className="retro-label">Degree</label>
+                  <input type="text" name="degree" value={formData.degree} onChange={handleChange} placeholder="Computer Science" className="retro-input" />
+                </div>
+              </>
+            )}
+            {userType === 'company' && (
+              <>
+                <div>
+                  <label className="retro-label">Company Name *</label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{color:'rgba(0,243,255,0.4)'}} />
+                    <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} placeholder="Your Company" required className="retro-input" style={inputStyle} />
+                  </div>
+                </div>
+                <div>
+                  <label className="retro-label">Phone Number *</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{color:'rgba(0,243,255,0.4)'}} />
+                    <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+27-11-123-4567" required maxLength={15} className="retro-input" style={inputStyle} />
+                  </div>
+                </div>
+                <div>
+                  <label className="retro-label">Website</label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{color:'rgba(0,243,255,0.4)'}} />
+                    <input type="url" name="website" value={formData.website} onChange={handleChange} placeholder="https://yourcompany.com" className="retro-input" style={inputStyle} />
+                  </div>
+                </div>
+              </>
+            )}
 
-            if (userType === 'student') {
-                await authAPI.registerStudent(registrationData);
-            } else {
-                await authAPI.registerCompany(registrationData);
-            }
-
-            toast.success('Account created successfully!');
-            navigate(`/login?type=${userType}`);
-        } catch (error) {
-            console.error('Registration error:', error.response?.data); // Debug log
-            toast.error(error.response?.data?.message || 'Registration failed');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center py-12">
-            {/* Animated Background */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-0 -left-4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-                <div className="absolute top-0 -right-4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-                <div className="absolute -bottom-8 left-20 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+            <div>
+              <label className="retro-label">Email Address *</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{color:'rgba(0,243,255,0.4)'}} />
+                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.com" required className="retro-input" style={inputStyle} />
+              </div>
             </div>
 
-            {/* Content */}
-            <div className="relative z-10 w-full max-w-md mx-auto px-6">
-                {/* Back Button */}
-                <Link 
-                    to="/" 
-                    className="inline-flex items-center space-x-2 text-gray-400 hover:text-white transition-colors mb-8">
-                    <ArrowLeft className="h-4 w-4" />
-                    <span>Back to home</span>
-                </Link>
-
-                {/* Register Card */}
-                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-                    {/* Header */}
-                    <div className="text-center mb-8">
-                        <div className="flex items-center justify-center space-x-3 mb-4">
-                            <div className="relative">
-                                <Briefcase className="h-12 w-12 text-blue-400" />
-                                <div className="absolute inset-0 bg-blue-400 blur-xl opacity-50"></div>
-                            </div>
-                            <span className="text-3xl font-bold text-white">IMS</span>
-                        </div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
+            <div>
+              <label className="retro-label">Password *</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{color:'rgba(0,243,255,0.4)'}} />
+                <input type={showPassword?'text':'password'} name="password" value={formData.password} onChange={handleChange} placeholder="Create a strong password" required className="retro-input" style={{paddingLeft:'2.5rem',paddingRight:'2.75rem'}} />
+                <button type="button" onClick={()=>setShowPassword(!showPassword)} style={{position:'absolute',right:'0.75rem',top:'50%',transform:'translateY(-50%)',color:'rgba(0,243,255,0.4)',background:'none',border:'none',cursor:'pointer'}}>
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {formData.password && (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex-1 h-1 rounded-full overflow-hidden" style={{background:'rgba(255,255,255,0.08)'}}>
+                      <div className="h-full transition-all duration-300 rounded-full" style={{width:`${passwordStrength()*25}%`, background:strengthInfo().color, boxShadow:`0 0 6px ${strengthInfo().color}`}} />
                     </div>
-
-                    {/* User Type Selector */}
-                    <div className="flex rounded-xl bg-white/5 p-1 mb-6">
-                        {['student', 'company'].map((type) => (
-                            <Link
-                                key={type}
-                                to={`/register?type=${type}`}
-                                className={`flex-1 py-2.5 rounded-lg text-center text-sm font-medium transition-all ${
-                                    userType === type
-                                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                                        : 'text-gray-400 hover:text-white'
-                                }`}>
-                                {type === 'student' ? (
-                                    <div className="flex items-center justify-center space-x-2">
-                                        <GraduationCap className="h-4 w-4" />
-                                        <span>Student</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-center space-x-2">
-                                        <Building2 className="h-4 w-4" />
-                                        <span>Company</span>
-                                    </div>
-                                )}
-                            </Link>
-                        ))}
-                    </div>
-
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Student Fields */}
-                        {userType === 'student' && (
-                            <>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                                            First Name *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="firstName"
-                                            value={formData.firstName}
-                                            onChange={handleChange}
-                                            placeholder="Shiva"
-                                            required
-                                            className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-2">
-                                            Last Name *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="lastName"
-                                            value={formData.lastName}
-                                            onChange={handleChange}
-                                            placeholder="Nagadan"
-                                            required
-                                            className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Phone Number */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        Phone Number *
-                                    </label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                                        <input
-                                            type="tel"
-                                            name="phoneNumber"
-                                            value={formData.phoneNumber}
-                                            onChange={handleChange}
-                                            placeholder="+27-82-123-4567"
-                                            required
-                                            maxLength={15}
-                                            className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        University
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="university"
-                                        value={formData.university}
-                                        onChange={handleChange}
-                                        placeholder="Your University"
-                                        className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        Degree
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="degree"
-                                        value={formData.degree}
-                                        onChange={handleChange}
-                                        placeholder="Computer Science"
-                                        className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                    />
-                                </div>
-                            </>
-                        )}
-
-                        {/* Company Fields */}
-                        {userType === 'company' && (
-                            <>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        Company Name *
-                                    </label>
-                                    <div className="relative">
-                                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                                        <input
-                                            type="text"
-                                            name="companyName"
-                                            value={formData.companyName}
-                                            onChange={handleChange}
-                                            placeholder="Your Company"
-                                            required
-                                            className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Phone Number - NEW REQUIRED FIELD */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        Phone Number *
-                                    </label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                                        <input
-                                            type="tel"
-                                            name="phoneNumber"
-                                            value={formData.phoneNumber}
-                                            onChange={handleChange}
-                                            placeholder="+27-11-123-4567"
-                                            required
-                                            maxLength={15}
-                                            className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Website - OPTIONAL FIELD */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        Website
-                                    </label>
-                                    <div className="relative">
-                                        <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                                        <input
-                                            type="url"
-                                            name="website"
-                                            value={formData.website}
-                                            onChange={handleChange}
-                                            placeholder="https://yourcompany.com"
-                                            className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                        />
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        {/* Email */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Email Address *
-                            </label>
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    placeholder="you@example.com"
-                                    required
-                                    className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Password */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Password *
-                            </label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    placeholder="Create a strong password"
-                                    required
-                                    className="w-full pl-12 pr-12 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
-                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                </button>
-                            </div>
-                            
-                            {formData.password && (
-                                <>
-                                    <div className="mt-2 flex items-center space-x-2">
-                                        <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                            <div 
-                                                className={`h-full transition-all ${
-                                                    passwordStrength() === 1 ? 'w-1/4 bg-red-500' :
-                                                    passwordStrength() === 2 ? 'w-2/4 bg-yellow-500' :
-                                                    passwordStrength() === 3 ? 'w-3/4 bg-blue-500' :
-                                                    passwordStrength() === 4 ? 'w-full bg-green-500' : 'w-0'
-                                                }`}>
-                                            </div>
-                                        </div>
-                                        <span className={`text-xs font-medium ${getPasswordStrengthText().color}`}>
-                                            {getPasswordStrengthText().text}
-                                        </span>
-                                    </div>
-                                    
-                                    <div className="mt-3 space-y-1.5">
-                                        {passwordRequirements.map((req, index) => (
-                                            <div key={index} className="flex items-center space-x-2 text-xs">
-                                                {req.met ? (
-                                                    <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                                                ) : (
-                                                    <XCircle className="h-3.5 w-3.5 text-gray-600" />
-                                                )}
-                                                <span className={req.met ? 'text-gray-300' : 'text-gray-500'}>
-                                                    {req.text}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
-                        {/* Confirm Password */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Confirm Password *
-                            </label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                                <input
-                                    type={showConfirmPassword ? 'text' : 'password'}
-                                    name="confirmPassword"
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
-                                    placeholder="Confirm your password"
-                                    required
-                                    className="w-full pl-12 pr-12 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
-                                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                </button>
-                            </div>
-                            {formData.confirmPassword && (
-                                <div className="mt-2 flex items-center space-x-2">
-                                    {formData.password === formData.confirmPassword ? (
-                                        <>
-                                            <CheckCircle className="h-4 w-4 text-green-500" />
-                                            <span className="text-xs text-green-500">Passwords match</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <XCircle className="h-4 w-4 text-red-500" />
-                                            <span className="text-xs text-red-500">Passwords don't match</span>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-xl hover:shadow-blue-500/50 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
-                            {loading ? (
-                                <div className="flex items-center justify-center space-x-2">
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    <span>Creating account...</span>
-                                </div>
-                            ) : (
-                                'Create Account'
-                            )}
-                        </button>
-                    </form>
-
-                    {/* Footer */}
-                    <div className="mt-6 text-center">
-                        <p className="text-gray-400">
-                            Already have an account?{' '}
-                            <Link 
-                                to={`/login?type=${userType}`}
-                                className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
-                                Sign in
-                            </Link>
-                        </p>
-                    </div>
+                    <span className="font-['Orbitron'] text-xs" style={{color:strengthInfo().color, letterSpacing:'0.05em'}}>{strengthInfo().text}</span>
+                  </div>
+                  <div className="space-y-1">
+                    {requirements.map((r,i)=>(
+                      <div key={i} className="flex items-center gap-2 text-xs" style={{fontFamily:'Share Tech Mono, monospace',color:r.met?'#00cc66':'rgba(120,140,160,0.5)'}}>
+                        {r.met ? <CheckCircle className="h-3 w-3 flex-shrink-0" style={{color:'#00cc66'}} /> : <XCircle className="h-3 w-3 flex-shrink-0" style={{color:'rgba(120,140,160,0.4)'}} />}
+                        {r.text}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-
-                {/* Terms */}
-                <div className="mt-6 text-center text-xs text-gray-500">
-                    <p>
-                        By creating an account, you agree to our{' '}
-                        <a href="#" className="text-gray-400 hover:text-white transition-colors">Terms</a>
-                        {' '}and{' '}
-                        <a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
-                    </p>
-                </div>
+              )}
             </div>
 
-            <style jsx>{`
-                @keyframes blob {
-                    0% { transform: translate(0px, 0px) scale(1); }
-                    33% { transform: translate(30px, -50px) scale(1.1); }
-                    66% { transform: translate(-20px, 20px) scale(0.9); }
-                    100% { transform: translate(0px, 0px) scale(1); }
-                }
-                .animate-blob {
-                    animation: blob 7s infinite;
-                }
-                .animation-delay-2000 {
-                    animation-delay: 2s;
-                }
-                .animation-delay-4000 {
-                    animation-delay: 4s;
-                }
-            `}</style>
+            <div>
+              <label className="retro-label">Confirm Password *</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{color:'rgba(0,243,255,0.4)'}} />
+                <input type={showConfirmPassword?'text':'password'} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm your password" required className="retro-input" style={{paddingLeft:'2.5rem',paddingRight:'2.75rem'}} />
+                <button type="button" onClick={()=>setShowConfirmPassword(!showConfirmPassword)} style={{position:'absolute',right:'0.75rem',top:'50%',transform:'translateY(-50%)',color:'rgba(0,243,255,0.4)',background:'none',border:'none',cursor:'pointer'}}>
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {formData.confirmPassword && (
+                <div className="flex items-center gap-2 mt-2 text-xs" style={{fontFamily:'Share Tech Mono, monospace'}}>
+                  {formData.password===formData.confirmPassword ? <><CheckCircle className="h-3 w-3" style={{color:'#00cc66'}} /><span style={{color:'#00cc66'}}>Passwords match</span></> : <><XCircle className="h-3 w-3" style={{color:'#ff6666'}} /><span style={{color:'#ff6666'}}>Passwords don't match</span></>}
+                </div>
+              )}
+            </div>
+
+            <button type="submit" disabled={loading} className="btn-retro-primary w-full justify-center" style={{clipPath:'none',borderRadius:0,marginTop:'0.5rem',opacity:loading?0.6:1}}>
+              {loading ? <><div className="retro-spinner" style={{width:'16px',height:'16px',borderWidth:'2px'}} />Creating account...</> : <><Zap className="h-4 w-4" />Create Account</>}
+            </button>
+          </form>
+
+          <div className="mt-5 text-center font-['Share_Tech_Mono'] text-xs" style={{color:'rgba(120,140,160,0.6)', letterSpacing:'0.05em'}}>
+            Already have an account?{' '}
+            <Link to={`/login?type=${userType}`} style={{color:'var(--neon-cyan)', textDecoration:'none'}}>Sign in</Link>
+          </div>
         </div>
-    );
+
+        <p className="text-center mt-4 font-['Share_Tech_Mono'] text-xs" style={{color:'rgba(80,100,120,0.4)', letterSpacing:'0.08em'}}>
+          By registering, you agree to our{' '}
+          <a href="#" style={{color:'rgba(0,243,255,0.5)', textDecoration:'none'}}>Terms</a>
+          {' '}and{' '}
+          <a href="#" style={{color:'rgba(0,243,255,0.5)', textDecoration:'none'}}>Privacy Policy</a>
+        </p>
+      </div>
+    </div>
+  );
 }

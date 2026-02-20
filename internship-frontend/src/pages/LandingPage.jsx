@@ -1,205 +1,177 @@
 import { Link } from 'react-router-dom';
-import { Briefcase, Building2, GraduationCap, Shield, ArrowRight, CheckCircle, Users, TrendingUp, Sparkles, Zap, Target } from 'lucide-react';
+import { Briefcase, Building2, GraduationCap, Shield, ArrowRight, CheckCircle, Users, Zap, Target, ChevronDown } from 'lucide-react';
 
 export default function LandingPage() {
-    return (
-        <div className="min-h-screen bg-black relative overflow-hidden">
-            {/* Animated Background Gradients */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-0 -left-4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-                <div className="absolute top-0 -right-4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-                <div className="absolute -bottom-8 left-20 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+  return (
+    <div className="min-h-screen bg-[#050510] text-[#d0d8e8] overflow-x-hidden">
+
+      {/* NAVBAR */}
+      <nav className="retro-navbar">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-cyan-900/30 border border-cyan-500 flex items-center justify-center" style={{boxShadow:'0 0 12px rgba(0,243,255,0.3)'}}>
+              <Briefcase className="h-5 w-5 text-cyan-400" />
             </div>
-
-            {/* Content */}
-            <div className="relative z-10">
-                {/* Navigation */}
-                <nav className="container mx-auto px-6 py-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <div className="relative">
-                                <Briefcase className="h-10 w-10 text-blue-400" />
-                                <div className="absolute inset-0 bg-blue-400 blur-xl opacity-50"></div>
-                            </div>
-                            <span className="text-3xl font-bold text-white tracking-tight">IMS</span>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <Link
-                                to="/login"
-                                className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover:shadow-lg hover:shadow-blue-500/50 transition-all hover:scale-105 font-medium">
-                                Sign In
-                            </Link>
-                        </div>
-                    </div>
-                </nav>
-
-                {/* Hero Section */}
-                <div className="container mx-auto px-6 pt-20 pb-32">
-                    <div className="max-w-5xl mx-auto text-center">
-                        <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full mb-8">
-                            <Sparkles className="h-4 w-4 text-blue-400" />
-                            <span className="text-sm text-gray-300">Welcome to the future of internships</span>
-                        </div>
-                        
-                        <h1 className="text-7xl md:text-8xl font-bold text-white mb-8 leading-tight">
-                            Helping You.
-                        </h1>
-                        
-                        <p className="text-2xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
-                            The modern platform connecting ambitious students with innovative companies. 
-                            Streamline your internship journey.
-                        </p>
-
-                        {/* CTA Buttons */}
-                        <div className="flex flex-col sm:flex-row justify-center gap-6">
-                            <Link
-                                to="/register?type=student"
-                                className="group px-10 py-5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-semibold hover:shadow-xl hover:shadow-blue-500/50 transition-all hover:scale-105 flex items-center justify-center space-x-3">
-                                <GraduationCap className="h-6 w-6" />
-                                <span>I'm a Student</span>
-                                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                            </Link>
-                            <Link
-                                to="/register?type=company"
-                                className="group px-10 py-5 bg-white/5 backdrop-blur-sm border border-white/10 text-white rounded-full font-semibold hover:bg-white/10 transition-all hover:scale-105 flex items-center justify-center space-x-3">
-                                <Building2 className="h-6 w-6" />
-                                <span>We are a Company</span>
-                                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Features Section */}
-                <div id="features" className="container mx-auto px-6 py-20">
-                    <div className="max-w-6xl mx-auto">
-                        <div className="text-center mb-16">
-                            <h2 className="text-5xl font-bold text-white mb-4">Powerful Features</h2>
-                            <p className="text-xl text-gray-400">Everything you need in one platform</p>
-                        </div>
-
-                        <div className="grid md:grid-cols-3 gap-8">
-                            {[
-                                {
-                                    icon: <Zap className="h-8 w-8" />,
-                                    title: 'Lightning Fast',
-                                    description: 'Search and apply to internships in seconds with our intuitive interface.',
-                                    gradient: 'from-blue-500 to-cyan-500'
-                                },
-                                {
-                                    icon: <Shield className="h-8 w-8" />,
-                                    title: 'Secure & Private',
-                                    description: 'Your data is protected with enterprise-grade security measures.',
-                                    gradient: 'from-purple-500 to-pink-500'
-                                },
-                                {
-                                    icon: <Target className="h-8 w-8" />,
-                                    title: 'Smart Matching',
-                                    description: 'AI-powered recommendations connect you with perfect opportunities.',
-                                    gradient: 'from-orange-500 to-red-500'
-                                }
-                            ].map((feature, index) => (
-                                <div key={index} className="group relative">
-                                    <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl blur-xl -z-10" 
-                                         style={{ background: `linear-gradient(to right, var(--tw-gradient-stops))` }}></div>
-                                    <div className="p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl hover:bg-white/10 transition-all hover:scale-105">
-                                        <div className={`inline-flex p-3 bg-gradient-to-r ${feature.gradient} rounded-xl mb-4`}>
-                                            {feature.icon}
-                                        </div>
-                                        <h3 className="text-2xl font-bold text-white mb-3">{feature.title}</h3>
-                                        <p className="text-gray-400 leading-relaxed">{feature.description}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* User Types Section */}
-                <div className="container mx-auto px-6 py-20">
-                    <div className="max-w-6xl mx-auto">
-                        <div className="text-center mb-16">
-                            <h2 className="text-5xl font-bold text-white mb-4">Built for Everyone</h2>
-                            <p className="text-xl text-gray-400">Three powerful dashboards, one seamless experience</p>
-                        </div>
-
-                        <div className="grid md:grid-cols-3 gap-8">
-                            {[
-                                {
-                                    icon: <GraduationCap className="h-12 w-12" />,
-                                    title: 'Students',
-                                    description: 'Browse internships, apply with one click, track your applications, and manage your career journey.',
-                                    features: ['Smart Search', 'One-Click Apply', 'Application Tracking', 'Resume Builder'],
-                                    gradient: 'from-blue-500 to-cyan-500'
-                                },
-                                {
-                                    icon: <Building2 className="h-12 w-12" />,
-                                    title: 'Companies',
-                                    description: 'Post opportunities, review applications, manage candidates, and build your talent pipeline.',
-                                    features: ['Easy Posting', 'Application Management', 'Candidate Review', 'Analytics'],
-                                    gradient: 'from-purple-500 to-pink-500'
-                                },
-                                {
-                                    icon: <Shield className="h-12 w-12" />,
-                                    title: 'Admins',
-                                    description: 'Monitor platform activity, moderate content, generate reports, and ensure quality.',
-                                    features: ['System Overview', 'User Management', 'Reports', 'Moderation'],
-                                    gradient: 'from-orange-500 to-red-500'
-                                }
-                            ].map((type, index) => (
-                                <div key={index} className="p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl hover:bg-white/10 transition-all">
-                                    <div className={`inline-flex p-4 bg-gradient-to-r ${type.gradient} rounded-2xl mb-6`}>
-                                        {type.icon}
-                                    </div>
-                                    <h3 className="text-3xl font-bold text-white mb-4">{type.title}</h3>
-                                    <p className="text-gray-400 mb-6 leading-relaxed">{type.description}</p>
-                                    <ul className="space-y-3">
-                                        {type.features.map((feature, idx) => (
-                                            <li key={idx} className="flex items-center space-x-3 text-gray-300">
-                                                <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0" />
-                                                <span>{feature}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* CTA Section */}
-                <div className="container mx-auto px-6 py-20">
-                    <div className="max-w-4xl mx-auto text-center">
-                        <div className="p-12 bg-gradient-to-r from-blue-500/10 to-purple-600/10 backdrop-blur-sm border border-white/10 rounded-3xl">
-                            <h2 className="text-5xl font-bold text-white mb-6">Ready to Get Started?</h2>
-                            <Link
-                                to="/register"
-                                className="inline-flex items-center space-x-3 px-10 py-5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-semibold hover:shadow-xl hover:shadow-blue-500/50 transition-all hover:scale-105">
-                                <span>Create Free Account</span>
-                                <ArrowRight className="h-5 w-5" />
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <style jsx>{`
-                @keyframes blob {
-                    0% { transform: translate(0px, 0px) scale(1); }
-                    33% { transform: translate(30px, -50px) scale(1.1); }
-                    66% { transform: translate(-20px, 20px) scale(0.9); }
-                    100% { transform: translate(0px, 0px) scale(1); }
-                }
-                .animate-blob {
-                    animation: blob 7s infinite;
-                }
-                .animation-delay-2000 {
-                    animation-delay: 2s;
-                }
-                .animation-delay-4000 {
-                    animation-delay: 4s;
-                }
-            `}</style>
+            <span className="font-['Orbitron'] font-black text-xl tracking-widest text-transparent bg-clip-text" style={{backgroundImage:'linear-gradient(to right, #00f3ff, #b026ff)'}}>IMS</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <a href="#features" className="font-['Orbitron'] text-xs tracking-widest text-cyan-400/70 hover:text-cyan-400 uppercase transition-colors">Modules</a>
+            <a href="#users" className="font-['Orbitron'] text-xs tracking-widest text-cyan-400/70 hover:text-cyan-400 uppercase transition-colors">Protocols</a>
+            <Link to="/login" className="btn-retro-primary" style={{padding:'0.45rem 1.2rem', fontSize:'0.62rem'}}>Login_System</Link>
+          </div>
         </div>
-    );
+      </nav>
+
+      {/* HERO */}
+      <section className="relative min-h-screen flex flex-col justify-center items-center pt-20 overflow-hidden">
+        {/* Grid Background */}
+        <div className="absolute inset-0 grid-bg opacity-60" />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0" style={{background:'radial-gradient(ellipse at 50% 60%, rgba(0,100,200,0.15) 0%, transparent 65%), radial-gradient(ellipse at 20% 80%, rgba(176,38,255,0.1) 0%, transparent 50%)'}} />
+
+        {/* Floating orbs */}
+        <div className="absolute top-1/4 left-12 w-40 h-40 rounded-full animate-float" style={{background:'rgba(0,243,255,0.04)', border:'1px solid rgba(0,243,255,0.1)', filter:'blur(2px)'}} />
+        <div className="absolute bottom-1/3 right-12 w-56 h-56 rounded-full animate-float" style={{animationDelay:'2s', background:'rgba(176,38,255,0.04)', border:'1px solid rgba(176,38,255,0.1)', filter:'blur(2px)'}} />
+
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+          <div className="section-tag mx-auto mb-8" style={{display:'inline-flex'}}>
+            <span style={{marginLeft:'0.25rem'}}>System Online // v2.0.85</span>
+          </div>
+
+          <h1 className="hero-title text-6xl md:text-8xl lg:text-9xl mb-6">
+            HELPING<br />
+            <span style={{backgroundImage:'linear-gradient(135deg, #b026ff, #ff0099, #ff9d00)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text', filter:'drop-shadow(0 0 25px rgba(176,38,255,0.5))'}}>YOU.</span>
+          </h1>
+
+          <p className="text-xl text-cyan-100/60 mb-12 max-w-2xl mx-auto leading-relaxed" style={{fontFamily:'Rajdhani, sans-serif', fontWeight:400}}>
+            The modern internship platform connecting ambitious students with innovative companies. Initialize your career protocol today.
+          </p>
+
+          <div className="flex flex-col sm:flex-row justify-center gap-6">
+            <Link to="/register?type=student" className="btn-retro-primary text-base">
+              <GraduationCap className="h-5 w-5" />
+              <span>I'm a Student</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link to="/register?type=company" className="btn-retro-secondary text-base">
+              <Building2 className="h-5 w-5" />
+              <span>We are a Company</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2" style={{color:'rgba(0,243,255,0.4)'}}>
+          <span className="font-['Orbitron'] text-xs tracking-[0.3em] uppercase">Scroll to Navigate</span>
+          <ChevronDown className="w-5 h-5 animate-bounce" />
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section id="features" className="py-24 relative">
+        <div className="absolute inset-0 grid-bg opacity-30" />
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-16">
+            <div className="section-tag" style={{display:'inline-flex'}}>
+              <span style={{marginLeft:'0.25rem'}}>System Modules</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl text-white mb-4">
+              Powerful <span className="text-glow-cyan" style={{color:'var(--neon-cyan)'}}>Features</span>
+            </h2>
+            <p className="text-lg" style={{color:'rgba(160,180,210,0.7)', fontFamily:'Rajdhani, sans-serif'}}>Everything you need in one platform</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { icon: <Zap className="h-7 w-7 text-cyan-400" />, title: 'Lightning Fast', desc: 'Search and apply to internships in seconds with our optimized interface protocols.', color: 'var(--neon-cyan)' },
+              { icon: <Shield className="h-7 w-7 text-purple-400" />, title: 'Secure & Private', desc: 'Your data is protected with enterprise-grade security measures and encryption.', color: 'var(--neon-purple)' },
+              { icon: <Target className="h-7 w-7 text-pink-400" />, title: 'Smart Matching', desc: 'AI-powered recommendations connect you with perfect opportunities in the network.', color: 'var(--neon-pink)' },
+            ].map((f, i) => (
+              <div key={i} className="internship-card group" style={{animationDelay:`${i*0.1}s`}}>
+                <div className="w-14 h-14 flex items-center justify-center mb-5 border transition-all duration-300 group-hover:scale-110"
+                     style={{background:'rgba(0,0,20,0.8)', borderColor: f.color + '40', boxShadow:`0 0 12px ${f.color}20`}}>
+                  {f.icon}
+                </div>
+                <h3 className="text-xl text-white mb-3" style={{fontFamily:'Orbitron, sans-serif', fontSize:'0.95rem'}}>{f.title}</h3>
+                <p style={{color:'rgba(160,180,210,0.65)', fontFamily:'Rajdhani, sans-serif', lineHeight:1.6}}>{f.desc}</p>
+                <div className="absolute top-3 right-3 w-2 h-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{background:f.color, boxShadow:`0 0 8px ${f.color}`}} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* USER TYPES */}
+      <section id="users" className="py-24 relative" style={{background:'rgba(0,0,10,0.5)'}}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <div className="section-tag" style={{display:'inline-flex'}}>
+              <span style={{marginLeft:'0.25rem'}}>Access Protocols</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl text-white mb-4">Built for <span style={{color:'var(--neon-cyan)'}} className="text-glow-cyan">Everyone</span></h2>
+            <p className="text-lg" style={{color:'rgba(160,180,210,0.7)', fontFamily:'Rajdhani, sans-serif'}}>Three powerful dashboards, one seamless experience</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { icon: <GraduationCap className="h-10 w-10" />, title: 'Students', color: 'var(--neon-cyan)', desc: 'Browse internships, apply with one click, track your applications, and manage your career journey.', features: ['Smart Search', 'One-Click Apply', 'Application Tracking', 'Resume Upload'] },
+              { icon: <Building2 className="h-10 w-10" />, title: 'Companies', color: 'var(--neon-purple)', desc: 'Post opportunities, review applications, manage candidates, and build your talent pipeline.', features: ['Easy Posting', 'Application Management', 'Candidate Review', 'Analytics'] },
+              { icon: <Shield className="h-10 w-10" />, title: 'Admins', color: 'var(--neon-pink)', desc: 'Monitor platform activity, moderate content, generate reports, and ensure quality control.', features: ['System Overview', 'User Management', 'Reports', 'Moderation'] },
+            ].map((u, i) => (
+              <div key={i} className="retro-panel p-8 corner-br hover:border-cyan-500/40 transition-all duration-300 group"
+                   style={{borderColor:`${u.color}25`}}>
+                <div className="w-16 h-16 flex items-center justify-center mb-6 border"
+                     style={{color: u.color, borderColor:`${u.color}40`, background:`${u.color}08`, boxShadow:`0 0 16px ${u.color}15`}}>
+                  {u.icon}
+                </div>
+                <h3 className="text-2xl text-white mb-3" style={{fontFamily:'Orbitron, sans-serif', fontSize:'1rem'}}>{u.title}</h3>
+                <p className="mb-5 text-sm leading-relaxed" style={{color:'rgba(160,180,210,0.6)', fontFamily:'Rajdhani, sans-serif'}}>{u.desc}</p>
+                <ul className="space-y-2">
+                  {u.features.map((f, fi) => (
+                    <li key={fi} className="flex items-center gap-3 text-sm" style={{fontFamily:'Rajdhani, sans-serif', color:'rgba(200,220,240,0.75)'}}>
+                      <CheckCircle className="h-4 w-4 flex-shrink-0" style={{color: u.color}} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-24 relative">
+        <div className="absolute inset-0 grid-bg opacity-20" />
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <div className="retro-panel p-16">
+            <div className="section-tag" style={{display:'inline-flex', marginBottom:'2rem'}}>
+              <span style={{marginLeft:'0.25rem'}}>Initialize System</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl text-white mb-8">Ready to Get <span style={{color:'var(--neon-cyan)'}} className="text-glow-cyan">Started?</span></h2>
+            <Link to="/register" className="btn-retro-primary text-base">
+              <span>Create Free Account</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="border-t py-10" style={{borderColor:'rgba(0,243,255,0.15)', background:'rgba(0,0,8,0.8)'}}>
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 border border-cyan-500 flex items-center justify-center" style={{background:'rgba(0,243,255,0.05)'}}>
+              <Briefcase className="h-4 w-4 text-cyan-400" />
+            </div>
+            <span className="font-['Orbitron'] font-black tracking-widest text-white text-sm">IMS</span>
+          </div>
+          <p className="font-['Share_Tech_Mono'] text-xs" style={{color:'rgba(100,120,140,0.7)', letterSpacing:'0.1em'}}>
+            © 2025 IMS SYSTEMS. ALL RIGHTS RESERVED. // DESIGNED FOR THE FUTURE
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
 }
