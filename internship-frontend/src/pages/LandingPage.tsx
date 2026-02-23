@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Zap, Bot, Globe, Layers, ShieldCheck, Github, Linkedin, Monitor, ChevronDown, Gamepad2, MonitorPlay, UserPlus, Radar, Send, Rocket, Menu, Quote, Terminal, Wifi } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-/* --- Navbar --- */
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
@@ -128,7 +127,6 @@ const Navbar = () => {
   );
 };
 
-/* --- Hero --- */
 const Hero = () => {
   return (
     <section id="hero" className="relative w-full h-screen overflow-hidden flex flex-col justify-center items-center bg-gray-950 text-white z-10">
@@ -230,7 +228,6 @@ const Hero = () => {
   );
 };
 
-/* --- Features --- */
 const Features = () => {
   const features = [
     {
@@ -347,7 +344,6 @@ const Features = () => {
   );
 };
 
-/* --- HowItWorks --- */
 const HowItWorks = () => {
   const steps = [
     {
@@ -445,7 +441,6 @@ const HowItWorks = () => {
   );
 };
 
-/* --- Testimonials --- */
 const Testimonials = () => {
   const testimonials = [
     {
@@ -547,7 +542,6 @@ const Testimonials = () => {
   );
 };
 
-/* --- CallToAction --- */
 const CallToAction = () => {
   return (
     <section id="join" className="py-32 relative flex items-center justify-center overflow-hidden bg-black">
@@ -596,7 +590,6 @@ const CallToAction = () => {
   );
 };
 
-/* --- Footer --- */
 const Footer = () => {
   return (
     <footer className="relative bg-gray-950 border-t border-cyan-900/50 overflow-hidden">
@@ -619,10 +612,10 @@ const Footer = () => {
               Advancing human potential through next-generation internship placement algorithms. The future is built here.
             </p>
             <div className="flex gap-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-gray-900 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-pink-500 hover:bg-pink-900/20 transition-all hover:scale-110 shadow-[0_0_10px_rgba(255,0,153,0.1)] hover:shadow-[0_0_20px_rgba(255,0,153,0.5)]">
+              <a href="https://github.com/Shiva04-Dev" className="w-10 h-10 rounded-full bg-gray-900 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-pink-500 hover:bg-pink-900/20 transition-all hover:scale-110 shadow-[0_0_10px_rgba(255,0,153,0.1)] hover:shadow-[0_0_20px_rgba(255,0,153,0.5)]">
                 <Github className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-gray-900 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-purple-500 hover:bg-purple-900/20 transition-all hover:scale-110 shadow-[0_0_10px_rgba(176,38,255,0.1)] hover:shadow-[0_0_20px_rgba(176,38,255,0.5)]">
+              <a href="https://www.linkedin.com/in/shiva-ganesh-nagadan/" className="w-10 h-10 rounded-full bg-gray-900 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-purple-500 hover:bg-purple-900/20 transition-all hover:scale-110 shadow-[0_0_10px_rgba(176,38,255,0.1)] hover:shadow-[0_0_20px_rgba(176,38,255,0.5)]">
                 <Linkedin className="w-5 h-5" />
               </a>
             </div>
@@ -633,7 +626,6 @@ const Footer = () => {
   );
 };
 
-/* --- Main LandingPage Component --- */
 const LandingPage = () => {
   return (
     <div className="bg-black text-white min-h-screen">
