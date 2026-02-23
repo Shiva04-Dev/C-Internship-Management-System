@@ -1,0 +1,218 @@
+/// <reference types="vite/client" />
+
+import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL as string;
+
+// Types
+interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+interface RegisterStudentData {
+  firstName: string;
+  lastName: string;
+  emailAddress: string;
+  password: string;
+  phoneNumber: string;
+  university?: string;
+  degree?: string;
+}
+
+interface RegisterCompanyData {
+  companyName: string;
+  email: string;
+  password: string;
+  phoneNumber: string;
+  website?: string;
+}
+
+interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+interface InternshipParams {
+  title?: string;
+  location?: string;
+  [key: string]: unknown;
+}
+
+interface InternshipData {
+  title: string;
+  description: string;
+  requirements: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+}
+
+interface ApplicationData {
+  internshipID: number;
+  [key: string]: unknown;
+}
+
+interface ApplicationStatus {
+  status: string;
+}
+
+interface BanStudentData {
+  Reason: string;
+}
+
+interface BanUserData {
+  Reason: string;
+}
+
+interface AdminParams {
+  [key: string]: unknown;
+}
+
+// Creating axios instance with default config
+const api: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Adding auth tokens to requests if it exists
+api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const token = localStorage.getItem('accessToken');
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle token expiration
+api.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  async (error: unknown) => {
+    const axiosError = error as {
+      response?: { status?: number };
+      config?: InternalAxiosRequestConfig;
+    };
+
+    if (axiosError.response?.status === 401) {
+      // Token has expired, try to refresh
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        try {
+          const response = await axios.post<RefreshTokenResponse>(
+            `${API_BASE_URL}/Authen/refresh`,
+            { refreshToken }
+          );
+
+          localStorage.setItem('accessToken', response.data.accessToken);
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+
+          // Then retry the original request
+          if (axiosError.config?.headers) {
+            axiosError.config.headers.Authorization = `Bearer ${response.data.accessToken}`;
+          }
+
+          return axios(axiosError.config!);
+        } catch {
+          // Refresh failed, logout
+          localStorage.clear();
+          window.location.href = '/login';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Authentication APIs
+export const authAPI = {
+  loginStudent: (credentials: LoginCredentials) =>
+    api.post('/Authen/login/student', credentials),
+  loginCompany: (credentials: LoginCredentials) =>
+    api.post('/Authen/login/company', credentials),
+  loginAdmin: (credentials: LoginCredentials) =>
+    api.post('/Authen/login/admin', credentials),
+  registerStudent: (data: RegisterStudentData) =>
+    api.post('/Authen/register/student', data),
+  registerCompany: (data: RegisterCompanyData) =>
+    api.post('/Authen/register/company', data),
+  logout: (refreshToken: string) =>
+    api.post('/Authen/logout', { refreshToken }),
+};
+
+// Internship APIs
+export const internshipAPI = {
+  getAll: (params?: InternshipParams) =>
+    api.get('/Internship', { params }),
+  getById: (id: string | number) =>
+    api.get(`/Internship/${id}`),
+  getMine: () =>
+    api.get('/Internship/company/mine'),
+  create: (data: InternshipData) =>
+    api.post('/Internship', data),
+  update: (id: string | number, data: InternshipData) =>
+    api.put(`/Internship/${id}`, data),
+  delete: (id: string | number) =>
+    api.delete(`/Internship/${id}`),
+};
+
+// Application APIs
+export const applicationAPI = {
+  getMine: () =>
+    api.get('/Application/student/mine'),
+  getForInternship: (id: string | number) =>
+    api.get(`/Application/internship/${id}`),
+  submit: (data: ApplicationData) =>
+    api.post('/Application', data),
+  submitWithResume: (formData: FormData) =>
+    api.post('/Application/with-resume', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  updateStatus: (id: string | number, status: ApplicationStatus) =>
+    api.put(`/Application/${id}/status`, status),
+  withdraw: (id: string | number) =>
+    api.delete(`/Application/${id}`),
+  getStats: () =>
+    api.get('/Application/stats'),
+  downloadResume: (applicationId: string | number) =>
+    api.get(`/Application/download-resume/${applicationId}`, {
+      responseType: 'blob',
+    }),
+};
+
+// Company APIs
+export const companyAPI = {
+  banStudent: (studentId: string | number, reason: string) =>
+    api.post(`/Company/ban-student/${studentId}`, { Reason: reason } as BanStudentData),
+  unbanStudent: (studentId: string | number) =>
+    api.post(`/Company/unban-student/${studentId}`),
+  getBannedStudents: () =>
+    api.get('/Company/banned-students'),
+};
+
+// Admin APIs
+export const adminAPI = {
+  getDashboard: () =>
+    api.get('/Admin/dashboard'),
+  getStudents: (params?: AdminParams) =>
+    api.get('/Admin/students', { params }),
+  getCompanies: (params?: AdminParams) =>
+    api.get('/Admin/companies', { params }),
+  getInternships: (params?: AdminParams) =>
+    api.get('/Admin/internships', { params }),
+  getApplications: (params?: AdminParams) =>
+    api.get('/Admin/applications', { params }),
+  getReports: () =>
+    api.get('/Admin/reports'),
+  closeInternship: (id: string | number) =>
+    api.delete(`/Admin/internship/${id}`),
+  banUser: (userId: string | number, userType: string, reason: string) =>
+    api.post(`/Admin/ban-user/${userId}/${userType}`, { Reason: reason } as BanUserData),
+  unbanUser: (userId: string | number, userType: string) =>
+    api.post(`/Admin/unban-user/${userId}/${userType}`),
+  getBannedUsers: () =>
+    api.get('/Admin/banned-users'),
+};
+
+export default api;

@@ -368,3 +368,79 @@ body::after {
 select.retro-input option { background: #0a0a20; color: #e0e8f0; }
 
 textarea.retro-input { resize: vertical; min-height: 100px; }
+
+@theme {
+  --font-display: "Orbitron", sans-serif;
+  --font-body: "Rajdhani", sans-serif;
+  
+  --color-neon-purple: #b026ff;
+  --color-neon-blue: #00f3ff;
+  --color-neon-pink: #ff0099;
+  --color-neon-orange: #ff9d00;
+  --color-dark-bg: #050510;
+  --color-panel-bg: rgba(20, 20, 40, 0.8);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    background-color: var(--color-dark-bg);
+    color: #e0e0e0;
+    font-family: var(--font-body);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+@layer utilities {
+  .text-glow-purple {
+    text-shadow: 0 0 10px rgba(176, 38, 255, 0.7), 0 0 20px rgba(176, 38, 255, 0.5);
+  }
+  
+  .text-glow-blue {
+    text-shadow: 0 0 10px rgba(0, 243, 255, 0.7), 0 0 20px rgba(0, 243, 255, 0.5);
+  }
+  
+  .text-glow-pink {
+    text-shadow: 0 0 10px rgba(255, 0, 153, 0.7), 0 0 20px rgba(255, 0, 153, 0.5);
+  }
+
+  .box-glow {
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.3), inset 0 0 15px rgba(0, 243, 255, 0.1);
+  }
+
+  .grid-bg {
+    background-image: 
+      linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center bottom;
+    mask-image: linear-gradient(to bottom, transparent 5%, black 40%);
+  }
+
+  .scanline {
+    background: linear-gradient(
+      to bottom,
+      rgba(255,255,255,0),
+      rgba(255,255,255,0) 50%,
+      rgba(0,0,0,0.1) 50%,
+      rgba(0,0,0,0.1)
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+  }
+}
