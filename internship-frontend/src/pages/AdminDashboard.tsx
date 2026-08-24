@@ -2,12 +2,19 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../services/api';
-import toast, { Toaster } from 'react-hot-toast';
-import { 
+import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
+import {
   Briefcase, LogOut, Users, Building2, FileText,
   CheckCircle, RefreshCw, Ban, ShieldAlert, X, UserX,
   BarChart3, PieChart, Award, Shield
 } from 'lucide-react';
+import StatCounter from '../motion/StatCounter';
+import TiltCard from '../motion/TiltCard';
+import { staggerContainer, staggerItem } from '../motion/staggerVariants';
+import FixedNavbar from '../motion/FixedNavbar';
+import AnimatedModal from '../motion/AnimatedModal';
+import SuccessPulse from '../motion/SuccessPulse';
 
 interface DashboardStats {
   totalStudents: number;
@@ -65,6 +72,10 @@ export default function AdminDashboard() {
   const [showBannedUsersModal, setShowBannedUsersModal] = useState(false);
   const [showUsersModal, setShowUsersModal] = useState(false);
   const [userModalType, setUserModalType] = useState<'students' | 'companies'>('students');
+  const [banPulse, setBanPulse] = useState(0);
+  // Which user the last successful ban applied to, so the ban pulse fires on
+  // that one row's Ban button inside the Users modal rather than on every row.
+  const [banPulseUserId, setBanPulseUserId] = useState<number | null>(null);
 
   const formatDate = (dateValue: string | null | undefined): string => {
     if (!dateValue) return 'N/A';
@@ -119,6 +130,8 @@ export default function AdminDashboard() {
     try {
       await adminAPI.banUser(userId, userType, reason);
       toast.success(`${userName} has been banned and logged out`);
+      setBanPulseUserId(userId);
+      setBanPulse(p => p + 1);
       loadAllData();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -148,6 +161,17 @@ export default function AdminDashboard() {
   const openUsersModal = (type: 'students' | 'companies') => {
     setUserModalType(type);
     setShowUsersModal(true);
+  };
+
+  /**
+   * Clearing `banPulseUserId` on close matters: `AnimatedModal` unmounts its
+   * children when closed, so a still-set id would make `SuccessPulse` mount
+   * fresh on the next open with a `trigger` that already matches a row, and
+   * replay the checkmark even though no ban just happened.
+   */
+  const closeUsersModal = () => {
+    setShowUsersModal(false);
+    setBanPulseUserId(null);
   };
 
   const stats = [
@@ -194,21 +218,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen" style={{ background: '#050510' }}>
-      <Toaster 
-        position="top-right" 
-        toastOptions={{ 
-          style: { 
-            background: '#080820', 
-            border: '1px solid rgba(255,80,80,0.3)', 
-            color: '#d0d8e8', 
-            fontFamily: 'Share Tech Mono, monospace', 
-            fontSize: '0.8rem' 
-          } 
-        }} 
-      />
-      
       {/* Header */}
-      <header className="retro-navbar">
+      <FixedNavbar>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 border flex items-center justify-center" style={{ background: 'rgba(255,80,80,0.05)', borderColor: 'rgba(255,80,80,0.3)' }}>
@@ -237,7 +248,7 @@ export default function AdminDashboard() {
             >
               <ShieldAlert className="h-4 w-4" style={{ color: '#ff6666' }} />
               {bannedUsers.length > 0 && (
-                <span 
+                <span
                   className="absolute -top-1 -right-1 h-4 w-4 text-white text-xs font-bold rounded-full flex items-center justify-center"
                   style={{ background: '#ff6666', fontSize: '0.6rem' }}
                 >
@@ -252,7 +263,7 @@ export default function AdminDashboard() {
             </button>
           </div>
         </div>
-      </header>
+      </FixedNavbar>
 
       <div className="max-w-7xl mx-auto px-6 pt-28 pb-12">
         {/* Welcome Section */}
@@ -285,7 +296,7 @@ export default function AdminDashboard() {
                   <stat.icon className="h-5 w-5" style={{ color: stat.color }} />
                 </div>
                 <div className="font-['Orbitron'] font-black text-3xl" style={{ color: stat.color }}>
-                  {stat.value}
+                  <StatCounter value={stat.value} />
                 </div>
               </div>
               <div className="font-['Orbitron'] text-xs tracking-widest uppercase" style={{ color: 'rgba(160,180,200,0.5)' }}>
@@ -322,9 +333,9 @@ export default function AdminDashboard() {
                   </div>
                   <h4 className="font-['Orbitron'] text-sm text-white tracking-wide">Top Companies</h4>
                 </div>
-                <div className="space-y-3">
+                <motion.div key={reports.topCompanies?.length ?? 0} className="space-y-3" variants={staggerContainer()} initial="hidden" animate="show">
                   {reports.topCompanies?.slice(0, 5).map((company, index) => (
-                    <div key={index} className="flex items-center justify-between p-3" style={{ background: 'rgba(0,0,20,0.5)', border: '1px solid rgba(0,243,255,0.1)' }}>
+                    <motion.div key={index} variants={staggerItem()} className="flex items-center justify-between p-3" style={{ background: 'rgba(0,0,20,0.5)', border: '1px solid rgba(0,243,255,0.1)' }}>
                       <div className="flex items-center gap-3">
                         <div className="font-['Orbitron'] text-xs" style={{ color: 'rgba(0,243,255,0.4)' }}>
                           #{index + 1}
@@ -336,14 +347,14 @@ export default function AdminDashboard() {
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                   {(!reports.topCompanies || reports.topCompanies.length === 0) && (
                     <p className="font-['Share_Tech_Mono'] text-xs text-center py-4" style={{ color: 'rgba(0,243,255,0.3)' }}>
                       No data available
                     </p>
                   )}
-                </div>
+                </motion.div>
               </div>
 
               {/* Application Status */}
@@ -357,13 +368,13 @@ export default function AdminDashboard() {
                   </div>
                   <h4 className="font-['Orbitron'] text-sm text-white tracking-wide">Application Status</h4>
                 </div>
-                <div className="space-y-3">
+                <motion.div key={reports.applicationsByStatus?.length ?? 0} className="space-y-3" variants={staggerContainer()} initial="hidden" animate="show">
                   {reports.applicationsByStatus?.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3" style={{ background: 'rgba(0,0,20,0.5)', border: '1px solid rgba(176,38,255,0.1)' }}>
+                    <motion.div key={index} variants={staggerItem()} className="flex items-center justify-between p-3" style={{ background: 'rgba(0,0,20,0.5)', border: '1px solid rgba(176,38,255,0.1)' }}>
                       <div className="flex items-center gap-3">
-                        <div 
+                        <div
                           className="h-3 w-3 rounded-full"
-                          style={{ 
+                          style={{
                             background: item.status === 'Pending' ? 'var(--neon-orange)' :
                                         item.status === 'Accepted' ? '#00ff78' : '#ff6666'
                           }}
@@ -373,14 +384,14 @@ export default function AdminDashboard() {
                       <span className="font-['Orbitron'] text-lg" style={{ color: 'var(--neon-purple)' }}>
                         {item.count}
                       </span>
-                    </div>
+                    </motion.div>
                   ))}
                   {(!reports.applicationsByStatus || reports.applicationsByStatus.length === 0) && (
                     <p className="font-['Share_Tech_Mono'] text-xs text-center py-4" style={{ color: 'rgba(176,38,255,0.3)' }}>
                       No data available
                     </p>
                   )}
-                </div>
+                </motion.div>
               </div>
             </div>
           </div>
@@ -401,9 +412,9 @@ export default function AdminDashboard() {
                   </div>
                   <h4 className="font-['Orbitron'] text-sm text-white tracking-wide">Top Students</h4>
                 </div>
-                <div className="space-y-3">
+                <motion.div key={reports.topStudents?.length ?? 0} className="space-y-3" variants={staggerContainer()} initial="hidden" animate="show">
                   {reports.topStudents?.slice(0, 5).map((student, index) => (
-                    <div key={index} className="flex items-center justify-between p-3" style={{ background: 'rgba(0,0,20,0.5)', border: '1px solid rgba(0,255,120,0.1)' }}>
+                    <motion.div key={index} variants={staggerItem()} className="flex items-center justify-between p-3" style={{ background: 'rgba(0,0,20,0.5)', border: '1px solid rgba(0,255,120,0.1)' }}>
                       <div className="flex items-center gap-3">
                         <div className="font-['Orbitron'] text-xs" style={{ color: 'rgba(0,255,120,0.4)' }}>
                           #{index + 1}
@@ -415,14 +426,14 @@ export default function AdminDashboard() {
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                   {(!reports.topStudents || reports.topStudents.length === 0) && (
                     <p className="font-['Share_Tech_Mono'] text-xs text-center py-4" style={{ color: 'rgba(0,255,120,0.3)' }}>
                       No data available
                     </p>
                   )}
-                </div>
+                </motion.div>
               </div>
 
               {/* Internship Status */}
@@ -436,11 +447,11 @@ export default function AdminDashboard() {
                   </div>
                   <h4 className="font-['Orbitron'] text-sm text-white tracking-wide">Internship Status</h4>
                 </div>
-                <div className="space-y-3">
+                <motion.div key={reports.internshipsByStatus?.length ?? 0} className="space-y-3" variants={staggerContainer()} initial="hidden" animate="show">
                   {reports.internshipsByStatus?.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3" style={{ background: 'rgba(0,0,20,0.5)', border: '1px solid rgba(255,157,0,0.1)' }}>
+                    <motion.div key={index} variants={staggerItem()} className="flex items-center justify-between p-3" style={{ background: 'rgba(0,0,20,0.5)', border: '1px solid rgba(255,157,0,0.1)' }}>
                       <div className="flex items-center gap-3">
-                        <div 
+                        <div
                           className="h-3 w-3 rounded-full"
                           style={{ background: item.status === 'Active' ? '#00ff78' : 'rgba(100,100,100,0.5)' }}
                         />
@@ -449,14 +460,14 @@ export default function AdminDashboard() {
                       <span className="font-['Orbitron'] text-lg" style={{ color: 'var(--neon-orange)' }}>
                         {item.count}
                       </span>
-                    </div>
+                    </motion.div>
                   ))}
                   {(!reports.internshipsByStatus || reports.internshipsByStatus.length === 0) && (
                     <p className="font-['Share_Tech_Mono'] text-xs text-center py-4" style={{ color: 'rgba(255,157,0,0.3)' }}>
                       No data available
                     </p>
                   )}
-                </div>
+                </motion.div>
               </div>
             </div>
           </div>
@@ -464,170 +475,189 @@ export default function AdminDashboard() {
       </div>
 
       {/* Users Modal */}
-      {showUsersModal && (
-        <div className="retro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowUsersModal(false) }}>
-          <div className="retro-modal" style={{ maxWidth: '800px' }}>
-            <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'rgba(0,243,255,0.15)' }}>
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-10 h-10 flex items-center justify-center border"
-                  style={{ 
-                    background: userModalType === 'students' ? 'rgba(0,243,255,0.1)' : 'rgba(176,38,255,0.1)',
-                    borderColor: userModalType === 'students' ? 'rgba(0,243,255,0.3)' : 'rgba(176,38,255,0.3)'
-                  }}
-                >
-                  {userModalType === 'students' ? (
-                    <Users className="h-5 w-5" style={{ color: 'var(--neon-cyan)' }} />
-                  ) : (
-                    <Building2 className="h-5 w-5" style={{ color: 'var(--neon-purple)' }} />
-                  )}
-                </div>
-                <div>
-                  <h2 className="font-['Orbitron'] text-sm text-white tracking-widest">
-                    // {userModalType === 'students' ? 'ALL STUDENTS' : 'ALL COMPANIES'}
-                  </h2>
-                  <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(0,243,255,0.5)' }}>
-                    {userModalType === 'students' ? students.length : companies.length} total
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowUsersModal(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,243,255,0.5)' }}
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
-              {(userModalType === 'students' ? students : companies).map((item) => (
-                <div
-                  key={userModalType === 'students' ? (item as Student).studentID : (item as Company).companyID}
-                  className="p-4 flex items-center justify-between"
-                  style={{ background: 'rgba(0,0,20,0.6)', border: '1px solid rgba(0,243,255,0.12)' }}
-                >
-                  <div className="flex-1">
-                    <h3 className="font-['Orbitron'] text-sm text-white mb-1">
-                      {userModalType === 'students' 
-                        ? `${(item as Student).firstName} ${(item as Student).lastName}` 
-                        : (item as Company).companyName}
-                    </h3>
-                    <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(0,243,255,0.5)' }}>
-                      {item.email}
-                    </p>
-                    {userModalType === 'students' && (item as Student).university && (
-                      <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: 'rgba(100,120,140,0.6)' }}>
-                        {(item as Student).university} - {(item as Student).degree}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => handleBanUser(
-                      userModalType === 'students' ? (item as Student).studentID : (item as Company).companyID,
-                      userModalType === 'students' ? 'Student' : 'Company',
-                      userModalType === 'students' ? `${(item as Student).firstName} ${(item as Student).lastName}` : (item as Company).companyName
-                    )}
-                    className="btn-retro-danger-sm"
-                  >
-                    <Ban className="h-3 w-3" />
-                    Ban
-                  </button>
-                </div>
-              ))}
-              {(userModalType === 'students' ? students : companies).length === 0 && (
-                <div className="text-center py-8">
-                  <p className="font-['Orbitron'] text-xs tracking-widest" style={{ color: 'rgba(0,243,255,0.3)' }}>
-                    NO {userModalType.toUpperCase()} FOUND
-                  </p>
-                </div>
+      <AnimatedModal
+        isOpen={showUsersModal}
+        onClose={closeUsersModal}
+        maxWidth="800px"
+        ariaLabel={userModalType === 'students' ? 'All students' : 'All companies'}
+      >
+        <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'rgba(0,243,255,0.15)' }}>
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 flex items-center justify-center border"
+              style={{
+                background: userModalType === 'students' ? 'rgba(0,243,255,0.1)' : 'rgba(176,38,255,0.1)',
+                borderColor: userModalType === 'students' ? 'rgba(0,243,255,0.3)' : 'rgba(176,38,255,0.3)'
+              }}
+            >
+              {userModalType === 'students' ? (
+                <Users className="h-5 w-5" style={{ color: 'var(--neon-cyan)' }} />
+              ) : (
+                <Building2 className="h-5 w-5" style={{ color: 'var(--neon-purple)' }} />
               )}
             </div>
+            <div>
+              <h2 className="font-['Orbitron'] text-sm text-white tracking-widest">
+                // {userModalType === 'students' ? 'ALL STUDENTS' : 'ALL COMPANIES'}
+              </h2>
+              <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(0,243,255,0.5)' }}>
+                {userModalType === 'students' ? students.length : companies.length} total
+              </p>
+            </div>
           </div>
+          <button
+            onClick={closeUsersModal}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,243,255,0.5)' }}
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
-      )}
+
+        <motion.div key={userModalType} className="p-6 space-y-3 max-h-[60vh] overflow-y-auto" variants={staggerContainer()} initial="hidden" animate="show">
+          {(userModalType === 'students' ? students : companies).map((item) => (
+            <motion.div
+              key={userModalType === 'students' ? (item as Student).studentID : (item as Company).companyID}
+              variants={staggerItem()}
+              className="p-4 flex items-center justify-between"
+              style={{ background: 'rgba(0,0,20,0.6)', border: '1px solid rgba(0,243,255,0.12)' }}
+            >
+              <div className="flex-1">
+                <h3 className="font-['Orbitron'] text-sm text-white mb-1">
+                  {userModalType === 'students'
+                    ? `${(item as Student).firstName} ${(item as Student).lastName}`
+                    : (item as Company).companyName}
+                </h3>
+                <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(0,243,255,0.5)' }}>
+                  {item.email}
+                </p>
+                {userModalType === 'students' && (item as Student).university && (
+                  <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: 'rgba(100,120,140,0.6)' }}>
+                    {(item as Student).university} - {(item as Student).degree}
+                  </p>
+                )}
+              </div>
+              {/* The ban pulse is anchored HERE, on the row's own Ban button
+                  inside the Users modal, not on the header's ShieldAlert
+                  button. `handleBanUser` is only reachable from inside this
+                  modal, and the modal stays open on success — a pulse on the
+                  header button would fire behind the overlay's blur backdrop
+                  and never actually be seen. */}
+              <div className="relative inline-block">
+                <button
+                  onClick={() => handleBanUser(
+                    userModalType === 'students' ? (item as Student).studentID : (item as Company).companyID,
+                    userModalType === 'students' ? 'Student' : 'Company',
+                    userModalType === 'students' ? `${(item as Student).firstName} ${(item as Student).lastName}` : (item as Company).companyName
+                  )}
+                  className="btn-retro-danger-sm"
+                >
+                  <Ban className="h-3 w-3" />
+                  Ban
+                </button>
+                <SuccessPulse
+                  trigger={
+                    (userModalType === 'students' ? (item as Student).studentID : (item as Company).companyID) === banPulseUserId
+                      ? banPulse
+                      : 0
+                  }
+                  color="#ff6666"
+                />
+              </div>
+            </motion.div>
+          ))}
+          {(userModalType === 'students' ? students : companies).length === 0 && (
+            <div className="text-center py-8">
+              <p className="font-['Orbitron'] text-xs tracking-widest" style={{ color: 'rgba(0,243,255,0.3)' }}>
+                NO {userModalType.toUpperCase()} FOUND
+              </p>
+            </div>
+          )}
+        </motion.div>
+      </AnimatedModal>
 
       {/* Banned Users Modal */}
-      {showBannedUsersModal && (
-        <div className="retro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowBannedUsersModal(false) }}>
-          <div className="retro-modal" style={{ maxWidth: '640px' }}>
-            <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'rgba(255,80,80,0.2)' }}>
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-10 h-10 flex items-center justify-center border"
-                  style={{ background: 'rgba(255,80,80,0.1)', borderColor: 'rgba(255,80,80,0.3)' }}
-                >
-                  <ShieldAlert className="h-5 w-5" style={{ color: '#ff6666' }} />
-                </div>
-                <div>
-                  <h2 className="font-['Orbitron'] text-sm text-white tracking-widest">// BANNED USERS</h2>
-                  <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(255,80,80,0.5)' }}>
-                    {bannedUsers.length} users banned
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowBannedUsersModal(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,80,80,0.5)' }}
-              >
-                <X className="h-5 w-5" />
-              </button>
+      <AnimatedModal
+        isOpen={showBannedUsersModal}
+        onClose={() => setShowBannedUsersModal(false)}
+        maxWidth="640px"
+        ariaLabel="Banned users"
+      >
+        <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'rgba(255,80,80,0.2)' }}>
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 flex items-center justify-center border"
+              style={{ background: 'rgba(255,80,80,0.1)', borderColor: 'rgba(255,80,80,0.3)' }}
+            >
+              <ShieldAlert className="h-5 w-5" style={{ color: '#ff6666' }} />
             </div>
-
-            <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
-              {bannedUsers.length === 0 ? (
-                <div className="text-center py-12">
-                  <UserX className="h-12 w-12 mx-auto mb-3" style={{ color: 'rgba(255,80,80,0.2)' }} />
-                  <p className="font-['Orbitron'] text-xs tracking-widest" style={{ color: 'rgba(255,80,80,0.3)' }}>
-                    NO BANNED USERS
-                  </p>
-                </div>
-              ) : (
-                bannedUsers.map((ban) => (
-                  <div
-                    key={ban.banId}
-                    className="p-4 flex items-start justify-between"
-                    style={{ background: 'rgba(20,0,0,0.6)', border: '1px solid rgba(255,80,80,0.15)' }}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-['Orbitron'] text-sm text-white">{ban.userName}</h3>
-                        <span 
-                          className="px-2 py-0.5 text-xs font-['Orbitron']"
-                          style={{ 
-                            background: ban.userType === 'Student' ? 'rgba(0,243,255,0.1)' : 'rgba(176,38,255,0.1)',
-                            border: `1px solid ${ban.userType === 'Student' ? 'rgba(0,243,255,0.3)' : 'rgba(176,38,255,0.3)'}`,
-                            color: ban.userType === 'Student' ? 'var(--neon-cyan)' : 'var(--neon-purple)'
-                          }}
-                        >
-                          {ban.userType}
-                        </span>
-                      </div>
-                      <p className="font-['Share_Tech_Mono'] text-xs mb-2" style={{ color: 'rgba(255,80,80,0.5)' }}>
-                        {ban.email}
-                      </p>
-                      {ban.reason && (
-                        <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(100,120,140,0.6)' }}>
-                          Reason: {ban.reason}
-                        </p>
-                      )}
-                      <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: 'rgba(100,120,140,0.5)' }}>
-                        Banned on: {formatDate(ban.bannedAt)}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleUnbanUser(ban.userId, ban.userType, ban.userName)}
-                      className="btn-retro-green-sm"
-                    >
-                      <CheckCircle className="h-3 w-3" />
-                      Unban
-                    </button>
-                  </div>
-                ))
-              )}
+            <div>
+              <h2 className="font-['Orbitron'] text-sm text-white tracking-widest">// BANNED USERS</h2>
+              <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(255,80,80,0.5)' }}>
+                {bannedUsers.length} users banned
+              </p>
             </div>
           </div>
+          <button
+            onClick={() => setShowBannedUsersModal(false)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,80,80,0.5)' }}
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
-      )}
+
+        <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
+          {bannedUsers.length === 0 ? (
+            <div className="text-center py-12">
+              <UserX className="h-12 w-12 mx-auto mb-3" style={{ color: 'rgba(255,80,80,0.2)' }} />
+              <p className="font-['Orbitron'] text-xs tracking-widest" style={{ color: 'rgba(255,80,80,0.3)' }}>
+                NO BANNED USERS
+              </p>
+            </div>
+          ) : (
+            bannedUsers.map((ban) => (
+              <div
+                key={ban.banId}
+                className="p-4 flex items-start justify-between"
+                style={{ background: 'rgba(20,0,0,0.6)', border: '1px solid rgba(255,80,80,0.15)' }}
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-['Orbitron'] text-sm text-white">{ban.userName}</h3>
+                    <span
+                      className="px-2 py-0.5 text-xs font-['Orbitron']"
+                      style={{
+                        background: ban.userType === 'Student' ? 'rgba(0,243,255,0.1)' : 'rgba(176,38,255,0.1)',
+                        border: `1px solid ${ban.userType === 'Student' ? 'rgba(0,243,255,0.3)' : 'rgba(176,38,255,0.3)'}`,
+                        color: ban.userType === 'Student' ? 'var(--neon-cyan)' : 'var(--neon-purple)'
+                      }}
+                    >
+                      {ban.userType}
+                    </span>
+                  </div>
+                  <p className="font-['Share_Tech_Mono'] text-xs mb-2" style={{ color: 'rgba(255,80,80,0.5)' }}>
+                    {ban.email}
+                  </p>
+                  {ban.reason && (
+                    <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(100,120,140,0.6)' }}>
+                      Reason: {ban.reason}
+                    </p>
+                  )}
+                  <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: 'rgba(100,120,140,0.5)' }}>
+                    Banned on: {formatDate(ban.bannedAt)}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleUnbanUser(ban.userId, ban.userType, ban.userName)}
+                  className="btn-retro-green-sm"
+                >
+                  <CheckCircle className="h-3 w-3" />
+                  Unban
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </AnimatedModal>
     </div>
   );
 }
