@@ -3,7 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { internshipAPI, applicationAPI } from '../services/api';
 import { Briefcase, LogOut, Search, MapPin, Calendar, Building2, FileText, CheckCircle, Clock, XCircle, ExternalLink, RefreshCw } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
+import StatCounter from '../motion/StatCounter';
+import TiltCard from '../motion/TiltCard';
+import { staggerContainer, staggerItem } from '../motion/staggerVariants';
+import FixedNavbar from '../motion/FixedNavbar';
 
 interface Internship {
   internshipID: number;
@@ -132,21 +137,8 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen" style={{ background: '#050510' }}>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: '#080820',
-            border: '1px solid rgba(0,243,255,0.3)',
-            color: '#d0d8e8',
-            fontFamily: 'Share Tech Mono, monospace',
-            fontSize: '0.8rem'
-          }
-        }}
-      />
-
       {/* Navbar */}
-      <header className="retro-navbar">
+      <FixedNavbar>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
@@ -184,7 +176,7 @@ export default function StudentDashboard() {
             </button>
           </div>
         </div>
-      </header>
+      </FixedNavbar>
 
       <div className="max-w-7xl mx-auto px-6 pt-28 pb-12">
         {/* Welcome */}
@@ -211,7 +203,7 @@ export default function StudentDashboard() {
           {stats.map((s, i) => (
             <div key={i} className="stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
               <div className="font-['Orbitron'] font-black text-3xl mb-1" style={{ color: s.color }}>
-                {s.value}
+                <StatCounter value={s.value} />
               </div>
               <div
                 className="font-['Orbitron'] text-xs tracking-widest uppercase"
@@ -274,7 +266,19 @@ export default function StudentDashboard() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-5">
+            {/* Keyed on the RESULT COUNT, not the raw filter text. Filtering
+                is instant and client-side, so keying on `searchTerm` meant
+                this container remounted and replayed the whole stagger
+                entrance on every single keystroke — visible flicker while
+                typing. Matches the `key={internships.length}` convention
+                CompanyDashboard's own grid already uses. */}
+            <motion.div
+              key={filtered.length}
+              className="grid md:grid-cols-2 gap-5"
+              variants={staggerContainer()}
+              initial="hidden"
+              animate="show"
+            >
               {filtered.length === 0 ? (
                 <div className="col-span-2 text-center py-16">
                   <Briefcase className="h-12 w-12 mx-auto mb-4" style={{ color: 'rgba(0,243,255,0.15)' }} />
@@ -287,7 +291,8 @@ export default function StudentDashboard() {
                 </div>
               ) : (
                 filtered.map(internship => (
-                  <div key={internship.internshipID} className="internship-card group">
+                  <motion.div key={internship.internshipID} variants={staggerItem()}>
+                  <TiltCard className="internship-card group">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div
@@ -325,16 +330,17 @@ export default function StudentDashboard() {
                       <span>View Details</span>
                       <ExternalLink className="h-3.5 w-3.5" />
                     </button>
-                  </div>
+                  </TiltCard>
+                  </motion.div>
                 ))
               )}
-            </div>
+            </motion.div>
           </div>
         )}
 
         {/* Applications Tab */}
         {activeTab === 'applications' && (
-          <div className="space-y-4">
+          <motion.div className="space-y-4" variants={staggerContainer()} initial="hidden" animate="show">
             {applications.length === 0 ? (
               <div className="text-center py-16">
                 <FileText className="h-12 w-12 mx-auto mb-4" style={{ color: 'rgba(0,243,255,0.15)' }} />
@@ -350,7 +356,8 @@ export default function StudentDashboard() {
               </div>
             ) : (
               applications.map(app => (
-                <div key={app.applicationID} className="internship-card">
+                <motion.div key={app.applicationID} variants={staggerItem()}>
+                <TiltCard className="internship-card">
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-['Orbitron'] text-sm text-white mb-0.5">
@@ -369,10 +376,11 @@ export default function StudentDashboard() {
                     <Calendar className="h-3.5 w-3.5" />
                     Applied: {new Date(app.appliedAt).toLocaleDateString()}
                   </div>
-                </div>
+                </TiltCard>
+                </motion.div>
               ))
             )}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
