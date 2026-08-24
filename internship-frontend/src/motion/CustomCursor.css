@@ -1,0 +1,30 @@
+.custom-cursor-active,
+.custom-cursor-active * {
+  cursor: none !important;
+}
+
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  margin-top: -8px;
+  border-radius: 9999px;
+  background: var(--neon-cyan, #00f3ff);
+  box-shadow: 0 0 12px var(--neon-cyan, #00f3ff);
+  pointer-events: none;
+  z-index: 9999;
+  transition: width 0.2s ease, height 0.2s ease, margin 0.2s ease, background 0.2s ease, border 0.2s ease;
+}
+
+.custom-cursor--hover {
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  margin-top: -20px;
+  background: transparent;
+  border: 1.5px solid var(--neon-cyan, #00f3ff);
+  mix-blend-mode: difference;
+}

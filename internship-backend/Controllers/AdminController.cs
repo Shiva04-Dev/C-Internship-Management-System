@@ -365,10 +365,6 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
 
-        // ============================================================
-        // BAN FEATURES - NEW METHODS ADDED BELOW
-        // ============================================================
-
         // POST: api/Admin/ban-user/{userId}/{userType}
         [HttpPost("ban-user/{userId}/{userType}")]
         public async Task<IActionResult> BanUser(int userId, string userType, [FromBody] AdminBanReasonDto dto)

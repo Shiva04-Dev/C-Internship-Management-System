@@ -137,11 +137,7 @@ namespace C__Internship_Management_Program.Services
                     throw new Exception("Invalid user type");
             }
 
-            // ============================================================
-            // CHECK IF USER IS BANNED (ADMIN GLOBAL BAN)
-            // This check happens AFTER password verification
-            // but BEFORE generating tokens
-            // ============================================================
+            // Ban check runs after password verification, before token generation
             var isBanned = userType.ToLower() switch
             {
                 "student" => await _context.UserBans.AnyAsync(b => b.StudentID == userId && b.IsActive),
@@ -153,10 +149,6 @@ namespace C__Internship_Management_Program.Services
             {
                 throw new Exception("Your account has been suspended. Please contact support.");
             }
-            // ============================================================
-            // END OF BAN CHECK
-            // ============================================================
-
             return await GenerateAuthenticationResponse(userId, email, userType, name);
         }
 

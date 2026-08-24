@@ -46,8 +46,9 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
 
-        // Admin Registration
+        // Admin Registration — requires an existing Admin; first Admin comes from DatabaseSeeder
         [HttpPost("register/admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RegisterAdmin([FromBody] AdminRegisterDto dto)
         {
             try

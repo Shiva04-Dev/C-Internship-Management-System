@@ -120,12 +120,15 @@ var app = builder.Build();
 // Middleware
 app.UseForwardedHeaders();
 
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+if (app.Environment.IsDevelopment())
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Internship Management API v1");
-    c.RoutePrefix = "swagger";
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Internship Management API v1");
+        c.RoutePrefix = "swagger";
+    });
+}
 
 app.UseHttpsRedirection();
 
@@ -177,10 +180,17 @@ using (var scope = app.Services.CreateScope())
 
         logger.LogInformation("All tables verified!");
 
-        // Seed data
-        logger.LogInformation("Seeding demo data...");
-        await DatabaseSeeder.SeedData(context);
-        logger.LogInformation("Seeding complete!");
+        // Seeds well-known demo credentials (DatabaseSeeder.cs) — Development only
+        if (app.Environment.IsDevelopment())
+        {
+            logger.LogInformation("Seeding demo data...");
+            await DatabaseSeeder.SeedData(context);
+            logger.LogInformation("Seeding complete!");
+        }
+        else
+        {
+            logger.LogInformation("Skipping demo data seeding (not Development environment).");
+        }
 
         // Final counts
         adminCount = await context.Admins.CountAsync();

@@ -75,7 +75,9 @@ export default function LoginPage() {
     }
   };
 
+  // Dev-only convenience; demo credentials never ship in a production build
   const useDemoCredentials = () => {
+    if (!import.meta.env.DEV) return;
     const demo: DemoCredentialsMap = {
       student: { email: 'john.doe@student.com', password: 'Student123!' },
       company: { email: 'hr@techcorp.com', password: 'Company123!' },
@@ -256,23 +258,25 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={useDemoCredentials}
-              className="w-full flex items-center justify-center gap-2 py-2 text-xs transition-colors"
-              style={{
-                color: 'rgba(0,243,255,0.5)',
-                fontFamily: 'Orbitron, sans-serif',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              <Zap className="h-3.5 w-3.5" />
-              Load Demo Credentials
-            </button>
+            {import.meta.env.DEV && (
+              <button
+                type="button"
+                onClick={useDemoCredentials}
+                className="w-full flex items-center justify-center gap-2 py-2 text-xs transition-colors"
+                style={{
+                  color: 'rgba(0,243,255,0.5)',
+                  fontFamily: 'Orbitron, sans-serif',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <Zap className="h-3.5 w-3.5" />
+                Load Demo Credentials (dev only)
+              </button>
+            )}
 
             <button
               type="submit"
