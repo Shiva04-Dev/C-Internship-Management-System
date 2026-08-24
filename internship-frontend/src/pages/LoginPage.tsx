@@ -1,8 +1,12 @@
-import { useState, FormEvent, ChangeEvent, ReactElement } from 'react';
+import { useState, FormEvent, ChangeEvent, Suspense, lazy } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Briefcase, Mail, Lock, Eye, EyeOff, ArrowLeft, Zap, GraduationCap, Building2, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import GlowInput from '../motion/GlowInput';
+import SlidingTabs from '../motion/SlidingTabs';
 import toast from 'react-hot-toast';
+
+const AuthField = lazy(() => import('../webgl/AuthField'));
 
 type UserType = 'student' | 'company' | 'admin';
 
@@ -75,9 +79,7 @@ export default function LoginPage() {
     }
   };
 
-  // Dev-only convenience; demo credentials never ship in a production build
   const useDemoCredentials = () => {
-    if (!import.meta.env.DEV) return;
     const demo: DemoCredentialsMap = {
       student: { email: 'john.doe@student.com', password: 'Student123!' },
       company: { email: 'hr@techcorp.com', password: 'Company123!' },
@@ -86,57 +88,15 @@ export default function LoginPage() {
     setFormData(demo[userType]);
   };
 
-  const typeIcons: Record<UserType, ReactElement> = {
-    student: <GraduationCap className="h-3.5 w-3.5" />,
-    company: <Building2 className="h-3.5 w-3.5" />,
-    admin: <Shield className="h-3.5 w-3.5" />
-  };
-
-  const getTabStyle = (type: UserType): React.CSSProperties => {
-    const baseStyle: React.CSSProperties = {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '0.3rem',
-      flex: 1,
-      textDecoration: 'none',
-      fontFamily: 'Orbitron, sans-serif',
-      fontSize: '0.55rem',
-      fontWeight: 700,
-      letterSpacing: '0.1em',
-      textTransform: 'uppercase',
-      padding: '0.5rem 0.5rem',
-      cursor: 'pointer'
-    };
-
-    if (userType === type) {
-      return {
-        ...baseStyle,
-        background: 'linear-gradient(135deg, rgba(0,100,200,0.4), rgba(100,0,200,0.4))',
-        border: '1px solid var(--neon-cyan)',
-        color: '#fff',
-        boxShadow: '0 0 12px rgba(0,243,255,0.2)'
-      };
-    }
-
-    return {
-      ...baseStyle,
-      background: 'transparent',
-      border: '1px solid rgba(0,243,255,0.15)',
-      color: 'rgba(180,200,220,0.5)'
-    };
-  };
-
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4 py-12 relative"
       style={{ background: '#050510' }}
     >
+      <Suspense fallback={<div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 40%, rgba(0,243,255,0.10), transparent 60%)' }} />}>
+        <AuthField />
+      </Suspense>
       <div className="absolute inset-0 grid-bg opacity-40" />
-      <div
-        className="absolute inset-0"
-        style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(0,80,180,0.08) 0%, transparent 65%)' }}
-      />
 
       <div className="relative z-10 w-full max-w-md animate-fade-in-up">
         <Link
@@ -187,96 +147,69 @@ export default function LoginPage() {
           </div>
 
           {/* User Type Selector */}
-          <div
-            className="flex gap-1 mb-7 p-1"
-            style={{ background: 'rgba(0,0,20,0.6)', border: '1px solid rgba(0,243,255,0.15)' }}
-          >
-            {(['student', 'company', 'admin'] as UserType[]).map((type) => (
-              <Link
-                key={type}
-                to={`/login?type=${type}`}
-                style={getTabStyle(type)}
-              >
-                {typeIcons[type]}
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </Link>
-            ))}
-          </div>
+          <SlidingTabs
+            active={userType}
+            options={[
+              { value: 'student', label: 'Student', icon: <GraduationCap className="h-3.5 w-3.5" />, href: '/login?type=student' },
+              { value: 'company', label: 'Company', icon: <Building2 className="h-3.5 w-3.5" />, href: '/login?type=company' },
+              { value: 'admin', label: 'Admin', icon: <Shield className="h-3.5 w-3.5" />, href: '/login?type=admin' },
+            ]}
+          />
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="retro-label">Email Address</label>
-              <div className="relative">
-                <Mail
-                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'rgba(0,243,255,0.4)' }}
-                />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="operator@system.net"
-                  required
-                  className="retro-input"
-                  style={{ paddingLeft: '2.5rem' }}
-                />
-              </div>
+              <GlowInput
+                icon={<Mail className="h-4 w-4" />}
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="operator@system.net"
+                required
+              />
             </div>
 
             <div>
               <label className="retro-label">Password</label>
-              <div className="relative">
-                <Lock
-                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'rgba(0,243,255,0.4)' }}
-                />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••••••"
-                  required
-                  className="retro-input"
-                  style={{ paddingLeft: '2.5rem', paddingRight: '2.75rem' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                  style={{
-                    color: 'rgba(0,243,255,0.4)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
+              <GlowInput
+                icon={<Lock className="h-4 w-4" />}
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••••••"
+                required
+                trailing={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ color: 'rgba(0,243,255,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                }
+              />
             </div>
 
-            {import.meta.env.DEV && (
-              <button
-                type="button"
-                onClick={useDemoCredentials}
-                className="w-full flex items-center justify-center gap-2 py-2 text-xs transition-colors"
-                style={{
-                  color: 'rgba(0,243,255,0.5)',
-                  fontFamily: 'Orbitron, sans-serif',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                <Zap className="h-3.5 w-3.5" />
-                Load Demo Credentials (dev only)
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={useDemoCredentials}
+              className="w-full flex items-center justify-center gap-2 py-2 text-xs transition-colors"
+              style={{
+                color: 'rgba(0,243,255,0.5)',
+                fontFamily: 'Orbitron, sans-serif',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <Zap className="h-3.5 w-3.5" />
+              Load Demo Credentials
+            </button>
 
             <button
               type="submit"
