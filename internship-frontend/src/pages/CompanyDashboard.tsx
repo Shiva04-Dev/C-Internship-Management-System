@@ -2,8 +2,15 @@ import { useState, useEffect, FormEvent, ChangeEvent, ReactElement } from 'react
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { internshipAPI, applicationAPI, companyAPI } from '../services/api';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 import { Briefcase, LogOut, Plus, Eye, X, Calendar, MapPin, CheckCircle, Clock, XCircle, Trash2, RefreshCw, Download, Ban, Building2, Shield, Zap } from 'lucide-react';
+import StatCounter from '../motion/StatCounter';
+import TiltCard from '../motion/TiltCard';
+import { staggerContainer, staggerItem } from '../motion/staggerVariants';
+import FixedNavbar from '../motion/FixedNavbar';
+import AnimatedModal from '../motion/AnimatedModal';
+import SuccessPulse from '../motion/SuccessPulse';
 
 interface Internship {
   internshipID: number;
@@ -18,6 +25,7 @@ interface Internship {
 }
 
 interface Student {
+  studentID?: number;
   name?: string;
   firstName?: string;
   lastName?: string;
@@ -26,7 +34,13 @@ interface Student {
 
 interface Application {
   applicationID: number;
-  studentID: number;
+  /**
+   * NOT sent by the API at the top level — `GET /api/Application/internship/{id}`
+   * nests the id as `student.studentID`. Kept optional (rather than deleted) so
+   * a future flatter payload still type-checks; read it through
+   * `studentIdOf(app)` below, never directly.
+   */
+  studentID?: number;
   internshipID: number;
   status: 'Pending' | 'Accepted' | 'Rejected';
   appliedAt: string;
@@ -34,11 +48,37 @@ interface Application {
   student?: Student;
 }
 
+/**
+ * The applications payload carries the student's id nested under `student`,
+ * so the old `app.studentID` read was always `undefined` and every Ban click
+ * from this modal POSTed `/api/Company/ban-student/undefined` and came back
+ * 400. Verified live against the running API on 2026-08-24: the response
+ * shape is `{ applicationID, status, appliedAt, updatedAt, resume, student: {
+ * studentID, firstName, ... } }`. Prefer the nested id, fall back to a
+ * top-level one if the API ever flattens.
+ */
+const studentIdOf = (app: Application): number | undefined => app.student?.studentID ?? app.studentID;
+
+/** Same name the application row renders, reused for the ban prompt/toast. */
+const displayName = (app: Application): string =>
+  app.student?.name || `${app.student?.firstName ?? ''} ${app.student?.lastName ?? ''}`.trim() || 'Student';
+
+/**
+ * Shape of `GET /api/Company/banned-students`, verified live against the
+ * running API on 2026-08-24:
+ * `{ banId, studentId, studentName, studentEmail, bannedAt, reason }`.
+ * The previous `{ studentID | id, name, email }` guess matched none of those,
+ * so every row rendered a blank name/email and Unban POSTed
+ * `/api/Company/unban-student/0` (404). It went unnoticed because banning was
+ * itself broken (see `studentIdOf`), so this list was always empty.
+ */
 interface BannedStudent {
-  studentID?: number;
-  id?: number;
-  name: string;
-  email: string;
+  banId: number;
+  studentId: number;
+  studentName: string;
+  studentEmail: string;
+  bannedAt?: string;
+  reason?: string;
 }
 
 interface FormData {
@@ -68,6 +108,11 @@ export default function CompanyDashboard() {
   const [showBannedStudentsModal, setShowBannedStudentsModal] = useState(false);
   const [formData, setFormData] = useState<FormData>({ title: '', description: '', requirements: '', location: '', startDate: '', endDate: '' });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [postPulse, setPostPulse] = useState(0);
+  const [banPulse, setBanPulse] = useState(0);
+  // Which student the last successful ban applied to, so the ban pulse fires
+  // on that one row's Ban button rather than on every row at once.
+  const [banPulseStudentId, setBanPulseStudentId] = useState<number | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -87,6 +132,17 @@ export default function CompanyDashboard() {
   };
 
   const handleRefresh = () => { setRefreshing(true); loadData(true); };
+
+  /**
+   * Clearing `banPulseStudentId` on close matters: `AnimatedModal` unmounts its
+   * children when closed, so a still-set id would make `SuccessPulse` mount
+   * fresh on the next open with a `trigger` that already matches a row, and
+   * replay the checkmark even though no ban just happened.
+   */
+  const closeApplicationsModal = () => {
+    setShowApplicationsModal(false);
+    setBanPulseStudentId(null);
+  };
 
   const loadApplications = async (internship: Internship) => {
     try {
@@ -109,12 +165,15 @@ export default function CompanyDashboard() {
     } catch { toast.error('Failed to update status'); }
   };
 
-  const handleBanStudent = async (studentId: number, name: string) => {
+  const handleBanStudent = async (studentId: number | undefined, name: string) => {
+    if (studentId === undefined) { toast.error('Could not identify that student'); return; }
     const reason = prompt(`Why are you banning ${name}?`);
     if (!reason) return;
     try {
       await companyAPI.banStudent(studentId, reason);
       toast.success(`${name} banned`);
+      setBanPulseStudentId(studentId);
+      setBanPulse(p => p + 1);
       loadData();
       if (selectedInternship) {
         const res = await applicationAPI.getForInternship(selectedInternship.internshipID);
@@ -167,6 +226,7 @@ export default function CompanyDashboard() {
     try {
       await internshipAPI.create(formData);
       toast.success('Internship posted!');
+      setPostPulse(p => p + 1);
       setShowCreateModal(false);
       setFormData({ title: '', description: '', requirements: '', location: '', startDate: '', endDate: '' });
       setFormErrors({});
@@ -211,10 +271,8 @@ export default function CompanyDashboard() {
 
   return (
     <div className="min-h-screen" style={{ background: '#050510' }}>
-      <Toaster position="top-right" toastOptions={{ style: { background: '#080820', border: '1px solid rgba(0,243,255,0.3)', color: '#d0d8e8', fontFamily: 'Share Tech Mono, monospace', fontSize: '0.8rem' } }} />
-
       {/* Navbar */}
-      <header className="retro-navbar">
+      <FixedNavbar>
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 border flex items-center justify-center" style={{ background: 'rgba(176,38,255,0.05)', borderColor: 'rgba(176,38,255,0.3)' }}>
@@ -237,7 +295,7 @@ export default function CompanyDashboard() {
             </button>
           </div>
         </div>
-      </header>
+      </FixedNavbar>
 
       <div className="max-w-7xl mx-auto px-6 pt-28 pb-12">
         <div className="mb-8 animate-fade-in-up flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -250,9 +308,12 @@ export default function CompanyDashboard() {
             </h2>
             <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(176,38,255,0.4)', letterSpacing: '0.08em' }}>Manage your internship programs</p>
           </div>
-          <button onClick={() => setShowCreateModal(true)} className="btn-retro-primary" style={{ borderColor: 'var(--neon-purple)', background: 'linear-gradient(135deg,#4400aa,#8800cc)' }}>
-            <Plus className="h-4 w-4" />Post New Internship
-          </button>
+          <div className="relative inline-block">
+            <button onClick={() => setShowCreateModal(true)} className="btn-retro-primary" style={{ borderColor: 'var(--neon-purple)', background: 'linear-gradient(135deg,#4400aa,#8800cc)' }}>
+              <Plus className="h-4 w-4" />Post New Internship
+            </button>
+            <SuccessPulse trigger={postPulse} color="var(--neon-purple)" />
+          </div>
         </div>
 
         {/* Stats */}
@@ -264,7 +325,7 @@ export default function CompanyDashboard() {
             { label: 'Banned', value: bannedStudents.length, color: '#ff6666' },
           ].map((s, i) => (
             <div key={i} className="stat-card">
-              <div className="font-['Orbitron'] font-black text-3xl mb-1" style={{ color: s.color }}>{s.value}</div>
+              <div className="font-['Orbitron'] font-black text-3xl mb-1" style={{ color: s.color }}><StatCounter value={s.value} /></div>
               <div className="font-['Orbitron'] text-xs tracking-widest uppercase" style={{ color: 'rgba(160,180,200,0.5)' }}>{s.label}</div>
               <div className="absolute top-3 right-3 w-2 h-2 rounded-full" style={{ background: s.color, boxShadow: `0 0 6px ${s.color}`, opacity: 0.7 }} />
             </div>
@@ -285,9 +346,16 @@ export default function CompanyDashboard() {
             </button>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-5">
+          <motion.div
+            key={internships.length}
+            className="grid md:grid-cols-2 gap-5"
+            variants={staggerContainer()}
+            initial="hidden"
+            animate="show"
+          >
             {internships.map(internship => (
-              <div key={internship.internshipID} className="internship-card" style={{ borderColor: 'rgba(176,38,255,0.2)' }}>
+              <motion.div key={internship.internshipID} variants={staggerItem()}>
+              <TiltCard className="internship-card" style={{ borderColor: 'rgba(176,38,255,0.2)' }}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 flex items-center justify-center border flex-shrink-0" style={{ background: 'rgba(100,0,200,0.15)', borderColor: 'rgba(176,38,255,0.25)' }}>
@@ -320,152 +388,166 @@ export default function CompanyDashboard() {
                     <Trash2 className="h-3.5 w-3.5" />Close
                   </button>
                 </div>
-              </div>
+              </TiltCard>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
 
       {/* Create Internship Modal */}
-      {showCreateModal && (
-        <div className="retro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowCreateModal(false) }}>
-          <div className="retro-modal" style={{ maxWidth: '580px' }}>
-            <div className="p-6 border-b" style={{ borderColor: 'rgba(0,243,255,0.15)' }}>
-              <div className="flex items-center justify-between">
-                <h2 className="font-['Orbitron'] text-sm tracking-widest text-white">// POST NEW INTERNSHIP</h2>
-                <button onClick={() => setShowCreateModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,243,255,0.5)' }}>
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-            <form onSubmit={handleCreateInternship} className="p-6 space-y-4">
-              {[['title', 'Internship Title', 'text', 'e.g. Frontend Developer Intern'], ['location', 'Location', 'text', 'e.g. Remote / Cape Town']].map(([name, label, type, ph]) => (
-                <div key={name}>
-                  <label className="retro-label">{label} *</label>
-                  <input type={type} name={name} value={formData[name as keyof FormData]} onChange={handleInputChange} placeholder={ph} className="retro-input" />
-                  {formErrors[name] && <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: '#ff6666' }}>{formErrors[name]}</p>}
-                </div>
-              ))}
-              <div className="grid grid-cols-2 gap-3">
-                {[['startDate', 'Start Date'], ['endDate', 'End Date']].map(([name, label]) => (
-                  <div key={name}>
-                    <label className="retro-label">{label} *</label>
-                    <input type="date" name={name} value={formData[name as keyof FormData]} onChange={handleInputChange} className="retro-input" style={{ colorScheme: 'dark' }} />
-                    {formErrors[name] && <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: '#ff6666' }}>{formErrors[name]}</p>}
-                  </div>
-                ))}
-              </div>
-              <div>
-                <label className="retro-label">Description *</label>
-                <textarea name="description" value={formData.description} onChange={handleInputChange} placeholder="Describe the internship role..." rows={3} className="retro-input" style={{ resize: 'vertical' }} />
-                {formErrors.description && <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: '#ff6666' }}>{formErrors.description}</p>}
-              </div>
-              <div>
-                <label className="retro-label">Requirements *</label>
-                <textarea name="requirements" value={formData.requirements} onChange={handleInputChange} placeholder="List requirements..." rows={3} className="retro-input" style={{ resize: 'vertical' }} />
-                {formErrors.requirements && <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: '#ff6666' }}>{formErrors.requirements}</p>}
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="btn-retro-secondary flex-1 justify-center" style={{ fontSize: '0.65rem' }}>Cancel</button>
-                <button type="submit" className="btn-retro-primary flex-1 justify-center" style={{ borderColor: 'var(--neon-purple)', background: 'linear-gradient(135deg,#4400aa,#8800cc)', fontSize: '0.65rem' }}>
-                  <Zap className="h-3.5 w-3.5" />Post Internship
-                </button>
-              </div>
-            </form>
+      <AnimatedModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} maxWidth="580px" ariaLabel="Post new internship">
+        <div className="p-6 border-b" style={{ borderColor: 'rgba(0,243,255,0.15)' }}>
+          <div className="flex items-center justify-between">
+            <h2 className="font-['Orbitron'] text-sm tracking-widest text-white">// POST NEW INTERNSHIP</h2>
+            <button onClick={() => setShowCreateModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,243,255,0.5)' }}>
+              <X className="h-5 w-5" />
+            </button>
           </div>
         </div>
-      )}
-
-      {/* Applications Modal */}
-      {showApplicationsModal && (
-        <div className="retro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowApplicationsModal(false) }}>
-          <div className="retro-modal" style={{ maxWidth: '640px' }}>
-            <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'rgba(0,243,255,0.15)' }}>
-              <div>
-                <h2 className="font-['Orbitron'] text-sm text-white mb-0.5">// APPLICATIONS</h2>
-                <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(0,243,255,0.5)' }}>{selectedInternship?.title}</p>
-              </div>
-              <button onClick={() => setShowApplicationsModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,243,255,0.5)' }}>
-                <X className="h-5 w-5" />
-              </button>
+        <form onSubmit={handleCreateInternship} className="p-6 space-y-4">
+          {[['title', 'Internship Title', 'text', 'e.g. Frontend Developer Intern'], ['location', 'Location', 'text', 'e.g. Remote / Cape Town']].map(([name, label, type, ph]) => (
+            <div key={name}>
+              <label className="retro-label">{label} *</label>
+              <input type={type} name={name} value={formData[name as keyof FormData]} onChange={handleInputChange} placeholder={ph} className="retro-input" />
+              {formErrors[name] && <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: '#ff6666' }}>{formErrors[name]}</p>}
             </div>
-            <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-              {applications.length === 0 ? (
-                <div className="text-center py-8">
-                <p className="font-['Orbitron'] text-xs tracking-widest" style={{ color: 'rgba(0,243,255,0.3)' }}>NO APPLICATIONS RECEIVED</p>
-              </div>
-              ) : applications.map(app => (
-              <div key={app.applicationID} className="p-4" style={{ background: 'rgba(0,0,20,0.6)', border: '1px solid rgba(0,243,255,0.12)' }}>
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="font-['Orbitron'] text-xs text-white">{app.student?.name || `${app.student?.firstName} ${app.student?.lastName}` || 'Student'}</p>
-                    <p className="font-['Share_Tech_Mono'] text-xs mt-0.5" style={{ color: 'rgba(0,243,255,0.4)' }}>{app.student?.email}</p>
-                  </div>
-                  {getStatusBadge(app.status)}
-                </div>
-                <p className="font-['Share_Tech_Mono'] text-xs mb-3" style={{ color: 'rgba(100,120,140,0.6)' }}>
-                  Applied: {new Date(app.appliedAt).toLocaleDateString()}
-                </p>
-                {app.status === 'Pending' && (
-                  <div className="flex flex-wrap gap-2">
-                    <button onClick={() => handleStatusUpdate(app.applicationID, 'Accepted')} className="btn-retro-green-sm">
-                      <CheckCircle className="h-3 w-3" />Accept
-                    </button>
-                    <button onClick={() => handleStatusUpdate(app.applicationID, 'Rejected')} className="btn-retro-danger-sm">
-                      <XCircle className="h-3 w-3" />Reject
-                    </button>
-                    {app.resumePath && (
-                    <button onClick={() => handleDownloadResume(app.applicationID, app.student?.name || 'Student')} className="btn-retro-sm">
-                      <Download className="h-3 w-3" />Resume
-                    </button>
-                  )}
-                  <button onClick={() => handleBanStudent(app.studentID, app.student?.name || 'Student')} className="btn-retro-danger-sm">
-                    <Ban className="h-3 w-3" />Ban
-                  </button>
-                </div>
-                )}
-                {app.status !== 'Pending' && app.resumePath && (
-                <button onClick={() => handleDownloadResume(app.applicationID, app.student?.name || 'Student')} className="btn-retro-sm">
-                  <Download className="h-3 w-3" />Download Resume
-                </button>
-              )}
-              </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Banned Students Modal */}
-      {showBannedStudentsModal && (
-        <div className="retro-modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowBannedStudentsModal(false) }}>
-          <div className="retro-modal" style={{ maxWidth: '520px' }}>
-            <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'rgba(255,80,80,0.2)' }}>
-              <h2 className="font-['Orbitron'] text-sm text-white">// BANNED STUDENTS</h2>
-              <button onClick={() => setShowBannedStudentsModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,80,80,0.5)' }}>
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
-              {bannedStudents.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="font-['Orbitron'] text-xs tracking-widest" style={{ color: 'rgba(0,243,255,0.3)' }}>NO BANNED STUDENTS</p>
-              </div>
-              ) : bannedStudents.map((s, i) => (
-              <div key={i} className="flex items-center justify-between p-4" style={{ background: 'rgba(20,0,0,0.6)', border: '1px solid rgba(255,80,80,0.15)' }}>
-                <div>
-                  <p className="font-['Orbitron'] text-xs text-white">{s.name}</p>
-                  <p className="font-['Share_Tech_Mono'] text-xs mt-0.5" style={{ color: 'rgba(255,80,80,0.5)' }}>{s.email}</p>
-                </div>
-                <button onClick={() => handleUnbanStudent(s.studentID || s.id || 0, s.name)} className="btn-retro-green-sm">
-                  <CheckCircle className="h-3 w-3" />Unban
-                </button>
+          ))}
+          <div className="grid grid-cols-2 gap-3">
+            {[['startDate', 'Start Date'], ['endDate', 'End Date']].map(([name, label]) => (
+              <div key={name}>
+                <label className="retro-label">{label} *</label>
+                <input type="date" name={name} value={formData[name as keyof FormData]} onChange={handleInputChange} className="retro-input" style={{ colorScheme: 'dark' }} />
+                {formErrors[name] && <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: '#ff6666' }}>{formErrors[name]}</p>}
               </div>
             ))}
-            </div>
           </div>
+          <div>
+            <label className="retro-label">Description *</label>
+            <textarea name="description" value={formData.description} onChange={handleInputChange} placeholder="Describe the internship role..." rows={3} className="retro-input" style={{ resize: 'vertical' }} />
+            {formErrors.description && <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: '#ff6666' }}>{formErrors.description}</p>}
+          </div>
+          <div>
+            <label className="retro-label">Requirements *</label>
+            <textarea name="requirements" value={formData.requirements} onChange={handleInputChange} placeholder="List requirements..." rows={3} className="retro-input" style={{ resize: 'vertical' }} />
+            {formErrors.requirements && <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: '#ff6666' }}>{formErrors.requirements}</p>}
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={() => setShowCreateModal(false)} className="btn-retro-secondary flex-1 justify-center" style={{ fontSize: '0.65rem' }}>Cancel</button>
+            <button type="submit" className="btn-retro-primary flex-1 justify-center" style={{ borderColor: 'var(--neon-purple)', background: 'linear-gradient(135deg,#4400aa,#8800cc)', fontSize: '0.65rem' }}>
+              <Zap className="h-3.5 w-3.5" />Post Internship
+            </button>
+          </div>
+        </form>
+      </AnimatedModal>
+
+      {/* Applications Modal */}
+      <AnimatedModal
+        isOpen={showApplicationsModal}
+        onClose={closeApplicationsModal}
+        maxWidth="640px"
+        ariaLabel={`Applications for ${selectedInternship?.title ?? 'internship'}`}
+      >
+        <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'rgba(0,243,255,0.15)' }}>
+          <div>
+            <h2 className="font-['Orbitron'] text-sm text-white mb-0.5">// APPLICATIONS</h2>
+            <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(0,243,255,0.5)' }}>{selectedInternship?.title}</p>
+          </div>
+          <button onClick={closeApplicationsModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(0,243,255,0.5)' }}>
+            <X className="h-5 w-5" />
+          </button>
         </div>
-      )}
+        <motion.div
+          key={applications.length}
+          className="p-6 space-y-4 max-h-[60vh] overflow-y-auto"
+          variants={staggerContainer()}
+          initial="hidden"
+          animate="show"
+        >
+          {applications.length === 0 ? (
+            <div className="text-center py-8">
+            <p className="font-['Orbitron'] text-xs tracking-widest" style={{ color: 'rgba(0,243,255,0.3)' }}>NO APPLICATIONS RECEIVED</p>
+          </div>
+          ) : applications.map(app => (
+          <motion.div key={app.applicationID} variants={staggerItem()} className="p-4" style={{ background: 'rgba(0,0,20,0.6)', border: '1px solid rgba(0,243,255,0.12)' }}>
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="font-['Orbitron'] text-xs text-white">{app.student?.name || `${app.student?.firstName} ${app.student?.lastName}` || 'Student'}</p>
+                <p className="font-['Share_Tech_Mono'] text-xs mt-0.5" style={{ color: 'rgba(0,243,255,0.4)' }}>{app.student?.email}</p>
+              </div>
+              {getStatusBadge(app.status)}
+            </div>
+            <p className="font-['Share_Tech_Mono'] text-xs mb-3" style={{ color: 'rgba(100,120,140,0.6)' }}>
+              Applied: {new Date(app.appliedAt).toLocaleDateString()}
+            </p>
+            {app.status === 'Pending' && (
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => handleStatusUpdate(app.applicationID, 'Accepted')} className="btn-retro-green-sm">
+                  <CheckCircle className="h-3 w-3" />Accept
+                </button>
+                <button onClick={() => handleStatusUpdate(app.applicationID, 'Rejected')} className="btn-retro-danger-sm">
+                  <XCircle className="h-3 w-3" />Reject
+                </button>
+                {app.resumePath && (
+                <button onClick={() => handleDownloadResume(app.applicationID, displayName(app))} className="btn-retro-sm">
+                  <Download className="h-3 w-3" />Resume
+                </button>
+              )}
+              {/* The ban pulse is anchored HERE, on the row's own Ban button
+                  inside the Applications modal, not on the header's "Banned"
+                  button. `handleBanStudent` is only reachable from inside this
+                  modal, and the modal stays open on success — a pulse on the
+                  header button would fire behind the overlay's blur backdrop
+                  and never actually be seen. */}
+              <div className="relative inline-block">
+                <button onClick={() => handleBanStudent(studentIdOf(app), displayName(app))} className="btn-retro-danger-sm">
+                  <Ban className="h-3 w-3" />Ban
+                </button>
+                <SuccessPulse trigger={studentIdOf(app) === banPulseStudentId ? banPulse : 0} color="#ff6666" />
+              </div>
+            </div>
+            )}
+            {app.status !== 'Pending' && app.resumePath && (
+            <button onClick={() => handleDownloadResume(app.applicationID, displayName(app))} className="btn-retro-sm">
+              <Download className="h-3 w-3" />Download Resume
+            </button>
+          )}
+          </motion.div>
+          ))}
+        </motion.div>
+      </AnimatedModal>
+
+      {/* Banned Students Modal */}
+      <AnimatedModal
+        isOpen={showBannedStudentsModal}
+        onClose={() => setShowBannedStudentsModal(false)}
+        maxWidth="520px"
+        ariaLabel="Banned students"
+      >
+        <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'rgba(255,80,80,0.2)' }}>
+          <h2 className="font-['Orbitron'] text-sm text-white">// BANNED STUDENTS</h2>
+          <button onClick={() => setShowBannedStudentsModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,80,80,0.5)' }}>
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
+          {bannedStudents.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="font-['Orbitron'] text-xs tracking-widest" style={{ color: 'rgba(0,243,255,0.3)' }}>NO BANNED STUDENTS</p>
+          </div>
+          ) : bannedStudents.map(s => (
+          <div key={s.banId} className="flex items-center justify-between p-4" style={{ background: 'rgba(20,0,0,0.6)', border: '1px solid rgba(255,80,80,0.15)' }}>
+            <div>
+              <p className="font-['Orbitron'] text-xs text-white">{s.studentName}</p>
+              <p className="font-['Share_Tech_Mono'] text-xs mt-0.5" style={{ color: 'rgba(255,80,80,0.5)' }}>{s.studentEmail}</p>
+            </div>
+            <button onClick={() => handleUnbanStudent(s.studentId, s.studentName)} className="btn-retro-green-sm">
+              <CheckCircle className="h-3 w-3" />Unban
+            </button>
+          </div>
+        ))}
+        </div>
+      </AnimatedModal>
       </div>
     );
 }
