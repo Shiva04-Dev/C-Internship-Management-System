@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Zap, Menu } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { getFixedChromeHost } from "@/motion/portalHost";
+import { ScrollSmoother, ScrollTrigger } from "@/motion/gsapSetup";
 
 const navItems = [
   { name: "Mission", href: "#hero" },
@@ -34,7 +35,38 @@ export default function Navbar() {
   function handleNavClick(e: React.MouseEvent<HTMLAnchorElement>, href: string) {
     e.preventDefault();
     setIsOpen(false);
-    document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+
+    const smoother = ScrollSmoother.get();
+
+    // "#hero" is itself the trigger of IntroSequence's pin — asking
+    // ScrollSmoother to look up that element's position while it's actively
+    // pinned returns whatever transient rect the pin currently holds it at,
+    // not its true top-of-page offset. "Mission" always means the very top,
+    // so target the absolute scroll position instead of resolving the DOM node.
+    if (href === "#hero" && smoother) {
+      smoother.scrollTo(0, true);
+      return;
+    }
+
+    // "#features" sits inside IntroSequence's pinned/scrubbed scroll sequence,
+    // where a DOM offset doesn't correspond to a stable visual state — resolve
+    // it via the labeled position on that ScrollTrigger's timeline instead.
+    if (href === "#features") {
+      const st = ScrollTrigger.getById("hero-sequence");
+      if (st && smoother) {
+        smoother.scrollTo(st.labelToScroll("features"), true);
+        return;
+      }
+    }
+
+    // ScrollSmoother drives scroll via a transform, not native window scroll —
+    // native scrollIntoView() fights it, so route through the smoother when
+    // it's active (it isn't created at all under reduced motion).
+    if (smoother) {
+      smoother.scrollTo(href, true, "top top");
+    } else {
+      document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+    }
   }
 
   return createPortal(

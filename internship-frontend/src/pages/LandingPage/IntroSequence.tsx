@@ -74,6 +74,7 @@ export default function IntroSequence() {
 
       const tl = gsap.timeline({
         scrollTrigger: {
+          id: "hero-sequence",
           trigger: wrapperRef.current,
           start: "top top",
           end: `+=${stages.length * 100}%`,
@@ -96,6 +97,11 @@ export default function IntroSequence() {
           { autoAlpha: 1, y: 0, scale: 1, duration: 0.35 },
           inStart
         );
+        // Label at the moment the first feature panel finishes fading in, fully
+        // visible and at rest — the Navbar's "Features" link resolves this label
+        // to a scroll offset via `ScrollTrigger.labelToScroll`, since a raw DOM
+        // offset can't target a spot inside this pinned/scrubbed sequence.
+        if (i === 1) tl.addLabel("features", inStart + 0.35);
       });
     },
     { scope: wrapperRef }
@@ -111,9 +117,6 @@ export default function IntroSequence() {
       ref={wrapperRef as never}
       className={reduced ? "relative w-full text-white" : "relative w-full h-screen overflow-hidden text-white"}
     >
-      {/* Scroll-jump target for the Navbar's "Features" link — lands just past the hero stage. */}
-      {!reduced && <div id="features" className="absolute left-0 w-px h-px" style={{ top: "100vh" }} />}
-
       <Suspense fallback={<ShaderFallback />}>
         <ShaderField />
       </Suspense>
@@ -172,6 +175,7 @@ export default function IntroSequence() {
       {features.map((feature, i) => (
         <div
           key={feature.title}
+          id={i === 0 ? "features" : undefined}
           ref={(el) => {
             featureStageRefs.current[i] = el;
           }}
