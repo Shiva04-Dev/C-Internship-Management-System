@@ -14,7 +14,7 @@ namespace C__Internship_Management_Program.DTOs
         [Required, EmailAddress, MaxLength(50)]
         public string EmailAddress { get; set; }
 
-        [Required, MinLength(6)]
+        [Required, MinLength(8)]
         public string Password { get; set; }
 
         [Required, MaxLength(15)]
@@ -32,7 +32,7 @@ namespace C__Internship_Management_Program.DTOs
         [Required, EmailAddress, MaxLength(50)]
         public string Email { get; set; }
 
-        [Required, MinLength(6)]
+        [Required, MinLength(8)]
         public string Password { get; set; }
 
         [Required, MaxLength(15)]
@@ -52,7 +52,7 @@ namespace C__Internship_Management_Program.DTOs
         [Required, EmailAddress, MaxLength(50)]
         public string Email { get; set; }
 
-        [Required, MinLength(6)]
+        [Required, MinLength(8)]
         public string Password { get; set; }
     }
 

@@ -5,7 +5,8 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>C__Internship_Management_Program</RootNamespace>
-	</PropertyGroup>
+	  <UserSecretsId>15d8a3fc-ec38-4352-926c-89e95aba320e</UserSecretsId>
+  </PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />

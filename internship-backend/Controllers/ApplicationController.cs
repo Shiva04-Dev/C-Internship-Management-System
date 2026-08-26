@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Models;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
 namespace C__Internship_Management_Program.Controllers
@@ -126,6 +127,13 @@ namespace C__Internship_Management_Program.Controllers
                 if (internship == null)
                     return NotFound(new { message = "Internship not found or is no longer active" });
 
+                // Respect a company's ban of this student before accepting an application to their internship
+                var isBannedByCompany = await _context.CompanyBans
+                    .AnyAsync(b => b.CompanyID == internship.CompanyID && b.StudentID == studentId);
+
+                if (isBannedByCompany)
+                    return Forbid();
+
                 // Check if already applied
                 var existingApplication = await _context.Applications
                     .FirstOrDefaultAsync(a => a.InternshipID == dto.InternshipID && a.StudentID == studentId);
@@ -133,24 +141,39 @@ namespace C__Internship_Management_Program.Controllers
                 if (existingApplication != null)
                     return BadRequest(new { message = "You have already applied to this internship" });
 
-                // Save resume file
-                string resumePath = null;
-                if (dto.Resume != null)
+                if (dto.Resume == null || dto.Resume.Length == 0)
+                    return BadRequest(new { message = "A resume file is required" });
+
+                const long maxResumeBytes = 5 * 1024 * 1024; // 5MB
+                if (dto.Resume.Length > maxResumeBytes)
+                    return BadRequest(new { message = "Resume file must be 5MB or smaller" });
+
+                // Verify the file is actually a PDF by its magic bytes ("%PDF-"), not just its declared name/content-type
+                var header = new byte[5];
+                using (var headerStream = dto.Resume.OpenReadStream())
                 {
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "resumes");
-                    if (!Directory.Exists(uploadsFolder))
-                        Directory.CreateDirectory(uploadsFolder);
+                    var bytesRead = await headerStream.ReadAsync(header, 0, header.Length);
+                    var isPdf = bytesRead == header.Length &&
+                        header[0] == 0x25 && header[1] == 0x50 && header[2] == 0x44 && header[3] == 0x46 && header[4] == 0x2D;
 
-                    var uniqueFileName = $"{studentId}_{dto.InternshipID}_{Guid.NewGuid()}.pdf";
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await dto.Resume.CopyToAsync(fileStream);
-                    }
-
-                    resumePath = uniqueFileName;
+                    if (!isPdf)
+                        return BadRequest(new { message = "Resume must be a valid PDF file" });
                 }
+
+                // Save resume file
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "resumes");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = $"{studentId}_{dto.InternshipID}_{Guid.NewGuid()}.pdf";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.Resume.CopyToAsync(fileStream);
+                }
+
+                string resumePath = uniqueFileName;
 
                 var application = new Application
                 {
@@ -342,7 +365,10 @@ namespace C__Internship_Management_Program.Controllers
     // DTOs
     public class SubmitApplicationWithResumeDto
     {
+        [Required]
         public int InternshipID { get; set; }
+
+        [Required]
         public IFormFile Resume { get; set; }
     }
 

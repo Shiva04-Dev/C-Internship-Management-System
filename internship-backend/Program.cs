@@ -7,6 +7,7 @@ using System.Text;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Services;
 using C__Internship_Management_Program.Seeders;
+using C__Internship_Management_Program.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,8 +27,14 @@ builder.Services.AddScoped<IAuthenService, AuthenService>();
 
 // Configure JWT Authentication
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
-    ?? builder.Configuration["Jwt:Key"]
-    ?? "YourSuperSecretKeyThatIsAtLeast32CharactersLong!";
+    ?? builder.Configuration["Jwt:Key"];
+
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    throw new InvalidOperationException(
+        "JWT signing key is not configured. Set the JWT_KEY environment variable " +
+        "(production) or run 'dotnet user-secrets set \"Jwt:Key\" \"<value>\"' (local development).");
+}
 
 var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
     ?? builder.Configuration["Jwt:Issuer"]
@@ -96,12 +103,17 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Configure CORS
+// Configure CORS — scoped to known frontend origins rather than AllowAnyOrigin
+var corsAllowedOrigins = (Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS")
+    ?? builder.Configuration["Cors:AllowedOrigins"]
+    ?? "http://localhost:5173,https://localhost:5173")
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(corsAllowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -132,8 +144,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
+app.UseMiddleware<BanCheckMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
 

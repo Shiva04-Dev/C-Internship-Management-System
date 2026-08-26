@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Models;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
 namespace C__Internship_Management_Program.Controllers
@@ -219,6 +220,10 @@ namespace C__Internship_Management_Program.Controllers
 				if (startDate >= endDate)
 					return BadRequest(new { message = "End date must be after the start date" });
 
+				var validStatuses = new[] { "Active", "Closed" };
+				if (dto.Status != null && !validStatuses.Contains(dto.Status))
+					return BadRequest(new { message = "Invalid status" });
+
 				//Update fields
 				internship.Title = dto.Title ?? internship.Title;
 				internship.Description = dto.Description ?? internship.Description;
@@ -271,22 +276,39 @@ namespace C__Internship_Management_Program.Controllers
 	//DTOs for Internship operations
 	public class CreateInternshipDto
 	{
+		[Required, MaxLength(100)]
 		public string Title { get; set; }
+
+		[Required, MaxLength(4000)]
 		public string Description { get; set; }
+
+		[Required, MaxLength(100)]
 		public string Location { get; set; }
+
 		public DateTime StartDate { get; set; }
 		public DateTime EndDate { get; set; }
+
+		[Required, MaxLength(2000)]
 		public string Requirements { get; set; }
 	}
 
 	public class UpdateInternshipDto
 	{
+		[MaxLength(100)]
 		public string? Title { get; set; }
+
+        [MaxLength(4000)]
         public string? Description { get; set; }
+
+        [MaxLength(100)]
         public string? Location { get; set; }
+
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+
+        [MaxLength(2000)]
         public string? Requirements { get; set; }
+
         public string? Status { get; set; }
     }
 }

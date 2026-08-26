@@ -192,6 +192,18 @@ namespace C__Internship_Management_Program.Services
 
             await _context.SaveChangesAsync();
 
+            // Without this, a banned Student/Company could keep calling /refresh to mint
+            // fresh access tokens indefinitely, bypassing the ban check LoginAsync already does.
+            var isBanned = storedToken.UserType switch
+            {
+                "Student" => await _context.UserBans.AnyAsync(b => b.StudentID == userId && b.IsActive),
+                "Company" => await _context.UserBans.AnyAsync(b => b.CompanyID == userId && b.IsActive),
+                _ => false
+            };
+
+            if (isBanned)
+                throw new Exception("Your account has been suspended. Please contact support.");
+
             return await GenerateAuthenticationResponse(userId, email, storedToken.UserType, name);
         }
 

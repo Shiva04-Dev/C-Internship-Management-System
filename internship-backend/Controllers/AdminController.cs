@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using C__Internship_Management_Program.Data;
+using C__Internship_Management_Program.DTOs;
 using C__Internship_Management_Program.Models;
 
 namespace C__Internship_Management_Program.Controllers
@@ -367,7 +368,7 @@ namespace C__Internship_Management_Program.Controllers
 
         // POST: api/Admin/ban-user/{userId}/{userType}
         [HttpPost("ban-user/{userId}/{userType}")]
-        public async Task<IActionResult> BanUser(int userId, string userType, [FromBody] AdminBanReasonDto dto)
+        public async Task<IActionResult> BanUser(int userId, string userType, [FromBody] BanReasonDto dto)
         {
             try
             {
@@ -489,11 +490,5 @@ namespace C__Internship_Management_Program.Controllers
                 return StatusCode(500, new { message = "Error fetching banned users", error = ex.Message });
             }
         }
-    }
-
-    // DTO for ban reason
-    public class AdminBanReasonDto
-    {
-        public string Reason { get; set; }
     }
 }
