@@ -30,7 +30,7 @@ namespace C__Internship_Management_Program.Models
         [Required]
         public DateTime EndDate { get; set; }
 
-        [MaxLength(250)]
+        [MaxLength(2000)]
         public string Requirements { get; set; }
 
         [Required]

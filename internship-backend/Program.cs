@@ -14,12 +14,20 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container
 builder.Services.AddControllers();
 
-// Database configuration - SQL Server only
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
+// Database configuration - PostgreSQL
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-Console.WriteLine("Using SQL Server");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Database connection string is not configured. Set the DATABASE_URL environment variable " +
+        "(production) or run 'dotnet user-secrets set \"ConnectionStrings:DefaultConnection\" \"<value>\"' (local development).");
+}
+
+Console.WriteLine("Using PostgreSQL");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
 
 // Register Services
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -180,9 +188,9 @@ using (var scope = app.Services.CreateScope())
         }
         logger.LogInformation("Connection successful!");
 
-        logger.LogInformation("Creating tables from models...");
-        await context.Database.EnsureCreatedAsync();
-        logger.LogInformation("Tables created!");
+        logger.LogInformation("Applying migrations...");
+        await context.Database.MigrateAsync();
+        logger.LogInformation("Migrations applied!");
 
         logger.LogInformation("Verifying tables...");
 
@@ -239,7 +247,7 @@ Console.WriteLine(new string('=', 60));
 Console.WriteLine("Internship Management API is running!");
 Console.WriteLine(new string('=', 60));
 Console.WriteLine($"  Environment:  {app.Environment.EnvironmentName}");
-Console.WriteLine($"  Database:     SQL Server");
+Console.WriteLine($"  Database:     PostgreSQL");
 Console.WriteLine($"  Swagger UI:   https://localhost:7179/swagger");
 Console.WriteLine($"  Health:       https://localhost:7179/health");
 Console.WriteLine(new string('=', 60) + "\n");

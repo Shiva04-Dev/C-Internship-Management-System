@@ -9,10 +9,11 @@ namespace C__Internship_Management_Program.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
-            // Always use SQL Server for migrations
-            var connectionString = "Server=localhost;Database=InternshipsDB;Trusted_Connection=True;TrustServerCertificate=True;";
-            optionsBuilder.UseSqlServer(connectionString);
-            Console.WriteLine("Using SQL Server for migrations");
+            // Design-time only (dotnet ef migrations add/update) — always targets the local
+            // Postgres dev container, never a real environment's connection string.
+            var connectionString = "Host=localhost;Port=5433;Database=IntershipsDB;Username=postgres;Password=devpassword";
+            optionsBuilder.UseNpgsql(connectionString);
+            Console.WriteLine("Using PostgreSQL for migrations");
 
             return new ApplicationDbContext(optionsBuilder.Options);
         }

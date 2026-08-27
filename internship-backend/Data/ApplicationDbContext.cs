@@ -61,6 +61,14 @@ namespace C__Internship_Management_Program.Data
             modelBuilder.Entity<Admin>()
                 .HasIndex(c => c.Email)
                 .IsUnique();
+
+            // Both are filtered on heavily (public listings, admin dashboard counts)
+            // and only had EF's automatic FK indexes before this.
+            modelBuilder.Entity<Internship>()
+                .HasIndex(i => i.Status);
+
+            modelBuilder.Entity<Application>()
+                .HasIndex(a => a.Status);
         }
     }
 }
