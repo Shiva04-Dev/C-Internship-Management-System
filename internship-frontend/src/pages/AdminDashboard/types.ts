@@ -10,10 +10,11 @@ export interface Dashboard {
 }
 
 export interface Reports {
-  topCompanies?: Array<{ companyName: string; internshipCount: number }>;
+  topCompanies?: Array<{ companyName: string; internshipCount: number; activeInternships: number }>;
   topStudents?: Array<{ studentName: string; applicationCount: number; acceptedCount: number }>;
   applicationsByStatus?: Array<{ status: string; count: number }>;
   internshipsByStatus?: Array<{ status: string; count: number }>;
+  applicationsOverTime?: Array<{ date: string; count: number }>;
 }
 
 export interface Student {
