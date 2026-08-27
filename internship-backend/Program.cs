@@ -44,6 +44,12 @@ if (string.IsNullOrWhiteSpace(jwtKey))
         "(production) or run 'dotnet user-secrets set \"Jwt:Key\" \"<value>\"' (local development).");
 }
 
+// JwtService reads Jwt:Key from IConfiguration directly to generate/validate tokens.
+// A plain JWT_KEY env var doesn't auto-bind to config key "Jwt:Key" (.NET only does
+// that for Jwt__Key), so without this, JwtService would silently see an empty key
+// under a JWT_KEY-env-var deployment even though the check above just passed.
+builder.Configuration["Jwt:Key"] = jwtKey;
+
 var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
     ?? builder.Configuration["Jwt:Issuer"]
     ?? "InternshipManagementAPI";
