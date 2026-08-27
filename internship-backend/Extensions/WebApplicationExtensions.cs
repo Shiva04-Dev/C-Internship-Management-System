@@ -6,6 +6,27 @@ namespace C__Internship_Management_Program.Extensions
 {
     public static class WebApplicationExtensions
     {
+        // Baseline security headers on every response except Swagger's own UI (dev-only,
+        // and its assets would break under this CSP). This is a pure JSON API otherwise,
+        // so default-src 'none' is safe — there's no first-party HTML/JS to allow.
+        public static WebApplication UseSecurityHeaders(this WebApplication app)
+        {
+            app.Use(async (context, next) =>
+            {
+                if (!context.Request.Path.StartsWithSegments("/swagger"))
+                {
+                    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+                    context.Response.Headers["X-Frame-Options"] = "DENY";
+                    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+                    context.Response.Headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'";
+                }
+
+                await next();
+            });
+
+            return app;
+        }
+
         // Applies pending EF Core migrations at startup and, in Development only,
         // seeds demo data. Failures are logged, not rethrown — matches prior behavior
         // of letting the app continue starting even if this step fails.

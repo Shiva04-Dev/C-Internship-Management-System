@@ -32,9 +32,10 @@ namespace C__Internship_Management_Program.Services
 
         public async Task<AuthenticationResponseDto> RegisterStudentAsync(StudentRegisterDto dto)
         {
-            // Check if student's email exists
+            // Deliberately generic — doesn't confirm or deny that this email already has
+            // an account, mirroring LoginAsync's non-enumerable "Invalid email or password".
             if (await _context.Students.AnyAsync(s => s.Email == dto.EmailAddress))
-                throw new Exception("Email already exists");
+                throw new Exception("Unable to create account with the provided details");
 
             var student = new Student
             {
@@ -56,8 +57,9 @@ namespace C__Internship_Management_Program.Services
 
         public async Task<AuthenticationResponseDto> RegisterCompanyAsync(CompanyRegisterDto dto)
         {
+            // Same non-enumerable messaging as RegisterStudentAsync above.
             if (await _context.Companies.AnyAsync(c => c.Email == dto.Email))
-                throw new Exception("Email already exists");
+                throw new Exception("Unable to create account with the provided details");
 
             var company = new Company
             {

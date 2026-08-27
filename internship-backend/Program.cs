@@ -101,6 +101,7 @@ var app = builder.Build();
 // Middleware — order matters: exception handling wraps everything else so nothing
 // downstream can leak an unhandled exception straight to the client.
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseSecurityHeaders();
 app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())

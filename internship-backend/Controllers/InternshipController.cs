@@ -70,8 +70,8 @@ namespace C__Internship_Management_Program.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetInternshipById(int id)
         {
-            // NOTE: M-2 (restricting Company.Email/PhoneNumber to authenticated students)
-            // is deliberately deferred to Phase 4 — out of scope for this phase.
+            var isAuthenticatedStudent = User.Identity?.IsAuthenticated == true && User.IsInRole("Student");
+
             var internship = await _context.Internships
                 .Include(i => i.Company)
                 .Where(i => i.InternshipID == id)
@@ -90,8 +90,11 @@ namespace C__Internship_Management_Program.Controllers
                     {
                         i.Company.CompanyID,
                         i.Company.CompanyName,
-                        i.Company.Email,
-                        i.Company.PhoneNumber,
+                        // Contact PII only goes to authenticated students — everyone
+                        // else (anonymous callers, companies, admins) gets the same
+                        // reduced shape the public list endpoint already uses.
+                        Email = isAuthenticatedStudent ? i.Company.Email : null,
+                        PhoneNumber = isAuthenticatedStudent ? i.Company.PhoneNumber : null,
                         i.Company.Website
                     }
                 })
