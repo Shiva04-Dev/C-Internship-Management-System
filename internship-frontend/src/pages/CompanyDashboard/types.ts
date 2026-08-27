@@ -10,6 +10,11 @@ export interface Internship {
   requirements: string;
 }
 
+export interface ApplicationStatusCount {
+  status: string;
+  count: number;
+}
+
 export interface Student {
   studentID?: number;
   name?: string;

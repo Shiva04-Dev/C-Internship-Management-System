@@ -13,7 +13,8 @@ import SuccessPulse from '../../motion/SuccessPulse';
 import CreateInternshipModal from './CreateInternshipModal';
 import ApplicationsModal from './ApplicationsModal';
 import BannedStudentsModal from './BannedStudentsModal';
-import { Internship, Application, BannedStudent, FormData, FormErrors } from './types';
+import InsightsSection from './InsightsSection';
+import { Internship, Application, BannedStudent, FormData, FormErrors, ApplicationStatusCount } from './types';
 
 export default function CompanyDashboard() {
   const { user, logout } = useAuth();
@@ -22,6 +23,7 @@ export default function CompanyDashboard() {
   const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [bannedStudents, setBannedStudents] = useState<BannedStudent[]>([]);
+  const [applicationStats, setApplicationStats] = useState<ApplicationStatusCount[]>([]);
   // Defaults to true so the pending-approval banner doesn't flash for already-approved
   // companies while /Company/me is still loading.
   const [isApproved, setIsApproved] = useState(true);
@@ -43,14 +45,16 @@ export default function CompanyDashboard() {
   const loadData = async (showToast = false) => {
     setLoading(true);
     try {
-      const [inRes, bannedRes, profileRes] = await Promise.all([
+      const [inRes, bannedRes, profileRes, statsRes] = await Promise.all([
         internshipAPI.getMine(),
         companyAPI.getBannedStudents(),
         companyAPI.getMyProfile(),
+        companyAPI.getApplicationStats(),
       ]);
       setInternships(inRes.data);
       setBannedStudents(bannedRes.data);
       setIsApproved(profileRes.data.isApproved);
+      setApplicationStats(statsRes.data.applicationsByStatus || []);
       if (showToast) toast.success('Dashboard refreshed');
     } catch (e) {
       toast.error('Failed to load data');
@@ -277,6 +281,8 @@ export default function CompanyDashboard() {
             </div>
           ))}
         </div>
+
+        <InsightsSection internships={internships} applicationsByStatus={applicationStats} />
 
         {/* Internships Grid */}
         <div className="mb-4">

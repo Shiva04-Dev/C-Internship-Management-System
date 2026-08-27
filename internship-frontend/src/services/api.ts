@@ -209,6 +209,8 @@ export const companyAPI = {
     api.get('/Company/banned-students'),
   getMyProfile: () =>
     api.get('/Company/me'),
+  getApplicationStats: () =>
+    api.get('/Company/application-stats'),
 };
 
 // Admin APIs
