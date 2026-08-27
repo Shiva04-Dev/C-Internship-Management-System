@@ -6,12 +6,21 @@ import { Briefcase, LogOut, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StatCounter from '../../motion/StatCounter';
 import FixedNavbar from '../../motion/FixedNavbar';
+import ConfirmDialog from '../../motion/ConfirmDialog';
 import BrowseTab from './BrowseTab';
 import ApplicationsTab from './ApplicationsTab';
 import InsightsSection from './InsightsSection';
 import { Internship, Application } from './types';
 
 type TabType = 'browse' | 'applications';
+
+interface ConfirmState {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  tone?: 'default' | 'danger';
+  onConfirm: () => void;
+}
 
 export default function StudentDashboard() {
   const { user, logout } = useAuth();
@@ -23,6 +32,7 @@ export default function StudentDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
 
   useEffect(() => {
     loadData();
@@ -51,11 +61,17 @@ export default function StudentDashboard() {
     loadData(true);
   };
 
-  const handleLogout = async () => {
-    if (window.confirm('Terminate session?')) {
-      await logout();
-      navigate('/');
-    }
+  const handleLogout = () => {
+    setConfirmDialog({
+      title: 'Terminate Session',
+      message: 'Are you sure you want to log out?',
+      confirmLabel: 'Log Out',
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        await logout();
+        navigate('/');
+      },
+    });
   };
 
   const handleApply = (id: number) => navigate(`/internship/${id}`);
@@ -206,6 +222,16 @@ export default function StudentDashboard() {
           <ApplicationsTab applications={applications} onBrowseClick={() => setActiveTab('browse')} />
         )}
       </main>
+
+      <ConfirmDialog
+        isOpen={confirmDialog !== null}
+        title={confirmDialog?.title ?? ''}
+        message={confirmDialog?.message ?? ''}
+        confirmLabel={confirmDialog?.confirmLabel}
+        tone={confirmDialog?.tone}
+        onConfirm={() => confirmDialog?.onConfirm()}
+        onCancel={() => setConfirmDialog(null)}
+      />
     </div>
   );
 }

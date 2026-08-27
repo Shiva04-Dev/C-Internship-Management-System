@@ -10,11 +10,20 @@ import TiltCard from '../../motion/TiltCard';
 import { staggerContainer, staggerItem } from '../../motion/staggerVariants';
 import FixedNavbar from '../../motion/FixedNavbar';
 import SuccessPulse from '../../motion/SuccessPulse';
+import ConfirmDialog from '../../motion/ConfirmDialog';
 import CreateInternshipModal from './CreateInternshipModal';
 import ApplicationsModal from './ApplicationsModal';
 import BannedStudentsModal from './BannedStudentsModal';
 import InsightsSection from './InsightsSection';
 import { Internship, Application, BannedStudent, FormData, FormErrors, ApplicationStatusCount } from './types';
+
+interface ConfirmState {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  tone?: 'default' | 'danger';
+  onConfirm: () => void;
+}
 
 export default function CompanyDashboard() {
   const { user, logout } = useAuth();
@@ -39,6 +48,7 @@ export default function CompanyDashboard() {
   // Which student the last successful ban applied to, so the ban pulse fires
   // on that one row's Ban button rather than on every row at once.
   const [banPulseStudentId, setBanPulseStudentId] = useState<number | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -115,13 +125,20 @@ export default function CompanyDashboard() {
     } catch { toast.error('Failed to ban student'); }
   };
 
-  const handleUnbanStudent = async (studentId: number, name: string) => {
-    if (!confirm(`Unban ${name}?`)) return;
-    try {
-      await companyAPI.unbanStudent(studentId);
-      toast.success(`${name} unbanned`);
-      loadData();
-    } catch { toast.error('Failed to unban'); }
+  const handleUnbanStudent = (studentId: number, name: string) => {
+    setConfirmDialog({
+      title: 'Unban Student',
+      message: `Unban ${name}? They'll be able to apply to your internships again.`,
+      confirmLabel: 'Unban',
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        try {
+          await companyAPI.unbanStudent(studentId);
+          toast.success(`${name} unbanned`);
+          loadData();
+        } catch { toast.error('Failed to unban'); }
+      },
+    });
   };
 
   const handleDownloadResume = async (applicationId: number, name: string) => {
@@ -167,19 +184,34 @@ export default function CompanyDashboard() {
     } catch { toast.error('Failed to create internship'); }
   };
 
-  const handleCloseInternship = async (id: number, title: string) => {
-    if (!confirm(`Close "${title}"?`)) return;
-    try {
-      await internshipAPI.delete(id);
-      toast.success('Internship closed');
-      loadData();
-    } catch { toast.error('Failed to close internship'); }
+  const handleCloseInternship = (id: number, title: string) => {
+    setConfirmDialog({
+      title: 'Close Internship',
+      message: `Close "${title}"? Students will no longer be able to apply.`,
+      confirmLabel: 'Close Listing',
+      tone: 'danger',
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        try {
+          await internshipAPI.delete(id);
+          toast.success('Internship closed');
+          loadData();
+        } catch { toast.error('Failed to close internship'); }
+      },
+    });
   };
 
-  const handleLogout = async () => {
-    if (!confirm('Terminate session?')) return;
-    await logout();
-    navigate('/');
+  const handleLogout = () => {
+    setConfirmDialog({
+      title: 'Terminate Session',
+      message: 'Are you sure you want to log out?',
+      confirmLabel: 'Log Out',
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        await logout();
+        navigate('/');
+      },
+    });
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -384,6 +416,16 @@ export default function CompanyDashboard() {
         onClose={() => setShowBannedStudentsModal(false)}
         bannedStudents={bannedStudents}
         onUnbanStudent={handleUnbanStudent}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDialog !== null}
+        title={confirmDialog?.title ?? ''}
+        message={confirmDialog?.message ?? ''}
+        confirmLabel={confirmDialog?.confirmLabel}
+        tone={confirmDialog?.tone}
+        onConfirm={() => confirmDialog?.onConfirm()}
+        onCancel={() => setConfirmDialog(null)}
       />
     </div>
   );

@@ -10,11 +10,20 @@ import {
 } from 'lucide-react';
 import StatCounter from '../../motion/StatCounter';
 import FixedNavbar from '../../motion/FixedNavbar';
+import ConfirmDialog from '../../motion/ConfirmDialog';
 import ReportsSection from './ReportsSection';
 import UsersModal from './UsersModal';
 import PendingCompaniesModal from './PendingCompaniesModal';
 import BannedUsersModal from './BannedUsersModal';
 import { Dashboard, Reports, Student, Company, BannedUser } from './types';
+
+interface ConfirmState {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  tone?: 'default' | 'danger';
+  onConfirm: () => void;
+}
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -34,6 +43,7 @@ export default function AdminDashboard() {
   // Which user the last successful ban applied to, so the ban pulse fires on
   // that one row's Ban button inside the Users modal rather than on every row.
   const [banPulseUserId, setBanPulseUserId] = useState<number | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
 
   const formatDate = (dateValue: string | null | undefined): string => {
     if (!dateValue) return 'N/A';
@@ -97,16 +107,22 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUnbanUser = async (userId: number, userType: string, userName: string) => {
-    if (!confirm(`Are you sure you want to unban ${userName}?`)) return;
-
-    try {
-      await adminAPI.unbanUser(userId, userType);
-      toast.success(`${userName} has been unbanned`);
-      loadAllData();
-    } catch {
-      toast.error('Failed to unban user');
-    }
+  const handleUnbanUser = (userId: number, userType: string, userName: string) => {
+    setConfirmDialog({
+      title: 'Unban User',
+      message: `Are you sure you want to unban ${userName}?`,
+      confirmLabel: 'Unban',
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        try {
+          await adminAPI.unbanUser(userId, userType);
+          toast.success(`${userName} has been unbanned`);
+          loadAllData();
+        } catch {
+          toast.error('Failed to unban user');
+        }
+      },
+    });
   };
 
   const handleApproveCompany = async (companyId: number, companyName: string) => {
@@ -120,11 +136,18 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = async () => {
-    if (!confirm('Are you sure you want to logout?')) return;
-    await logout();
-    toast.success('Logged out successfully!');
-    navigate('/');
+  const handleLogout = () => {
+    setConfirmDialog({
+      title: 'Terminate Session',
+      message: 'Are you sure you want to log out?',
+      confirmLabel: 'Log Out',
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        await logout();
+        toast.success('Logged out successfully!');
+        navigate('/');
+      },
+    });
   };
 
   const openUsersModal = (type: 'students' | 'companies') => {
@@ -329,6 +352,16 @@ export default function AdminDashboard() {
         bannedUsers={bannedUsers}
         formatDate={formatDate}
         onUnbanUser={handleUnbanUser}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDialog !== null}
+        title={confirmDialog?.title ?? ''}
+        message={confirmDialog?.message ?? ''}
+        confirmLabel={confirmDialog?.confirmLabel}
+        tone={confirmDialog?.tone}
+        onConfirm={() => confirmDialog?.onConfirm()}
+        onCancel={() => setConfirmDialog(null)}
       />
     </div>
   );
