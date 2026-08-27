@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using C__Internship_Management_Program.DTOs;
 using C__Internship_Management_Program.Services;
 
@@ -18,6 +19,7 @@ namespace C__Internship_Management_Program.Controllers
 
         // Student Registration
         [HttpPost("register/student")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> RegisterStudent([FromBody] StudentRegisterDto dto)
         {
             try
@@ -33,6 +35,7 @@ namespace C__Internship_Management_Program.Controllers
 
         // Company Registration
         [HttpPost("register/company")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> RegisterCompany([FromBody] CompanyRegisterDto dto)
         {
             try
@@ -64,6 +67,7 @@ namespace C__Internship_Management_Program.Controllers
 
         // Student Login
         [HttpPost("login/student")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> LoginStudent([FromBody] LoginDto dto)
         {
             try
@@ -79,6 +83,7 @@ namespace C__Internship_Management_Program.Controllers
 
         // Company Login
         [HttpPost("login/company")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> LoginCompany([FromBody] LoginDto dto)
         {
             try
@@ -94,6 +99,7 @@ namespace C__Internship_Management_Program.Controllers
 
         // Admin Login
         [HttpPost("login/admin")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> LoginAdmin([FromBody] LoginDto dto)
         {
             try
