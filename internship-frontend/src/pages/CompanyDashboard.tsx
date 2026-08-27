@@ -101,6 +101,9 @@ export default function CompanyDashboard() {
   const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [bannedStudents, setBannedStudents] = useState<BannedStudent[]>([]);
+  // Defaults to true so the pending-approval banner doesn't flash for already-approved
+  // companies while /Company/me is still loading.
+  const [isApproved, setIsApproved] = useState(true);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -119,9 +122,14 @@ export default function CompanyDashboard() {
   const loadData = async (showToast = false) => {
     setLoading(true);
     try {
-      const [inRes, bannedRes] = await Promise.all([internshipAPI.getMine(), companyAPI.getBannedStudents()]);
+      const [inRes, bannedRes, profileRes] = await Promise.all([
+        internshipAPI.getMine(),
+        companyAPI.getBannedStudents(),
+        companyAPI.getMyProfile(),
+      ]);
       setInternships(inRes.data);
       setBannedStudents(bannedRes.data);
+      setIsApproved(profileRes.data.isApproved);
       if (showToast) toast.success('Dashboard refreshed');
     } catch (e) {
       toast.error('Failed to load data');
@@ -298,6 +306,18 @@ export default function CompanyDashboard() {
       </FixedNavbar>
 
       <main id="main" className="max-w-7xl mx-auto px-6 pt-28 pb-12">
+        {!isApproved && (
+          <div
+            className="mb-6 p-4 flex items-center gap-3 animate-fade-in-up"
+            style={{ background: 'rgba(255,157,0,0.06)', border: '1px solid rgba(255,157,0,0.3)' }}
+          >
+            <Clock className="h-5 w-5 flex-shrink-0" style={{ color: 'var(--neon-orange)' }} />
+            <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(255,180,80,0.85)' }}>
+              Your company account is pending admin approval. You'll be able to post internships once approved.
+            </p>
+          </div>
+        )}
+
         <div className="mb-8 animate-fade-in-up flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="section-tag" style={{ display: 'inline-flex' }}>
@@ -309,7 +329,18 @@ export default function CompanyDashboard() {
             <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(176,38,255,0.4)', letterSpacing: '0.08em' }}>Manage your internship programs</p>
           </div>
           <div className="relative inline-block">
-            <button onClick={() => setShowCreateModal(true)} className="btn-retro-primary" style={{ borderColor: 'var(--neon-purple)', background: 'linear-gradient(135deg,#4400aa,#8800cc)' }}>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              disabled={!isApproved}
+              title={!isApproved ? 'Pending admin approval' : undefined}
+              className="btn-retro-primary"
+              style={{
+                borderColor: 'var(--neon-purple)',
+                background: 'linear-gradient(135deg,#4400aa,#8800cc)',
+                opacity: isApproved ? 1 : 0.4,
+                cursor: isApproved ? 'pointer' : 'not-allowed'
+              }}
+            >
               <Plus className="h-4 w-4" />Post New Internship
             </button>
             <SuccessPulse trigger={postPulse} color="var(--neon-purple)" />
@@ -341,7 +372,18 @@ export default function CompanyDashboard() {
           <div className="text-center py-16">
             <Briefcase className="h-12 w-12 mx-auto mb-4" style={{ color: 'rgba(176,38,255,0.15)' }} />
             <p className="font-['Orbitron'] text-xs tracking-widest mb-6" style={{ color: 'rgba(176,38,255,0.3)' }}>NO INTERNSHIPS POSTED</p>
-            <button onClick={() => setShowCreateModal(true)} className="btn-retro-primary" style={{ borderColor: 'var(--neon-purple)', background: 'linear-gradient(135deg,#4400aa,#8800cc)' }}>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              disabled={!isApproved}
+              title={!isApproved ? 'Pending admin approval' : undefined}
+              className="btn-retro-primary"
+              style={{
+                borderColor: 'var(--neon-purple)',
+                background: 'linear-gradient(135deg,#4400aa,#8800cc)',
+                opacity: isApproved ? 1 : 0.4,
+                cursor: isApproved ? 'pointer' : 'not-allowed'
+              }}
+            >
               <Plus className="h-4 w-4" />Post Your First Internship
             </button>
           </div>

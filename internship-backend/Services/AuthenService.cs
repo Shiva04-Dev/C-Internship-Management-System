@@ -66,6 +66,7 @@ namespace C__Internship_Management_Program.Services
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 PhoneNumber = dto.PhoneNumber,
                 Website = dto.Website,
+                IsApproved = false,
                 UpdatedAt = DateTime.UtcNow
             };
 

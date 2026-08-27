@@ -20,6 +20,19 @@ namespace C__Internship_Management_Program.Controllers
             _context = context;
         }
 
+        // GET: api/Company/me - The logged-in company's own profile/approval status
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var company = await _context.Companies.FindAsync(companyId);
+            if (company == null)
+                return NotFound(new { message = "Company not found" });
+
+            return Ok(new { company.CompanyID, company.CompanyName, company.IsApproved });
+        }
+
         // POST: api/Company/ban-student/{studentId}
         [HttpPost("ban-student/{studentId}")]
         public async Task<IActionResult> BanStudent(int studentId, [FromBody] BanReasonDto dto)

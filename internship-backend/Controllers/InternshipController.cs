@@ -142,6 +142,13 @@ namespace C__Internship_Management_Program.Controllers
 			//Get company ID from JWT Token
 			var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
+			var company = await _context.Companies.FindAsync(companyId);
+			if (company == null)
+				return NotFound(new { message = "Company not found" });
+
+			if (!company.IsApproved)
+				return StatusCode(403, new { message = "Your company account is pending admin approval. You'll be able to post internships once approved." });
+
 			var startDate = dto.StartDate.EnsureUtc();
 			var endDate = dto.EndDate.EnsureUtc();
 

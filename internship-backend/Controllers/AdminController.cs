@@ -134,6 +134,7 @@ namespace C__Internship_Management_Program.Controllers
                     c.Email,
                     c.PhoneNumber,
                     c.Website,
+                    c.IsApproved,
                     c.UpdatedAt,
                     InternshipCount = c.Internships.Count,
                     ActiveInternships = c.Internships.Count(i => i.Status == "Active")
@@ -239,6 +240,24 @@ namespace C__Internship_Management_Program.Controllers
                 totalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
                 applications
             });
+        }
+
+        // POST: api/Admin/companies/{id}/approve - Approve a pending company
+        [HttpPost("companies/{id}/approve")]
+        public async Task<IActionResult> ApproveCompany(int id)
+        {
+            var company = await _context.Companies.FindAsync(id);
+
+            if (company == null)
+                return NotFound(new { message = "Company not found" });
+
+            if (company.IsApproved)
+                return BadRequest(new { message = "Company is already approved" });
+
+            company.IsApproved = true;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Company approved successfully" });
         }
 
         // DELETE: api/Admin/internship/{id} - Force close/delete internship

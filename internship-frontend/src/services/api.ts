@@ -207,6 +207,8 @@ export const companyAPI = {
     api.post(`/Company/unban-student/${studentId}`),
   getBannedStudents: () =>
     api.get('/Company/banned-students'),
+  getMyProfile: () =>
+    api.get('/Company/me'),
 };
 
 // Admin APIs
@@ -231,6 +233,8 @@ export const adminAPI = {
     api.post(`/Admin/unban-user/${userId}/${userType}`),
   getBannedUsers: () =>
     api.get('/Admin/banned-users'),
+  approveCompany: (id: string | number) =>
+    api.post(`/Admin/companies/${id}/approve`),
 };
 
 export default api;

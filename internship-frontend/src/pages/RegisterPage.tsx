@@ -131,10 +131,11 @@ export default function RegisterPage() {
 
       if (userType === 'student') {
         await authAPI.registerStudent(data);
+        toast.success('Account created successfully!');
       } else {
         await authAPI.registerCompany(data);
+        toast.success('Account created! An admin will review and approve your company before you can post internships.', { duration: 6000 });
       }
-      toast.success('Account created successfully!');
       navigate(`/login?type=${userType}`);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };

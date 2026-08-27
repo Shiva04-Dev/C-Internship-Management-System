@@ -62,6 +62,13 @@ namespace C__Internship_Management_Program.Data
                 .HasIndex(c => c.Email)
                 .IsUnique();
 
+            // Existing companies are backfilled to approved=true when this column is
+            // added; RegisterCompanyAsync explicitly sets false on new registrations,
+            // which overrides this DB-level default in the INSERT.
+            modelBuilder.Entity<Company>()
+                .Property(c => c.IsApproved)
+                .HasDefaultValue(true);
+
             // Both are filtered on heavily (public listings, admin dashboard counts)
             // and only had EF's automatic FK indexes before this.
             modelBuilder.Entity<Internship>()
