@@ -145,7 +145,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div
+    <main
+      id="main"
       className="min-h-screen flex items-center justify-center px-4 py-12 relative"
       style={{ background: '#050510' }}
     >
@@ -401,6 +402,6 @@ export default function RegisterPage() {
           </a>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

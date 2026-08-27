@@ -86,6 +86,34 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+// Shared in-flight refresh so concurrent 401s (e.g. several requests firing at
+// once when the access token expires) reuse one /refresh call instead of each
+// racing to refresh independently — the backend revokes a refresh token on
+// first use, so a second concurrent refresh call would otherwise fail and
+// force a logout right after the first one just succeeded.
+let refreshPromise: Promise<string> | null = null;
+
+function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      return Promise.reject(new Error('No refresh token available'));
+    }
+
+    refreshPromise = axios
+      .post<RefreshTokenResponse>(`${API_BASE_URL}/Authen/refresh`, { refreshToken })
+      .then((response) => {
+        localStorage.setItem('accessToken', response.data.accessToken);
+        localStorage.setItem('refreshToken', response.data.refreshToken);
+        return response.data.accessToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
 // Handle token expiration
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
@@ -95,30 +123,20 @@ api.interceptors.response.use(
       config?: InternalAxiosRequestConfig;
     };
 
-    if (axiosError.response?.status === 401) {
-      // Token has expired, try to refresh
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
-        try {
-          const response = await axios.post<RefreshTokenResponse>(
-            `${API_BASE_URL}/Authen/refresh`,
-            { refreshToken }
-          );
+    if (axiosError.response?.status === 401 && localStorage.getItem('refreshToken')) {
+      try {
+        const newAccessToken = await refreshAccessToken();
 
-          localStorage.setItem('accessToken', response.data.accessToken);
-          localStorage.setItem('refreshToken', response.data.refreshToken);
-
-          // Then retry the original request
-          if (axiosError.config?.headers) {
-            axiosError.config.headers.Authorization = `Bearer ${response.data.accessToken}`;
-          }
-
-          return axios(axiosError.config!);
-        } catch {
-          // Refresh failed, logout
-          localStorage.clear();
-          window.location.href = '/login';
+        // Then retry the original request
+        if (axiosError.config?.headers) {
+          axiosError.config.headers.Authorization = `Bearer ${newAccessToken}`;
         }
+
+        return axios(axiosError.config!);
+      } catch {
+        // Refresh failed, logout
+        localStorage.clear();
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);

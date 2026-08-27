@@ -16,26 +16,6 @@ interface LoginCredentials {
   password: string;
 }
 
-interface RegisterData {
-  // Common fields
-  email: string;
-  password: string;
-  name?: string; // Keep for backward compatibility
-  
-  // Student-specific
-  firstName?: string;
-  lastName?: string;
-  phoneNumber?: string;
-  university?: string;
-  degree?: string;
-  
-  // Company-specific
-  companyName?: string;
-  website?: string;
-  
-  [key: string]: unknown;
-}
-
 interface AuthResult {
   success: boolean;
   message?: string;
@@ -45,7 +25,6 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (credentials: LoginCredentials, userType: string) => Promise<AuthResult>;
-  register: (data: RegisterData, userType: string) => Promise<AuthResult>;
   logout: () => Promise<void>;
 }
 
@@ -117,56 +96,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const register = async (data: RegisterData, userType: string): Promise<AuthResult> => {
-  try {
-    let response: AuthResponse;
-
-    if (userType === 'student') {
-      const studentData = {
-        firstName: data.firstName!,
-        lastName: data.lastName!,
-        emailAddress: data.email,
-        password: data.password,
-        phoneNumber: data.phoneNumber!,
-        university: data.university,
-        degree: data.degree,
-      };
-      response = await authAPI.registerStudent(studentData);
-    } else if (userType === 'company') {
-        const companyData = {
-          companyName: data.companyName!,
-          email: data.email,
-          password: data.password,
-          phoneNumber: data.phoneNumber!,
-          website: data.website,
-        };
-        response = await authAPI.registerCompany(companyData);
-      } else {
-        return { success: false, message: 'Invalid user type' };
-      }
-
-      const userData: User = {
-        userId: response.data.userID,
-        email: response.data.email,
-        name: response.data.name,
-        userType: response.data.userType,
-      };
-
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('refreshToken', response.data.refreshToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-
-      setUser(userData);
-        return { success: true };
-    } catch (error: unknown) {
-        const err = error as { response?: { data?: { message?: string } } };
-      return {
-        success: false,
-        message: err.response?.data?.message || 'Registration failed',
-      };
-    }
-  };
-
   const logout = async (): Promise<void> => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
@@ -182,7 +111,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

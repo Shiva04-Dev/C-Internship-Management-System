@@ -17,6 +17,27 @@
 
 html { scroll-behavior: smooth; }
 
+/* Visually hidden until focused, then jumps to the top so keyboard/screen-reader
+   users can bypass repeated nav chrome (WCAG 2.4.1 Bypass Blocks). */
+.skip-to-content {
+  position: fixed;
+  top: -100%;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.75rem 1.25rem;
+  background: var(--dark-bg);
+  color: var(--neon-cyan);
+  border: 1px solid var(--border-bright);
+  border-radius: 0.25rem;
+  font-family: 'Share Tech Mono', monospace;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+
+.skip-to-content:focus {
+  top: 1rem;
+}
+
 body {
   background-color: var(--dark-bg);
   color: #d0d8e8;

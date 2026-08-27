@@ -89,7 +89,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div
+    <main
+      id="main"
       className="min-h-screen flex items-center justify-center px-4 py-12 relative"
       style={{ background: '#050510' }}
     >
@@ -252,6 +253,6 @@ export default function LoginPage() {
           PROTECTED BY ENTERPRISE-GRADE SECURITY
         </p>
       </div>
-    </div>
+    </main>
   );
 }

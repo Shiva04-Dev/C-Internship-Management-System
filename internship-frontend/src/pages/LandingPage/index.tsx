@@ -8,9 +8,11 @@ export default function LandingPage() {
   return (
     <div className="bg-black text-white min-h-screen">
       <Navbar />
-      <IntroSequence />
-      <HowItWorks />
-      <CallToAction />
+      <main id="main">
+        <IntroSequence />
+        <HowItWorks />
+        <CallToAction />
+      </main>
       <Footer />
     </div>
   );

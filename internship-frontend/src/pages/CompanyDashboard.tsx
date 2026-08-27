@@ -263,10 +263,10 @@ export default function CompanyDashboard() {
   const activeInternships = internships.filter(i => i.status === 'Active').length;
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center flex-col gap-4" style={{ background: '#050510' }}>
+    <main id="main" className="min-h-screen flex items-center justify-center flex-col gap-4" style={{ background: '#050510' }}>
       <div className="retro-spinner" style={{ width: '48px', height: '48px' }} />
       <p className="font-['Orbitron'] text-xs tracking-widest" style={{ color: 'rgba(0,243,255,0.5)' }}>LOADING COMPANY DATA...</p>
-    </div>
+    </main>
   );
 
   return (
@@ -297,15 +297,15 @@ export default function CompanyDashboard() {
         </div>
       </FixedNavbar>
 
-      <div className="max-w-7xl mx-auto px-6 pt-28 pb-12">
+      <main id="main" className="max-w-7xl mx-auto px-6 pt-28 pb-12">
         <div className="mb-8 animate-fade-in-up flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="section-tag" style={{ display: 'inline-flex' }}>
               <span style={{ marginLeft: '0.25rem' }}>Company Portal</span>
             </div>
-            <h2 className="text-3xl md:text-4xl text-white mb-1">
+            <h1 className="text-3xl md:text-4xl text-white mb-1">
               Welcome, <span style={{ color: 'var(--neon-purple)' }} className="text-glow-purple">{user?.name}</span>
-            </h2>
+            </h1>
             <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(176,38,255,0.4)', letterSpacing: '0.08em' }}>Manage your internship programs</p>
           </div>
           <div className="relative inline-block">
@@ -393,7 +393,7 @@ export default function CompanyDashboard() {
             ))}
           </motion.div>
         )}
-      </div>
+      </main>
 
       {/* Create Internship Modal */}
       <AnimatedModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} maxWidth="580px" ariaLabel="Post new internship">
@@ -408,28 +408,28 @@ export default function CompanyDashboard() {
         <form onSubmit={handleCreateInternship} className="p-6 space-y-4">
           {[['title', 'Internship Title', 'text', 'e.g. Frontend Developer Intern'], ['location', 'Location', 'text', 'e.g. Remote / Cape Town']].map(([name, label, type, ph]) => (
             <div key={name}>
-              <label className="retro-label">{label} *</label>
-              <input type={type} name={name} value={formData[name as keyof FormData]} onChange={handleInputChange} placeholder={ph} className="retro-input" />
+              <label className="retro-label" htmlFor={name}>{label} *</label>
+              <input id={name} type={type} name={name} value={formData[name as keyof FormData]} onChange={handleInputChange} placeholder={ph} className="retro-input" />
               {formErrors[name] && <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: '#ff6666' }}>{formErrors[name]}</p>}
             </div>
           ))}
           <div className="grid grid-cols-2 gap-3">
             {[['startDate', 'Start Date'], ['endDate', 'End Date']].map(([name, label]) => (
               <div key={name}>
-                <label className="retro-label">{label} *</label>
-                <input type="date" name={name} value={formData[name as keyof FormData]} onChange={handleInputChange} className="retro-input" style={{ colorScheme: 'dark' }} />
+                <label className="retro-label" htmlFor={name}>{label} *</label>
+                <input id={name} type="date" name={name} value={formData[name as keyof FormData]} onChange={handleInputChange} className="retro-input" style={{ colorScheme: 'dark' }} />
                 {formErrors[name] && <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: '#ff6666' }}>{formErrors[name]}</p>}
               </div>
             ))}
           </div>
           <div>
-            <label className="retro-label">Description *</label>
-            <textarea name="description" value={formData.description} onChange={handleInputChange} placeholder="Describe the internship role..." rows={3} className="retro-input" style={{ resize: 'vertical' }} />
+            <label className="retro-label" htmlFor="description">Description *</label>
+            <textarea id="description" name="description" value={formData.description} onChange={handleInputChange} placeholder="Describe the internship role..." rows={3} className="retro-input" style={{ resize: 'vertical' }} />
             {formErrors.description && <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: '#ff6666' }}>{formErrors.description}</p>}
           </div>
           <div>
-            <label className="retro-label">Requirements *</label>
-            <textarea name="requirements" value={formData.requirements} onChange={handleInputChange} placeholder="List requirements..." rows={3} className="retro-input" style={{ resize: 'vertical' }} />
+            <label className="retro-label" htmlFor="requirements">Requirements *</label>
+            <textarea id="requirements" name="requirements" value={formData.requirements} onChange={handleInputChange} placeholder="List requirements..." rows={3} className="retro-input" style={{ resize: 'vertical' }} />
             {formErrors.requirements && <p className="font-['Share_Tech_Mono'] text-xs mt-1" style={{ color: '#ff6666' }}>{formErrors.requirements}</p>}
           </div>
           <div className="flex gap-3 pt-2">

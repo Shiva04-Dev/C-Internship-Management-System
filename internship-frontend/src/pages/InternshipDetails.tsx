@@ -267,18 +267,18 @@ export default function InternshipDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center flex-col gap-4" style={{ background: '#050510' }}>
+      <main id="main" className="min-h-screen flex items-center justify-center flex-col gap-4" style={{ background: '#050510' }}>
         <div className="retro-spinner" style={{ width: '48px', height: '48px' }} />
         <p className="font-['Orbitron'] text-xs tracking-widest" style={{ color: 'rgba(0,243,255,0.5)' }}>
           LOADING INTERNSHIP DATA...
         </p>
-      </div>
+      </main>
     );
   }
 
   if (!internship) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#050510' }}>
+      <main id="main" className="min-h-screen flex items-center justify-center" style={{ background: '#050510' }}>
         <div className="text-center">
           <Briefcase className="h-12 w-12 mx-auto mb-4" style={{ color: 'rgba(0,243,255,0.15)' }} />
           <p className="font-['Orbitron'] text-xs tracking-widest mb-6" style={{ color: 'rgba(0,243,255,0.3)' }}>
@@ -288,12 +288,12 @@ export default function InternshipDetails() {
             Back to Dashboard
           </button>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#050510' }}>
+    <main id="main" className="min-h-screen" style={{ background: '#050510' }}>
       {/* Top bar */}
       <PinnedTopBar onBack={() => navigate('/student')} />
 
@@ -438,6 +438,6 @@ export default function InternshipDetails() {
           </div>
         </div>
       </AnimatedModal>
-    </div>
+    </main>
   );
 }

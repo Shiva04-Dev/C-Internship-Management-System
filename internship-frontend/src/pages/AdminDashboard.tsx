@@ -207,12 +207,12 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center flex-col gap-4" style={{ background: '#050510' }}>
+      <main id="main" className="min-h-screen flex items-center justify-center flex-col gap-4" style={{ background: '#050510' }}>
         <div className="retro-spinner" style={{ width: '48px', height: '48px' }} />
         <p className="font-['Orbitron'] text-xs tracking-widest" style={{ color: 'rgba(255,80,80,0.5)' }}>
           LOADING ADMIN PANEL...
         </p>
-      </div>
+      </main>
     );
   }
 
@@ -265,15 +265,15 @@ export default function AdminDashboard() {
         </div>
       </FixedNavbar>
 
-      <div className="max-w-7xl mx-auto px-6 pt-28 pb-12">
+      <main id="main" className="max-w-7xl mx-auto px-6 pt-28 pb-12">
         {/* Welcome Section */}
         <div className="mb-8 animate-fade-in-up">
           <div className="section-tag" style={{ display: 'inline-flex', borderColor: 'rgba(255,80,80,0.3)', background: 'rgba(255,80,80,0.05)' }}>
             <span style={{ marginLeft: '0.25rem', color: '#ff6666' }}>Admin Portal</span>
           </div>
-          <h2 className="text-3xl md:text-4xl text-white mb-1">
+          <h1 className="text-3xl md:text-4xl text-white mb-1">
             Welcome, <span style={{ color: '#ff6666' }} className="text-glow-red">{user?.name}</span>
-          </h2>
+          </h1>
           <p className="font-['Share_Tech_Mono'] text-xs" style={{ color: 'rgba(255,80,80,0.4)', letterSpacing: '0.08em' }}>
             Monitor and manage the entire platform
           </p>
@@ -472,7 +472,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
-      </div>
+      </main>
 
       {/* Users Modal */}
       <AnimatedModal

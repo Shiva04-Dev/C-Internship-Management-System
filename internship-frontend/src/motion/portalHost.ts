@@ -47,6 +47,20 @@ export function getFixedChromeHost(): HTMLElement {
 
   const host = document.createElement("div");
   host.id = HOST_ID;
+
+  // A skip-to-content link only works if it's the very first focusable thing
+  // on the page. Every page's fixed nav (this file's whole reason for
+  // existing) portals into this same host, so inserting it here — ahead of
+  // whatever nav content a page appends next — is the one place that's
+  // guaranteed to hold regardless of which page is mounted. A React child
+  // rendered inside a page would land after this host's siblings in `#root`,
+  // i.e. after the very nav it's supposed to let users skip past.
+  const skipLink = document.createElement("a");
+  skipLink.href = "#main";
+  skipLink.className = "skip-to-content";
+  skipLink.textContent = "Skip to main content";
+  host.appendChild(skipLink);
+
   document.body.prepend(host);
   cached = host;
   return host;

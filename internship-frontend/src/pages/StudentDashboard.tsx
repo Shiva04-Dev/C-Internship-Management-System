@@ -126,12 +126,12 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center flex-col gap-4" style={{ background: '#050510' }}>
+      <main id="main" className="min-h-screen flex items-center justify-center flex-col gap-4" style={{ background: '#050510' }}>
         <div className="retro-spinner" style={{ width: '48px', height: '48px' }} />
         <p className="font-['Orbitron'] text-xs tracking-widest" style={{ color: 'rgba(0,243,255,0.5)' }}>
           LOADING SYSTEM DATA...
         </p>
-      </div>
+      </main>
     );
   }
 
@@ -178,18 +178,18 @@ export default function StudentDashboard() {
         </div>
       </FixedNavbar>
 
-      <div className="max-w-7xl mx-auto px-6 pt-28 pb-12">
+      <main id="main" className="max-w-7xl mx-auto px-6 pt-28 pb-12">
         {/* Welcome */}
         <div className="mb-8 animate-fade-in-up">
           <div className="section-tag" style={{ display: 'inline-flex' }}>
             <span style={{ marginLeft: '0.25rem' }}>Student Portal</span>
           </div>
-          <h2 className="text-3xl md:text-4xl text-white mb-1">
+          <h1 className="text-3xl md:text-4xl text-white mb-1">
             Welcome back,{' '}
             <span style={{ color: 'var(--neon-cyan)' }} className="text-glow-cyan">
               {user?.name}
             </span>
-          </h2>
+          </h1>
           <p
             className="font-['Share_Tech_Mono'] text-xs"
             style={{ color: 'rgba(0,243,255,0.4)', letterSpacing: '0.08em' }}
@@ -382,7 +382,7 @@ export default function StudentDashboard() {
             )}
           </motion.div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
