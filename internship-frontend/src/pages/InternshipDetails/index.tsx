@@ -42,7 +42,7 @@ export default function InternshipDetails() {
   const checkIfApplied = async () => {
     try {
       const res = await applicationAPI.getMine();
-      setApplied(res.data.some((a: Application) => a.internshipID === parseInt(id as string)));
+      setApplied(res.data.some((a: Application) => a.internship?.internshipID === parseInt(id as string)));
     } catch {
       // Silently fail
     }
