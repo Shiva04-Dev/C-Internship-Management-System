@@ -81,9 +81,9 @@ export default function LoginPage() {
 
   const useDemoCredentials = () => {
     const demo: DemoCredentialsMap = {
-      student: { email: 'john.doe@student.com', password: 'Student123!' },
-      company: { email: 'hr@techcorp.com', password: 'Company123!' },
-      admin: { email: 'admin@internships.com', password: 'Admin123!' }
+      student: { email: 'lindiwe.khumalo@mailbox.co.za', password: 'Comet$Drift42' },
+      company: { email: 'talent@solace-robotics.io', password: 'Ignite&Forge3' },
+      admin: { email: 'zara.hendricks@imscontrol.io', password: 'Obsidian#7Key' }
     };
     setFormData(demo[userType]);
   };
