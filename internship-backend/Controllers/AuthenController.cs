@@ -27,9 +27,14 @@ namespace C__Internship_Management_Program.Controllers
                 var response = await _authService.RegisterStudentAsync(dto);
                 return Ok(response);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new { message = ex.Message });
+                // Same response shape ASP.NET's automatic model validation produces for a
+                // genuinely malformed field (type/title/status/errors/traceId), not the
+                // flat {message} shape used elsewhere — otherwise a duplicate email is
+                // enumerable by response shape alone, regardless of the message text.
+                ModelState.AddModelError(nameof(dto.EmailAddress), "Unable to create account with the provided details");
+                return ValidationProblem(ModelState);
             }
         }
 
@@ -43,9 +48,11 @@ namespace C__Internship_Management_Program.Controllers
                 var response = await _authService.RegisterCompanyAsync(dto);
                 return Ok(response);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new { message = ex.Message });
+                // See RegisterStudent above — same shape-matching rationale.
+                ModelState.AddModelError(nameof(dto.Email), "Unable to create account with the provided details");
+                return ValidationProblem(ModelState);
             }
         }
 
