@@ -105,5 +105,20 @@ namespace C__Internship_Management_Program.Controllers
 
             return Ok(bannedStudents);
         }
+
+        // GET: api/Company/application-stats - Applicant status breakdown across all of this company's internships
+        [HttpGet("application-stats")]
+        public async Task<IActionResult> GetApplicationStats()
+        {
+            var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var applicationsByStatus = await _context.Applications
+                .Where(a => a.Internship.CompanyID == companyId)
+                .GroupBy(a => a.Status)
+                .Select(g => new { status = g.Key, count = g.Count() })
+                .ToListAsync();
+
+            return Ok(new { applicationsByStatus });
+        }
     }
 }
