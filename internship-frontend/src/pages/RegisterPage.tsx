@@ -110,30 +110,25 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      const data =
-        userType === 'student'
-          ? {
-              firstName: formData.firstName,
-              lastName: formData.lastName,
-              emailAddress: formData.email,
-              password: formData.password,
-              phoneNumber: formData.phoneNumber,
-              university: formData.university,
-              degree: formData.degree
-            }
-          : {
-              companyName: formData.companyName,
-              email: formData.email,
-              password: formData.password,
-              phoneNumber: formData.phoneNumber,
-              website: formData.website || ''
-            };
-
       if (userType === 'student') {
-        await authAPI.registerStudent(data);
+        await authAPI.registerStudent({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          emailAddress: formData.email,
+          password: formData.password,
+          phoneNumber: formData.phoneNumber,
+          university: formData.university,
+          degree: formData.degree
+        });
         toast.success('Account created successfully!');
       } else {
-        await authAPI.registerCompany(data);
+        await authAPI.registerCompany({
+          companyName: formData.companyName,
+          email: formData.email,
+          password: formData.password,
+          phoneNumber: formData.phoneNumber,
+          website: formData.website || ''
+        });
         toast.success('Account created! An admin will review and approve your company before you can post internships.', { duration: 6000 });
       }
       navigate(`/login?type=${userType}`);
