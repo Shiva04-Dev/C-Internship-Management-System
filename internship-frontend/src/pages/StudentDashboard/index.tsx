@@ -8,6 +8,7 @@ import StatCounter from '../../motion/StatCounter';
 import FixedNavbar from '../../motion/FixedNavbar';
 import BrowseTab from './BrowseTab';
 import ApplicationsTab from './ApplicationsTab';
+import InsightsSection from './InsightsSection';
 import { Internship, Application } from './types';
 
 type TabType = 'browse' | 'applications';
@@ -174,6 +175,8 @@ export default function StudentDashboard() {
             </div>
           ))}
         </div>
+
+        <InsightsSection applications={applications} />
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6">
