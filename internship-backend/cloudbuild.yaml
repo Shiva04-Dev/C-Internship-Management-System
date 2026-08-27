@@ -25,7 +25,7 @@ steps:
       - --min-instances=0
       - --max-instances=2
       - --set-secrets=JWT_KEY=JWT_TOKEN:latest,DATABASE_URL=DATABASE_URL:latest
-      - --set-env-vars=CORS_ALLOWED_ORIGINS=https://imsinternships.vercel.app
+      - --set-env-vars=CORS_ALLOWED_ORIGINS=https://imsinternships.vercel.app,RESUME_BUCKET_NAME=ims-resumes-project-5b74f390-4444-4e81-92e
 
 images:
   - us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/c-internship-management-system:$SHORT_SHA

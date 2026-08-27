@@ -33,6 +33,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthenService, AuthenService>();
 
+// Resume storage — GCS when RESUME_BUCKET_NAME is set (production; Cloud Run's own
+// filesystem is ephemeral), local disk otherwise (local development, no GCP
+// credentials required to run the app locally).
+var resumeBucketName = Environment.GetEnvironmentVariable("RESUME_BUCKET_NAME");
+if (!string.IsNullOrWhiteSpace(resumeBucketName))
+{
+    builder.Services.AddSingleton<IResumeStorageService>(new GcsResumeStorageService(resumeBucketName));
+}
+else
+{
+    builder.Services.AddSingleton<IResumeStorageService, LocalDiskResumeStorageService>();
+}
+
 // Configure JWT Authentication
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
     ?? builder.Configuration["Jwt:Key"];

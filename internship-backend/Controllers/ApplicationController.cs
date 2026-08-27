@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.Models;
+using C__Internship_Management_Program.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
@@ -13,10 +14,12 @@ namespace C__Internship_Management_Program.Controllers
     public class ApplicationController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IResumeStorageService _resumeStorage;
 
-        public ApplicationController(ApplicationDbContext context)
+        public ApplicationController(ApplicationDbContext context, IResumeStorageService resumeStorage)
         {
             _context = context;
+            _resumeStorage = resumeStorage;
         }
 
         // GET: api/Application/student/mine - Get all applications for logged-in student
@@ -160,18 +163,10 @@ namespace C__Internship_Management_Program.Controllers
                         return BadRequest(new { message = "Resume must be a valid PDF file" });
                 }
 
-                // Save resume file
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "resumes");
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
+                // Save resume file (Google Cloud Storage in production, local disk for
+                // local dev — see IResumeStorageService registration in Program.cs)
                 var uniqueFileName = $"{studentId}_{dto.InternshipID}_{Guid.NewGuid()}.pdf";
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await dto.Resume.CopyToAsync(fileStream);
-                }
+                await _resumeStorage.SaveResumeAsync(dto.Resume, uniqueFileName);
 
                 string resumePath = uniqueFileName;
 
@@ -265,19 +260,11 @@ namespace C__Internship_Management_Program.Controllers
                 if (string.IsNullOrEmpty(application.Resume))
                     return NotFound(new { message = "Resume not found" });
 
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "resumes", application.Resume);
-
-                if (!System.IO.File.Exists(filePath))
+                var stream = await _resumeStorage.GetResumeAsync(application.Resume);
+                if (stream == null)
                     return NotFound(new { message = "Resume file not found" });
 
-                var memory = new MemoryStream();
-                using (var stream = new FileStream(filePath, FileMode.Open))
-                {
-                    await stream.CopyToAsync(memory);
-                }
-                memory.Position = 0;
-
-                return File(memory, "application/pdf", application.Resume);
+                return File(stream, "application/pdf", application.Resume);
             }
             catch (Exception ex)
             {
