@@ -8,6 +8,13 @@
       </feMerge>
     </filter>
   </defs>
-  <rect x="0" y="0" width="24" height="24" rx="5" fill="#050510" />
-  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#00f3ff" filter="url(#glow)" />
+  <polygon
+    points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
+    fill="none"
+    stroke="#00f3ff"
+    stroke-width="1.6"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+    filter="url(#glow)"
+  />
 </svg>
