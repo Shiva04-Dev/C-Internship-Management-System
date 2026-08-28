@@ -44,7 +44,7 @@ export default function InternshipDetails() {
       const res = await applicationAPI.getMine();
       setApplied(res.data.some((a: Application) => a.internship?.internshipID === parseInt(id as string)));
     } catch {
-      // Silently fail
+      // noop
     }
   };
 
@@ -129,7 +129,6 @@ export default function InternshipDetails() {
         {/* Content */}
         <div className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-5">
-            {/* Description */}
             <div className="retro-panel p-7">
               <h2 className="font-['Orbitron'] text-xs tracking-widest mb-4" style={{ color: 'rgba(0,243,255,0.6)' }}>
                 // ABOUT THIS INTERNSHIP
@@ -142,7 +141,6 @@ export default function InternshipDetails() {
               </p>
             </div>
 
-            {/* Requirements */}
             <div className="retro-panel p-7">
               <h2 className="font-['Orbitron'] text-xs tracking-widest mb-4" style={{ color: 'rgba(0,243,255,0.6)' }}>
                 // REQUIREMENTS
@@ -156,9 +154,7 @@ export default function InternshipDetails() {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-5">
-            {/* Timeline */}
             <div className="retro-panel p-6">
               <h3 className="font-['Orbitron'] text-xs tracking-widest mb-4" style={{ color: 'rgba(0,243,255,0.5)' }}>
                 // TIMELINE
@@ -166,7 +162,6 @@ export default function InternshipDetails() {
               <DrawTimelineBar startDate={internship.startDate} endDate={internship.endDate} />
             </div>
 
-            {/* Apply section */}
             <StickyReveal topOffset={72}>
               <div className="retro-panel p-6">
                 <h3 className="font-['Orbitron'] text-xs tracking-widest mb-4" style={{ color: 'rgba(0,243,255,0.5)' }}>

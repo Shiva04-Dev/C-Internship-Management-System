@@ -6,9 +6,7 @@ namespace C__Internship_Management_Program.Extensions
 {
     public static class WebApplicationExtensions
     {
-        // Baseline security headers on every response except Swagger's own UI (dev-only,
-        // and its assets would break under this CSP). This is a pure JSON API otherwise,
-        // so default-src 'none' is safe — there's no first-party HTML/JS to allow.
+        // Skips Swagger's own UI (dev-only), whose assets would break under this CSP.
         public static WebApplication UseSecurityHeaders(this WebApplication app)
         {
             app.Use(async (context, next) =>
@@ -27,9 +25,7 @@ namespace C__Internship_Management_Program.Extensions
             return app;
         }
 
-        // Applies pending EF Core migrations at startup and, in Development only,
-        // seeds demo data. Failures are logged, not rethrown — matches prior behavior
-        // of letting the app continue starting even if this step fails.
+        // Applies migrations and, in Development only, seeds demo data.
         public static async Task ApplyMigrationsAndSeedAsync(this WebApplication app)
         {
             using var scope = app.Services.CreateScope();

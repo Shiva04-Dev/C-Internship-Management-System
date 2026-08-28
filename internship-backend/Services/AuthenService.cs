@@ -166,10 +166,8 @@ namespace C__Internship_Management_Program.Services
             if (storedToken == null || !storedToken.IsActive)
                 throw new Exception("Invalid or expired token");
 
-            // Revoke old token
             storedToken.IsRevoked = true;
 
-            // Generate new tokens based on type of user
             string name = "";
             string email = "";
             int userId = 0;
@@ -233,7 +231,6 @@ namespace C__Internship_Management_Program.Services
                 CreatedByIP = "127.0.0.1"
             };
 
-            // Set appropriate user ID based on type
             if (userType == "Student") refreshTokenEntity.StudentID = userId;
             else if (userType == "Company") refreshTokenEntity.CompanyID = userId;
             else if (userType == "Admin") refreshTokenEntity.AdminID = userId;

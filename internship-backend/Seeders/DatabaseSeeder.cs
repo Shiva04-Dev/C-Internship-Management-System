@@ -7,9 +7,7 @@ namespace C__Internship_Management_Program.Seeders
 {
     public static class DatabaseSeeder
     {
-        // Fixed seed so a fresh database always gets the same demo dataset -
-        // consistent charts and screenshots across resets instead of a
-        // different random spread every time.
+        // Fixed seed so a reset always reproduces the same demo dataset.
         private const int RandomSeed = 20260827;
 
         public static async Task SeedData(ApplicationDbContext context)
@@ -30,7 +28,6 @@ namespace C__Internship_Management_Program.Seeders
             Console.WriteLine("Seeding database with demo data...");
             var rng = new Random(RandomSeed);
 
-            // Create Admin
             var admin = new Admin
             {
                 FirstName = "Zara",
@@ -41,7 +38,6 @@ namespace C__Internship_Management_Program.Seeders
             };
             context.Admins.Add(admin);
 
-            // Create Companies
             var companies = new List<Company>
             {
                 new Company
@@ -128,7 +124,6 @@ namespace C__Internship_Management_Program.Seeders
             context.Companies.AddRange(companies);
             await context.SaveChangesAsync(); // Save to get CompanyIDs
 
-            // Create Students
             var students = new List<Student>
             {
                 new Student { FirstName = "Lindiwe", LastName = "Khumalo", Email = "lindiwe.khumalo@mailbox.co.za", PasswordHash = BCrypt.Net.BCrypt.HashPassword("Comet$Drift42"), PhoneNumber = "+27-82-101-2233", University = "University of Cape Town", Degree = "BSc Computer Science", CreatedAt = DateTime.UtcNow },
@@ -147,7 +142,7 @@ namespace C__Internship_Management_Program.Seeders
             context.Students.AddRange(students);
             await context.SaveChangesAsync(); // Save to get StudentIDs
 
-            // Create Internships (2 per company; 3 marked Closed for status-mix variety)
+            // 2 internships per company; 3 marked Closed for status-mix variety.
             var internships = new List<Internship>
             {
                 // Solace Robotics
@@ -185,10 +180,7 @@ namespace C__Internship_Management_Program.Seeders
             context.Internships.AddRange(internships);
             await context.SaveChangesAsync(); // Save to get InternshipIDs
 
-            // Create Applications - each student applies to 3-5 distinct internships,
-            // with AppliedAt spread across the last 30 days so the admin activity
-            // chart has a real shape. Deterministic (fixed-seed rng above), so a
-            // reset always produces the same demo dataset.
+            // Each student applies to 3-5 distinct internships, spread over the last 30 days.
             var applications = new List<Application>();
             var statusPool = new[] { "Pending", "Pending", "Pending", "Accepted", "Accepted", "Rejected" };
 

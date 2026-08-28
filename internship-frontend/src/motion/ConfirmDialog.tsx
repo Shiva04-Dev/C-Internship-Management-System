@@ -29,13 +29,6 @@ const TONE_STYLES = {
   },
 };
 
-/**
- * Themed replacement for the browser's native confirm() dialog, built on the
- * shared AnimatedModal (focus trap, Escape-to-close, portal rendering).
- * Callers own the pending-action state — see any handler using this for the
- * pattern: store { title, message, onConfirm } instead of calling confirm()
- * synchronously, then run the real action from this dialog's onConfirm.
- */
 export default function ConfirmDialog({
   isOpen,
   title,

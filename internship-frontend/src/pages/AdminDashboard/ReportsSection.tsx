@@ -22,7 +22,6 @@ export default function ReportsSection({ reports }: { reports: Reports }) {
 
   return (
     <>
-      {/* Hero: applications over time */}
       <div className="mb-8">
         <h3
           className="font-['Orbitron'] text-sm tracking-widest mb-4"
@@ -35,7 +34,6 @@ export default function ReportsSection({ reports }: { reports: Reports }) {
         </div>
       </div>
 
-      {/* Row of 3: status donut, top companies, top students */}
       <div className="mb-8">
         <h3
           className="font-['Orbitron'] text-sm tracking-widest mb-4"
@@ -79,7 +77,6 @@ export default function ReportsSection({ reports }: { reports: Reports }) {
         </div>
       </div>
 
-      {/* Row of 2: funnel, internship status mix */}
       <div className="mb-8">
         <div className="grid md:grid-cols-2 gap-6">
           <div className="retro-panel p-6">

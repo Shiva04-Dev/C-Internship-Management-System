@@ -4,7 +4,6 @@ import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 
 
 const API_BASE_URL = import.meta.env.VITE_API_URL as string;
 
-// Types
 interface LoginCredentials {
   email: string;
   password: string;
@@ -69,7 +68,6 @@ interface AdminParams {
   [key: string]: unknown;
 }
 
-// Creating axios instance with default config
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -77,7 +75,6 @@ const api: AxiosInstance = axios.create({
   },
 });
 
-// Adding auth tokens to requests if it exists
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem('accessToken');
   if (token && config.headers) {
@@ -86,11 +83,8 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
-// Shared in-flight refresh so concurrent 401s (e.g. several requests firing at
-// once when the access token expires) reuse one /refresh call instead of each
-// racing to refresh independently — the backend revokes a refresh token on
-// first use, so a second concurrent refresh call would otherwise fail and
-// force a logout right after the first one just succeeded.
+// Shared in-flight refresh so concurrent 401s reuse one /refresh call instead
+// of racing — the backend revokes a refresh token on first use.
 let refreshPromise: Promise<string> | null = null;
 
 function refreshAccessToken(): Promise<string> {
@@ -114,7 +108,6 @@ function refreshAccessToken(): Promise<string> {
   return refreshPromise;
 }
 
-// Handle token expiration
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: unknown) => {
@@ -127,14 +120,12 @@ api.interceptors.response.use(
       try {
         const newAccessToken = await refreshAccessToken();
 
-        // Then retry the original request
         if (axiosError.config?.headers) {
           axiosError.config.headers.Authorization = `Bearer ${newAccessToken}`;
         }
 
         return axios(axiosError.config!);
       } catch {
-        // Refresh failed, logout
         localStorage.clear();
         window.location.href = '/login';
       }
@@ -143,7 +134,6 @@ api.interceptors.response.use(
   }
 );
 
-// Authentication APIs
 export const authAPI = {
   loginStudent: (credentials: LoginCredentials) =>
     api.post('/Authen/login/student', credentials),
@@ -159,7 +149,6 @@ export const authAPI = {
     api.post('/Authen/logout', { refreshToken }),
 };
 
-// Internship APIs
 export const internshipAPI = {
   getAll: (params?: InternshipParams) =>
     api.get('/Internship', { params }),
@@ -175,7 +164,6 @@ export const internshipAPI = {
     api.delete(`/Internship/${id}`),
 };
 
-// Application APIs
 export const applicationAPI = {
   getMine: () =>
     api.get('/Application/student/mine'),
@@ -199,7 +187,6 @@ export const applicationAPI = {
     }),
 };
 
-// Company APIs
 export const companyAPI = {
   banStudent: (studentId: string | number, reason: string) =>
     api.post(`/Company/ban-student/${studentId}`, { Reason: reason } as BanStudentData),
@@ -213,7 +200,6 @@ export const companyAPI = {
     api.get('/Company/application-stats'),
 };
 
-// Admin APIs
 export const adminAPI = {
   getDashboard: () =>
     api.get('/Admin/dashboard'),

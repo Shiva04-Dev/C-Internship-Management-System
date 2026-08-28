@@ -6,26 +6,8 @@ import { prefersReducedMotion } from '../../motion/reducedMotion';
 
 registerGsapPlugins();
 
-/**
- * The page's back-to-dashboard bar. Held at the top of the viewport with a
- * GSAP `ScrollTrigger` pin rather than CSS `position: sticky`: the app is
- * wrapped in ScrollSmoother globally (see `App.tsx`), which simulates
- * scrolling by transforming `#smooth-content` instead of natively scrolling
- * an ancestor — so native sticky inside it has nothing to stick against and
- * silently does nothing. GSAP's ScrollSmoother docs name `pin: true` as the
- * replacement, which is what this uses. `end: "max"` keeps it pinned for the
- * whole remaining page, and `pinSpacing: false` reproduces sticky's layout:
- * the bar keeps its own space in flow and the page scrolls underneath it.
- *
- * Split into its own component (like `HeroPanel` above) so its one-shot
- * `useGSAP` runs on ITS first mount — the parent renders a `loading` early
- * return first, so an effect living up there would fire with the bar's DOM
- * node not yet in the document and never wire the pin up.
- *
- * Under reduced motion no smoother is created at all, so the page scrolls
- * natively and plain CSS sticky works — that path falls back to it and runs
- * no GSAP.
- */
+// Pinned via GSAP ScrollTrigger (not CSS sticky — ScrollSmoother transforms
+// content instead of scrolling). Split out so useGSAP attaches after mount.
 export default function PinnedTopBar({ onBack }: { onBack: () => void }) {
   const barRef = useRef<HTMLDivElement | null>(null);
   const reduced = prefersReducedMotion();

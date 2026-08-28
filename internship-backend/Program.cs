@@ -11,7 +11,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-// Database configuration - PostgreSQL
 var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -25,7 +24,6 @@ if (string.IsNullOrWhiteSpace(connectionString))
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// Register Services
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthenService, AuthenService>();
 builder.Services.AddResumeStorage();
@@ -41,17 +39,14 @@ if (string.IsNullOrWhiteSpace(jwtKey))
         "(production) or run 'dotnet user-secrets set \"Jwt:Key\" \"<value>\"' (local development).");
 }
 
-// JwtService reads Jwt:Key from IConfiguration directly to generate/validate tokens.
-// A plain JWT_KEY env var doesn't auto-bind to config key "Jwt:Key" (.NET only does
-// that for Jwt__Key), so without this, JwtService would silently see an empty key
-// under a JWT_KEY-env-var deployment even though the check above just passed.
+// A JWT_KEY env var doesn't auto-bind to config key "Jwt:Key" (only JWT__Key would),
+// so JwtService needs it bridged in here manually.
 builder.Configuration["Jwt:Key"] = jwtKey;
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddFrontendCors(builder.Configuration);
 builder.Services.AddApplicationRateLimiting();
 
-// Configure Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -88,7 +83,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Configure forwarded headers
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -98,8 +92,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 var app = builder.Build();
 
-// Middleware — order matters: exception handling wraps everything else so nothing
-// downstream can leak an unhandled exception straight to the client.
+// Order matters: exception handling must wrap everything else.
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSecurityHeaders();
 app.UseForwardedHeaders();
@@ -123,7 +116,6 @@ app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
 
-// Health check endpoints
 app.MapGet("/", () => Results.Ok(new
 {
     status = "running",

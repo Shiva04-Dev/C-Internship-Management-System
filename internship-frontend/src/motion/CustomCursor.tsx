@@ -15,11 +15,6 @@ export default function CustomCursor() {
     setEnabled(!isTouch && !prefersReducedMotion());
   }, []);
 
-  // A click on a `[data-cursor-hover]` element often navigates (e.g. a nav
-  // button), which unmounts that element before the browser fires `mouseout`
-  // — the class below never gets removed and the cursor stays stuck expanded
-  // until the user hovers another hoverable element elsewhere. Clearing it on
-  // every route change closes that gap for any such button, not just one.
   useEffect(() => {
     dotRef.current?.classList.remove("custom-cursor--hover");
   }, [location.pathname]);

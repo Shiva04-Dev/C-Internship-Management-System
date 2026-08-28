@@ -76,12 +76,7 @@ export default function CompanyDashboard() {
 
   const handleRefresh = () => { setRefreshing(true); loadData(true); };
 
-  /**
-   * Clearing `banPulseStudentId` on close matters: `AnimatedModal` unmounts its
-   * children when closed, so a still-set id would make `SuccessPulse` mount
-   * fresh on the next open with a `trigger` that already matches a row, and
-   * replay the checkmark even though no ban just happened.
-   */
+  // Clears the trigger so SuccessPulse doesn't replay on the next modal open.
   const closeApplicationsModal = () => {
     setShowApplicationsModal(false);
     setBanPulseStudentId(null);

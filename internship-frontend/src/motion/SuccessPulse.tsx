@@ -8,17 +8,6 @@ export interface SuccessPulseProps {
   color?: string;
 }
 
-/**
- * A small, restrained "it worked" micro-animation — a checkmark that pops in
- * with a soft expanding ring and fades out over ~700ms. NOT a full-screen
- * confetti burst: it's a subtle overlay meant to sit on top of the button
- * that triggered a success action (post an internship, apply a ban).
- * Re-fires every time `trigger` changes to a new value — pass an
- * incrementing counter, bumped once inside the success branch of whatever
- * handler just succeeded. Renders nothing at all under reduced motion; the
- * existing `react-hot-toast` success message alone communicates success in
- * that case, exactly as it already does today.
- */
 export default function SuccessPulse({ trigger, color = "#00cc66" }: SuccessPulseProps) {
   const [visible, setVisible] = useState(false);
   const reduced = prefersReducedMotion();

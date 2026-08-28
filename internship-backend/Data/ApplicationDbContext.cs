@@ -9,7 +9,6 @@ namespace C__Internship_Management_Program.Data
             : base(options) { 
         }
 
-        // Db Tables
         public DbSet<Student> Students { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Admin> Admins { get; set; }
@@ -49,7 +48,6 @@ namespace C__Internship_Management_Program.Data
             .HasForeignKey(rt => rt.AdminID)
             .OnDelete(DeleteBehavior.Cascade);
 
-            //Unique Email Constraint
             modelBuilder.Entity<Student>()
             .HasIndex(s => s.Email)
             .IsUnique();
@@ -62,9 +60,8 @@ namespace C__Internship_Management_Program.Data
                 .HasIndex(c => c.Email)
                 .IsUnique();
 
-            // Existing companies are backfilled to approved=true when this column is
-            // added; RegisterCompanyAsync explicitly sets false on new registrations,
-            // which overrides this DB-level default in the INSERT.
+            // Only backfills existing rows on migration — new EF inserts always send an
+            // explicit value and never fall through to this default.
             modelBuilder.Entity<Company>()
                 .Property(c => c.IsApproved)
                 .HasDefaultValue(true);

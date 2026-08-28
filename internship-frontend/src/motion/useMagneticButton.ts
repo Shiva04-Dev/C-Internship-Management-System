@@ -7,11 +7,6 @@ export interface MagneticOffset {
   y: number;
 }
 
-/**
- * How far a magnetic element should shift toward the cursor. Pull strength
- * ramps linearly from 0 at the edge of `radius` to `strength` at the origin;
- * outside the radius the element is left alone (returns {x:0, y:0}).
- */
 export function computeMagneticOffset(
   cursorX: number,
   cursorY: number,

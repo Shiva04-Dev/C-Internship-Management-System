@@ -39,12 +39,10 @@ namespace C__Internship_Management_Program.Controllers
         {
             var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
-            // Check if student exists
             var student = await _context.Students.FindAsync(studentId);
             if (student == null)
                 return NotFound(new { message = "Student not found" });
 
-            // Check if already banned
             var existingBan = await _context.CompanyBans
                 .FirstOrDefaultAsync(b => b.CompanyID == companyId && b.StudentID == studentId);
 

@@ -8,12 +8,7 @@ export interface RingSegment {
   dashOffset: number;
 }
 
-/**
- * Maps a series of values onto SVG coordinates spanning `width`x`height`,
- * inverted so a larger value sits higher up (smaller y). A flat series (or a
- * single point) collapses to the vertical midline instead of dividing by
- * zero.
- */
+/** Maps values onto SVG coords, larger = smaller y. Flat series collapse to the midline. */
 export function normalizePoints(
   values: number[],
   width: number,
@@ -39,9 +34,7 @@ export function normalizePoints(
   });
 }
 
-/** Builds a closed SVG path filling the area under a line, from the first
- * point down to `height`, across, and back up to the last point. Returns ''
- * for fewer than 2 points — an area chart needs at least a line segment. */
+/** Closed area path under the line, down to `height`. Returns '' for fewer than 2 points. */
 export function areaPathD(points: Point[], height: number): string {
   if (points.length < 2) return "";
   const [first, ...rest] = points;
@@ -59,13 +52,8 @@ export function linePathD(points: Point[]): string {
   return `M ${first.x} ${first.y} ${line}`;
 }
 
-/**
- * Splits `circumference` proportionally across `values` as
- * stroke-dasharray/stroke-dashoffset pairs for stacking arcs around one
- * <circle>, starting at 12 o'clock and proceeding clockwise. Returns []
- * when every value is zero (the caller should render an empty-state ring
- * instead of an arc with no length).
- */
+// Splits `circumference` into dasharray/dashoffset pairs for stacking arcs
+// around one <circle>. Returns [] when every value is zero.
 export function ringSegments(values: number[], circumference: number): RingSegment[] {
   const total = values.reduce((sum, v) => sum + v, 0);
   if (total <= 0) return [];
@@ -79,11 +67,7 @@ export function ringSegments(values: number[], circumference: number): RingSegme
   });
 }
 
-/**
- * Percent width of each stage relative to the first stage (100 = same size
- * as stage 0). A zero-valued first stage returns all zeros rather than
- * dividing by zero — the funnel should render as empty, not NaN-wide bars.
- */
+// Percent width of each stage vs. the first. A zero first stage returns all zeros.
 export function funnelWidths(values: number[]): number[] {
   if (values.length === 0) return [];
   const base = values[0];

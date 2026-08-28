@@ -6,15 +6,7 @@ import SuccessPulse from '../../motion/SuccessPulse';
 import { staggerContainer, staggerItem } from '../../motion/staggerVariants';
 import { Application } from './types';
 
-/**
- * The applications payload carries the student's id nested under `student`,
- * so the old `app.studentID` read was always `undefined` and every Ban click
- * from this modal POSTed `/api/Company/ban-student/undefined` and came back
- * 400. Verified live against the running API on 2026-08-24: the response
- * shape is `{ applicationID, status, appliedAt, updatedAt, resume, student: {
- * studentID, firstName, ... } }`. Prefer the nested id, fall back to a
- * top-level one if the API ever flattens.
- */
+// Prefer the nested student id; fall back to top-level if the API ever flattens.
 const studentIdOf = (app: Application): number | undefined => app.student?.studentID ?? app.studentID;
 
 /** Same name the application row renders, reused for the ban prompt/toast. */

@@ -2,9 +2,7 @@ using System.Net;
 
 namespace C__Internship_Management_Program.Middleware
 {
-    // Last-resort catch for any exception not already handled by a controller action's
-    // own try/catch. Logs full details server-side, returns a generic message to the
-    // client — no response body should ever contain raw exception text.
+    // Last-resort catch: logs full details server-side, returns a generic message to the client.
     public class ExceptionHandlingMiddleware
     {
         private readonly RequestDelegate _next;

@@ -12,14 +12,6 @@ export interface DropZoneProps {
   hint?: string;
 }
 
-/**
- * Real HTML5 drag-and-drop file dropzone with a lively animated hover
- * state (scale pulse + glow) while a file is dragged over it — not just a
- * styled file input with no drop handling. Uses a drag-enter counter
- * rather than a plain boolean so hovering over child elements (the icon,
- * the label text) during a drag doesn't cause the hover state to flicker
- * off and on as the pointer crosses child element boundaries.
- */
 export default function DropZone({
   onFileSelect,
   selectedFile,

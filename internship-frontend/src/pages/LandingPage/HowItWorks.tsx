@@ -13,7 +13,7 @@ const steps = [
   { id: 4, title: "Get Hired", description: "Track your status and hear back from companies in one place.", icon: Rocket },
 ];
 
-/** Renders each step as a full-viewport panel scrubbed left with scroll. Falls back to a plain vertical stack under reduced motion (horizontal scroll-jacking is itself a motion effect that must be skippable). */
+/** Each step as a full-viewport panel scrubbed with scroll; falls back to a plain stack under reduced motion. */
 export default function HowItWorks() {
   const reduced = prefersReducedMotion();
   const sectionRef = useRef<HTMLElement | null>(null);

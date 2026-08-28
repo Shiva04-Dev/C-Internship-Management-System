@@ -5,13 +5,6 @@ import { prefersReducedMotion } from "./reducedMotion";
 
 registerGsapPlugins();
 
-/**
- * Wraps the app in GSAP ScrollSmoother for inertia scrolling. IMPORTANT: any
- * `position: fixed` element (e.g. CustomCursor) must be rendered as a SIBLING
- * of this provider, never as a child — ScrollSmoother applies a CSS
- * `transform` to its content element, which creates a new containing block
- * and breaks `position: fixed` children.
- */
 export default function ScrollSmootherProvider({ children }: { children: ReactNode }) {
   const smootherRef = useRef<ScrollSmoother | null>(null);
 

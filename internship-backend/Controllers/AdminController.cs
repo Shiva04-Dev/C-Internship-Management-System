@@ -30,7 +30,6 @@ namespace C__Internship_Management_Program.Controllers
             var totalApplications = await _context.Applications.CountAsync();
             var pendingApplications = await _context.Applications.CountAsync(a => a.Status == "Pending");
 
-            // Recent Activity
             var recentInternships = await _context.Internships
                 .Include(i => i.Company)
                 .OrderByDescending(i => i.CreatedAt)
@@ -279,19 +278,16 @@ namespace C__Internship_Management_Program.Controllers
         [HttpGet("reports")]
         public async Task<IActionResult> GetReports()
         {
-            // Applications by status
             var applicationsByStatus = await _context.Applications
                 .GroupBy(a => a.Status)
                 .Select(g => new { status = g.Key, count = g.Count() })
                 .ToListAsync();
 
-            // Internships by status
             var internshipsByStatus = await _context.Internships
                 .GroupBy(i => i.Status)
                 .Select(g => new { status = g.Key, count = g.Count() })
                 .ToListAsync();
 
-            // Top companies by internships posted
             var topCompanies = await _context.Companies
                 .Include(c => c.Internships)
                 .OrderByDescending(c => c.Internships.Count)
@@ -304,7 +300,6 @@ namespace C__Internship_Management_Program.Controllers
                 })
                 .ToListAsync();
 
-            // Top students by applications submitted
             var topStudents = await _context.Students
                 .Include(s => s.Applications)
                 .OrderByDescending(s => s.Applications.Count)
@@ -317,7 +312,6 @@ namespace C__Internship_Management_Program.Controllers
                 })
                 .ToListAsync();
 
-            // Applications over time (30 days)
             var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
             var applicationsOverTime = await _context.Applications
                 .Where(a => a.AppliedAt >= thirtyDaysAgo)
@@ -343,7 +337,6 @@ namespace C__Internship_Management_Program.Controllers
             if (userType != "Student" && userType != "Company")
                 return BadRequest(new { message = "Invalid user type. Must be 'Student' or 'Company'" });
 
-            // Check if user exists
             if (userType == "Student")
             {
                 var student = await _context.Students.FindAsync(userId);
@@ -357,7 +350,6 @@ namespace C__Internship_Management_Program.Controllers
                     return NotFound(new { message = "Company not found" });
             }
 
-            // Check if already banned
             var existingBan = userType == "Student"
                 ? await _context.UserBans.FirstOrDefaultAsync(b => b.StudentID == userId && b.IsActive)
                 : await _context.UserBans.FirstOrDefaultAsync(b => b.CompanyID == userId && b.IsActive);

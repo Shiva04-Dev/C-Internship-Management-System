@@ -11,7 +11,6 @@ namespace C__Internship_Management_Program.Models
         [Required]
         public string RoleName { get; set; }
 
-        // Navigation
         public ICollection<NotificationRole> NotificationRoles { get; set; }
     }
 }

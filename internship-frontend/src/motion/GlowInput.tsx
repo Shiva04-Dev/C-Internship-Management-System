@@ -28,7 +28,6 @@ const GlowInput = forwardRef<HTMLInputElement, GlowInputProps>(function GlowInpu
       perimeterRef.current = perimeter;
       gsap.set(trace, { strokeDasharray: perimeter });
 
-      // Maintain current focus/blur state after resize
       if (isFocusedRef.current) {
         gsap.set(trace, { strokeDashoffset: 0 });
       } else {
@@ -36,10 +35,8 @@ const GlowInput = forwardRef<HTMLInputElement, GlowInputProps>(function GlowInpu
       }
     };
 
-    // Initial setup
     updatePerimeter();
 
-    // Add ResizeObserver for responsive updates
     const resizeObserver = new ResizeObserver(() => {
       updatePerimeter();
     });

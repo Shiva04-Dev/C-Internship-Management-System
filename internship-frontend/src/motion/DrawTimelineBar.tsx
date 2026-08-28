@@ -10,13 +10,6 @@ export interface DrawTimelineBarProps {
   endDate: string;
 }
 
-/**
- * Horizontal start-to-end date bar that draws itself in ONCE when scrolled
- * into view (toggleActions "play none none none") — unlike LandingPage's
- * HowItWorks timeline, which continuously scrubs its draw-in with scroll
- * position, this plays a single reveal and then holds. A "today" marker is
- * positioned proportionally along the bar when today falls within range.
- */
 export default function DrawTimelineBar({ startDate, endDate }: DrawTimelineBarProps) {
   const sectionRef = useRef<HTMLDivElement | null>(null);
   const lineRef = useRef<SVGLineElement | null>(null);

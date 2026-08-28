@@ -24,15 +24,12 @@ namespace C__Internship_Management_Program.Models
 
         public string Website { get; set; }
 
-        // New companies start unapproved and can't post internships until an admin
-        // approves them (see InternshipController.CreateInternship) — closes the
-        // fake-company resume-harvesting path a pentest found. Existing companies
-        // are backfilled to true by the migration; see ApplicationDbContext.
+        // New companies start unapproved until an admin approves them — see
+        // InternshipController.CreateInternship.
         public bool IsApproved { get; set; }
 
         public DateTime UpdatedAt { get; set; }
 
-        //Navigation
         public ICollection<Internship> Internships { get; set; }
         public ICollection<RefreshToken> RefreshTokens { get; set; }
     }

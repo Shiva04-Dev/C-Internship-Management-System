@@ -16,7 +16,6 @@ export interface PasswordStrengthMeterProps {
   requirements: PasswordRequirementItem[];
 }
 
-/** Password strength bar that overshoots slightly past its target width on change and settles — a spring, not a linear CSS transition — with each requirement's checkmark popping in when it flips to met. */
 export default function PasswordStrengthMeter({ score, label, color, requirements }: PasswordStrengthMeterProps) {
   const barRef = useRef<HTMLDivElement | null>(null);
 

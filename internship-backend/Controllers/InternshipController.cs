@@ -30,7 +30,6 @@ namespace C__Internship_Management_Program.Controllers
 				.Include(i => i.Company)
 				.Where(i => i.Status == "Active");
 
-			//Apply filters if provided by the User
 			if (!string.IsNullOrEmpty(location))
 			{
 				query = query.Where(i => i.Location.Contains(location));
@@ -90,9 +89,7 @@ namespace C__Internship_Management_Program.Controllers
                     {
                         i.Company.CompanyID,
                         i.Company.CompanyName,
-                        // Contact PII only goes to authenticated students — everyone
-                        // else (anonymous callers, companies, admins) gets the same
-                        // reduced shape the public list endpoint already uses.
+                        // Contact PII only goes to authenticated students.
                         Email = isAuthenticatedStudent ? i.Company.Email : null,
                         PhoneNumber = isAuthenticatedStudent ? i.Company.PhoneNumber : null,
                         i.Company.Website
@@ -111,7 +108,6 @@ namespace C__Internship_Management_Program.Controllers
 		[Authorize(Roles = "Company")]
 		public async Task<IActionResult> GetMyCompanyInternships()
 		{
-			//Get the Compnay ID from the JWT Token
 			var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
 			var internships = await _context.Internships
@@ -142,7 +138,6 @@ namespace C__Internship_Management_Program.Controllers
 		[Authorize(Roles = "Company")]
 		public async Task<IActionResult> CreateInternship([FromBody] CreateInternshipDto dto)
 		{
-			//Get company ID from JWT Token
 			var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
 			var company = await _context.Companies.FindAsync(companyId);
@@ -155,7 +150,6 @@ namespace C__Internship_Management_Program.Controllers
 			var startDate = dto.StartDate.EnsureUtc();
 			var endDate = dto.EndDate.EnsureUtc();
 
-			//Validate Dates
 			if (startDate >= endDate)
 				return BadRequest(new { message = "End Date must be after the Start Date" });
 
@@ -196,7 +190,6 @@ namespace C__Internship_Management_Program.Controllers
 			if (internship == null)
 				return NotFound(new { message = "Internship not found or you do not have the necessary permissions to edit" });
 
-			//Validate dates if provided
 			var startDate = dto.StartDate?.EnsureUtc() ?? internship.StartDate;
 			var endDate = dto.EndDate?.EnsureUtc() ?? internship.EndDate;
 
@@ -207,7 +200,6 @@ namespace C__Internship_Management_Program.Controllers
 			if (dto.Status != null && !validStatuses.Contains(dto.Status))
 				return BadRequest(new { message = "Invalid status" });
 
-			//Update fields
 			internship.Title = dto.Title ?? internship.Title;
 			internship.Description = dto.Description ?? internship.Description;
 			internship.Location = dto.Location ?? internship.Location;
@@ -234,7 +226,6 @@ namespace C__Internship_Management_Program.Controllers
 			if (internship == null)
 				return NotFound(new { message = "Internship not found or you do not have the necessary permissions to delete" });
 
-			//Soft delete by setting status to Closed
 			internship.Status = "Closed";
 			await _context.SaveChangesAsync();
 

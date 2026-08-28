@@ -47,13 +47,8 @@ function ShaderFallback() {
   );
 }
 
-/**
- * Hero + Features as one continuous pinned scroll sequence: the viewport stays
- * fixed on the shader background while the foreground crossfades through the
- * hero intro, then each feature, one full-screen "scene" at a time. Falls back
- * to a normal stacked (unpinned) layout when reduced motion is preferred —
- * pinning/scroll-jacking is itself a motion effect that must be skippable.
- */
+// Pinned scroll sequence: the foreground crossfades through hero → each feature
+// as a full-screen scene. Falls back to a normal stacked layout under reduced motion.
 export default function IntroSequence() {
   const reduced = prefersReducedMotion();
   const navigate = useNavigate();
@@ -83,10 +78,8 @@ export default function IntroSequence() {
         },
       });
 
-      // Outgoing and incoming panels only briefly overlap (~0.1 units) rather than
-      // sharing the whole transition window — full overlap left two full-viewport
-      // headlines readable on top of each other. The outgoing panel also shrinks
-      // and blurs so it visually recedes behind the incoming one during that overlap.
+      // Panels only briefly overlap (~0.1 units) — full overlap left two
+      // full-viewport headlines readable on top of each other.
       stages.forEach((stage, i) => {
         if (i === 0) return;
         const outStart = i - 0.6;
@@ -97,10 +90,8 @@ export default function IntroSequence() {
           { autoAlpha: 1, y: 0, scale: 1, duration: 0.35 },
           inStart
         );
-        // Label at the moment the first feature panel finishes fading in, fully
-        // visible and at rest — the Navbar's "Features" link resolves this label
-        // to a scroll offset via `ScrollTrigger.labelToScroll`, since a raw DOM
-        // offset can't target a spot inside this pinned/scrubbed sequence.
+        // Navbar's "Features" link resolves this label to a scroll offset —
+        // a raw DOM offset can't target inside this pinned sequence.
         if (i === 1) tl.addLabel("features", inStart + 0.35);
       });
     },

@@ -12,7 +12,6 @@ namespace C__Internship_Management_Program.Models
         [Required, MaxLength(500)]
         public string Token { get; set; }
 
-        //Lifecycle
         [Required]
         public DateTime ExpiresAt { get; set; }
 
@@ -23,7 +22,6 @@ namespace C__Internship_Management_Program.Models
         [MaxLength(45)]
         public string? CreatedByIP { get; set; }
 
-        //User Type and ID
         [MaxLength(20)]
         public string UserType { get;set; }
 
@@ -36,7 +34,6 @@ namespace C__Internship_Management_Program.Models
         public int? AdminID { get; set; }
         public Admin Admin { get; set; }
 
-        //Convenience Flags
         [NotMapped]
         public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
 

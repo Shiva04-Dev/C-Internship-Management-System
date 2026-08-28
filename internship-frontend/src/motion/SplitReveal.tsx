@@ -30,17 +30,9 @@ export default function SplitReveal({
       if (!ref.current || prefersReducedMotion()) return;
       const el = ref.current;
 
-      // Detect gradient/bg-clip-text styling (e.g. Tailwind's `bg-clip-text text-transparent`)
-      // BEFORE splitting: SplitText moves the text into per-char child <div>s, which don't
-      // inherit `background-image`/`background-clip` from their parent, so the gradient would
-      // otherwise vanish. Re-apply the same gradient to each char, sliced to its own position,
-      // so the effect looks like one continuous gradient across the whole line.
       const computedBg = getComputedStyle(el).backgroundImage;
       const hasGradientClipText = computedBg !== "none";
 
-      // "chars, words" (not just "chars") wraps each word in its own non-breaking container —
-      // splitting by chars alone makes every character an independently-breakable inline-block,
-      // which lets the browser line-wrap in the middle of a word.
       const split = new SplitText(el, { type: "chars, words", charsClass: "split-char", wordsClass: "split-word" });
 
       if (hasGradientClipText) {

@@ -31,7 +31,6 @@ namespace C__Internship_Management_Program.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        //Navigation
         public ICollection<Application> Applications { get; set; }
         public ICollection<Feedback> Feedbacks { get; set; }
         public ICollection<RefreshToken> RefreshTokens { get; set; }

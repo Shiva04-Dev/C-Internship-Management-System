@@ -13,20 +13,8 @@ const navItems = [
   { name: "Initiate", href: "#join" },
 ];
 
-/**
- * Portalled into the shared fixed-chrome host (see `motion/portalHost.ts`)
- * rather than rendered in place. This nav is `position: fixed`, and
- * `ScrollSmootherProvider` wraps the whole app, so left inside
- * `#smooth-content` its `top: 0` resolves against that transformed div instead
- * of the viewport and the bar scrolls off the top of the screen with the page
- * — the same defect that was measured and fixed on the three dashboard
- * navbars. The host sits before `#root`, so the nav keeps its natural
- * first-in-document position for tab and screen-reader order.
- *
- * Portalled DOM stays in the React tree, so `useAuth`/`useNavigate` context,
- * the `isOpen` mobile-menu state and the framer-motion entrance below all
- * behave exactly as before; only the DOM parent changes.
- */
+// Portalled into the shared fixed-chrome host — ScrollSmootherProvider transforms
+// #smooth-content, so a fixed nav left inside it would scroll off-screen instead of staying pinned.
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
@@ -38,19 +26,15 @@ export default function Navbar() {
 
     const smoother = ScrollSmoother.get();
 
-    // "#hero" is itself the trigger of IntroSequence's pin — asking
-    // ScrollSmoother to look up that element's position while it's actively
-    // pinned returns whatever transient rect the pin currently holds it at,
-    // not its true top-of-page offset. "Mission" always means the very top,
-    // so target the absolute scroll position instead of resolving the DOM node.
+    // #hero is IntroSequence's own pin trigger, so its DOM rect is unreliable
+    // mid-pin — scroll to the absolute top instead.
     if (href === "#hero" && smoother) {
       smoother.scrollTo(0, true);
       return;
     }
 
-    // "#features" sits inside IntroSequence's pinned/scrubbed scroll sequence,
-    // where a DOM offset doesn't correspond to a stable visual state — resolve
-    // it via the labeled position on that ScrollTrigger's timeline instead.
+    // #features sits inside a pinned/scrubbed sequence where DOM offset is
+    // unstable — resolve via the ScrollTrigger label instead.
     if (href === "#features") {
       const st = ScrollTrigger.getById("hero-sequence");
       if (st && smoother) {
@@ -59,9 +43,8 @@ export default function Navbar() {
       }
     }
 
-    // ScrollSmoother drives scroll via a transform, not native window scroll —
-    // native scrollIntoView() fights it, so route through the smoother when
-    // it's active (it isn't created at all under reduced motion).
+    // ScrollSmoother scrolls via transform, not native scroll — native
+    // scrollIntoView() fights it, so route through the smoother when active.
     if (smoother) {
       smoother.scrollTo(href, true, "top top");
     } else {

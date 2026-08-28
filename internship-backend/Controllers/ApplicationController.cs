@@ -61,7 +61,6 @@ namespace C__Internship_Management_Program.Controllers
         [Authorize(Roles = "Company, Admin")]
         public async Task<IActionResult> GetApplicationsForInternship(int internshipId)
         {
-            // Verify if the internship is owned by the company
             if (User.IsInRole("Company"))
             {
                 var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
@@ -107,7 +106,6 @@ namespace C__Internship_Management_Program.Controllers
         {
             var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
-            // Check if internship exists and is active
             var internship = await _context.Internships
                 .FirstOrDefaultAsync(i => i.InternshipID == dto.InternshipID && i.Status == "Active");
 
@@ -121,7 +119,6 @@ namespace C__Internship_Management_Program.Controllers
             if (isBannedByCompany)
                 return Forbid();
 
-            // Check if already applied
             var existingApplication = await _context.Applications
                 .FirstOrDefaultAsync(a => a.InternshipID == dto.InternshipID && a.StudentID == studentId);
 
@@ -194,7 +191,6 @@ namespace C__Internship_Management_Program.Controllers
                     return Forbid();
             }
 
-            // Validate status
             var validStatuses = new[] { "Pending", "Accepted", "Rejected", "Withdrawn" };
             if (!validStatuses.Contains(dto.Status))
                 return BadRequest(new { message = "Invalid status" });
@@ -219,7 +215,6 @@ namespace C__Internship_Management_Program.Controllers
             if (application == null)
                 return NotFound(new { message = "Application not found" });
 
-            // Verify company owns the internship (if company role)
             if (User.IsInRole("Company"))
             {
                 var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);

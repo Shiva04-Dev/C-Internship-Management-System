@@ -32,10 +32,6 @@ export default function SlidingTabs({ options, active }: SlidingTabsProps) {
 
       const target = { x: tab.offsetLeft, width: tab.offsetWidth };
 
-      // Detect if this is a fresh mount by checking the indicator's current state.
-      // Under StrictMode, GSAP's context.current.revert() can wipe the indicator's transform,
-      // but the boolean latch doesn't reset. Instead, check if the indicator is actually
-      // positioned yet (has inline width set). If not, snap instantly (first paint).
       const hasInlineWidth = indicator.style.width !== "";
       const isFirstMount = !hasInlineWidth || prefersReducedMotion();
 
@@ -48,9 +44,6 @@ export default function SlidingTabs({ options, active }: SlidingTabsProps) {
     { dependencies: [activeIndex], scope: containerRef }
   );
 
-  // Keep the indicator aligned with the currently active tab across viewport reflows
-  // (e.g. below ~480px the tab row reflows but offsetLeft/offsetWidth were only ever
-  // captured on mount/activeIndex change, so the indicator would drift out of place).
   useEffect(() => {
     const container = containerRef.current;
     const indicator = indicatorRef.current;

@@ -9,17 +9,6 @@ export interface TiltCardProps {
   onClick?: () => void;
 }
 
-/**
- * Drop-in replacement for a plain <div className="...card..."> that adds a
- * mouse-reactive tilt: rotateX/rotateY computed from cursor position within
- * the card, applied as an inline `transform` with a CSS `transition` doing
- * the settle-back easing — no animation library involved at all, just a
- * mousemove handler writing one inline style property and letting the
- * browser's own CSS transition interpolate it. No WebGL, no canvas. Skips
- * both listeners' actual effect under reduced motion (`handleMouseMove`
- * returns immediately, so `el.style.transform` is simply never written —
- * the card renders and behaves as a fully static div in that case).
- */
 export default function TiltCard({ children, className, style, maxTilt = 8, onClick }: TiltCardProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const reduced = prefersReducedMotion();

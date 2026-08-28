@@ -1,9 +1,6 @@
 namespace C__Internship_Management_Program.Services
 {
-    // Local-disk resume storage — local development only. Not used in production
-    // (Cloud Run's filesystem is ephemeral; see GcsResumeStorageService). Preserves
-    // the exact folder layout the app used before persistent storage was added, so
-    // no extra setup is required to run the backend locally.
+    // Local development only — Cloud Run's filesystem is ephemeral in production.
     public class LocalDiskResumeStorageService : IResumeStorageService
     {
         private readonly string _uploadsFolder;

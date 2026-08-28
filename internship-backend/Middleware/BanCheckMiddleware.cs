@@ -4,12 +4,8 @@ using C__Internship_Management_Program.Data;
 
 namespace C__Internship_Management_Program.Middleware
 {
-    /// <summary>
-    /// Rejects every request from an authenticated Student/Company that has an active
-    /// UserBan. Without this, a still-valid access token keeps authenticating for up to
-    /// its full remaining lifetime after an admin bans the account, since JWT validation
-    /// alone has no way to know about a ban that happened after the token was issued.
-    /// </summary>
+    // Rejects requests from a Student/Company with an active UserBan — otherwise a
+    // still-valid token keeps working until it expires, even after being banned.
     public class BanCheckMiddleware
     {
         private readonly RequestDelegate _next;

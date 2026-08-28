@@ -8,9 +8,7 @@ namespace C__Internship_Management_Program.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        // Expects Program.cs to have already resolved and fail-fast-validated Jwt:Key
-        // (including writing a JWT_KEY env var back into configuration — see Program.cs)
-        // before this is called.
+        // Expects Program.cs to have already resolved and validated Jwt:Key.
         public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
             var jwtKey = configuration["Jwt:Key"];
@@ -61,9 +59,7 @@ namespace C__Internship_Management_Program.Extensions
             return services;
         }
 
-        // Fixed-window limiter keyed by client IP, applied via [EnableRateLimiting("auth")]
-        // on login/register actions. Built into ASP.NET Core's shared framework — no
-        // external service, no package, no ongoing cost.
+        // Fixed-window limiter keyed by client IP, applied via [EnableRateLimiting("auth")].
         public static IServiceCollection AddApplicationRateLimiting(this IServiceCollection services)
         {
             services.AddRateLimiter(options =>

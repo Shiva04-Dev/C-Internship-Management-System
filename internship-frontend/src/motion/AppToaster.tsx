@@ -10,16 +10,6 @@ const ACCENT_BORDERS: Record<NonNullable<AppToasterProps["accent"]>, string> = {
   red: "rgba(255,80,80,0.3)",
 };
 
-/**
- * Shared react-hot-toast <Toaster> used by every page that shows toasts,
- * instead of each page repeating its own near-identical <Toaster
- * toastOptions={{...}} /> block. Adds a spring pop-in via the `toastPopIn`
- * keyframe (defined in index.css) applied directly via inline style to ensure
- * it wins the cascade over react-hot-toast's internal goober-generated animation.
- * Respects `prefers-reduced-motion` via the JS gate pattern — when reduced motion
- * is preferred, no animation is applied. Each page keeps its own accent border
- * color via the `accent` prop — cyan everywhere except AdminDashboard's red.
- */
 export default function AppToaster({ accent = "cyan" }: AppToasterProps) {
   const reduced = prefersReducedMotion();
 

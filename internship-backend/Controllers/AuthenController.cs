@@ -17,7 +17,6 @@ namespace C__Internship_Management_Program.Controllers
             _authService = authService;
         }
 
-        // Student Registration
         [HttpPost("register/student")]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> RegisterStudent([FromBody] StudentRegisterDto dto)
@@ -29,16 +28,13 @@ namespace C__Internship_Management_Program.Controllers
             }
             catch (Exception)
             {
-                // Same response shape ASP.NET's automatic model validation produces for a
-                // genuinely malformed field (type/title/status/errors/traceId), not the
-                // flat {message} shape used elsewhere — otherwise a duplicate email is
-                // enumerable by response shape alone, regardless of the message text.
+                // Matches ASP.NET's own validation-error shape so a duplicate email isn't
+                // enumerable by response shape alone.
                 ModelState.AddModelError(nameof(dto.EmailAddress), "Unable to create account with the provided details");
                 return ValidationProblem(ModelState);
             }
         }
 
-        // Company Registration
         [HttpPost("register/company")]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> RegisterCompany([FromBody] CompanyRegisterDto dto)
@@ -56,7 +52,7 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
 
-        // Admin Registration — requires an existing Admin; first Admin comes from DatabaseSeeder
+        // Requires an existing Admin; the first one comes from DatabaseSeeder.
         [HttpPost("register/admin")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RegisterAdmin([FromBody] AdminRegisterDto dto)
@@ -72,7 +68,6 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
 
-        // Student Login
         [HttpPost("login/student")]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> LoginStudent([FromBody] LoginDto dto)
@@ -88,7 +83,6 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
 
-        // Company Login
         [HttpPost("login/company")]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> LoginCompany([FromBody] LoginDto dto)
@@ -104,7 +98,6 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
 
-        // Admin Login
         [HttpPost("login/admin")]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> LoginAdmin([FromBody] LoginDto dto)
@@ -120,7 +113,6 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
 
-        // Refresh Token
         [HttpPost("refresh")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto dto)
         {
@@ -135,7 +127,6 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
 
-        // Logout (Revoke Refresh Token)
         [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto dto)
@@ -153,7 +144,6 @@ namespace C__Internship_Management_Program.Controllers
             }
         }
 
-        // Test endpoint to verify authentication
         [HttpGet("me")]
         [Authorize]
         public IActionResult GetCurrentUser()

@@ -1,7 +1,6 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { authAPI } from '../services/api';
 
-// Types
 type UserType = 'Student' | 'Company' | 'Admin';
 
 interface User {
@@ -32,7 +31,6 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Type for API response
 interface AuthResponse {
   data: {
     userID: string;

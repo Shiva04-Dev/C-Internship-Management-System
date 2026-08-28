@@ -62,11 +62,7 @@ function FieldPlane({ colorA, colorB }: FieldPlaneProps) {
   );
 }
 
-/**
- * Lighter, transparent variant of ShaderField for auth-page backgrounds: one
- * noise octave instead of two, capped device-pixel-ratio, alpha-blended so it
- * sits subtly behind a form panel rather than as a full-bleed hero canvas.
- */
+/** Lighter, transparent variant of ShaderField for auth-page backgrounds. */
 export interface AuthFieldProps {
   colorA?: string;
   colorB?: string;

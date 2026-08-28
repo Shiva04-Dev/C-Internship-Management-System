@@ -13,7 +13,6 @@ import CompanyDashboard from './pages/CompanyDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import InternshipDetails from './pages/InternshipDetails';
 
-/* --- Types --- */
 type UserType = 'Student' | 'Company' | 'Admin';
 
 interface ProtectedRouteProps {
@@ -21,7 +20,6 @@ interface ProtectedRouteProps {
   allowedRoles?: UserType[];
 }
 
-/* --- Protected Route --- */
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
 
@@ -54,7 +52,6 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   return <>{children}</>;
 };
 
-/* --- App Routes --- */
 function AppRoutes() {
   const { user } = useAuth();
   const location = useLocation();
@@ -109,24 +106,8 @@ function AppRoutes() {
   );
 }
 
-/* --- App Shell ---
- * Everything that must live OUTSIDE `ScrollSmootherProvider`. GSAP's
- * ScrollSmoother puts a CSS `transform` on `#smooth-content`, which makes
- * that div the containing block for every `position: fixed` descendant — so
- * anything fixed-positioned rendered inside it (the custom cursor, toasts)
- * would scroll away with the page instead of staying pinned to the viewport.
- * Both siblings below are deliberately kept out of that subtree.
- *
- * `AppToaster` is mounted here exactly ONCE for the whole app rather than
- * per-page. Previously each dashboard mounted its own, which meant
- * LoginPage and RegisterPage — which both call `toast.success`/`toast.error`
- * — had no <Toaster> at all and their toasts rendered nowhere. The accent is
- * derived from the route so /admin keeps its red border and every other page
- * gets the cyan default, which is the only thing the per-page mounts varied.
- *
- * This lives in its own component (not in `App`) because `useLocation()` is
- * only legal below `<Router>`, and `App` is what renders `<Router>`.
- */
+// Outside ScrollSmootherProvider — its transform on #smooth-content would make
+// fixed descendants (cursor, toasts) scroll with the page. Split out since useLocation() needs <Router>.
 function AppShell() {
   const location = useLocation();
 
@@ -141,7 +122,6 @@ function AppShell() {
   );
 }
 
-/* --- Main App --- */
 function App() {
   return (
     <Router>

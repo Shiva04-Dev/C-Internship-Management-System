@@ -39,7 +39,6 @@ namespace C__Internship_Management_Program.Models
         [Required]
         public DateTime CreatedAt { get; set; }
 
-        // Navigation
         public ICollection<Application> Applications { get; set; }
         public ICollection<Feedback> Feedbacks { get; set; }
     }

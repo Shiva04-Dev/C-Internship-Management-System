@@ -2,16 +2,8 @@ import { MapPin, Calendar, Briefcase, Building2, Clock } from 'lucide-react';
 import { useParallax } from '../../motion/useParallax';
 import { Internship } from './types';
 
-/**
- * Hero Panel is split into its own component so `useParallax`'s ref
- * attaches on ITS OWN first mount. useParallax's effect only runs once
- * (deps=[speed], fixed) — if it lived directly in InternshipDetails, that
- * one-shot effect would fire during the initial `loading` render, when
- * this JSX (and therefore the ref's DOM node) doesn't exist yet, and the
- * effect would never re-run once the real content mounts. Mounting this
- * component only after `internship` has loaded guarantees the ref is
- * already attached when useParallax's effect fires for the first time.
- */
+// Split out so useParallax's one-shot ref effect attaches on ITS OWN mount —
+// living in the parent, it'd fire during the loading return before the ref exists.
 export default function HeroPanel({ internship }: { internship: Internship }) {
   const parallaxRef = useParallax<HTMLDivElement>(0.25);
 
