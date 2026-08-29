@@ -187,6 +187,21 @@ export const applicationAPI = {
     }),
 };
 
+export const studentAPI = {
+  getMyResume: () =>
+    api.get('/Student/resume'),
+  uploadResume: (formData: FormData) =>
+    api.post('/Student/resume', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  deleteResume: () =>
+    api.delete('/Student/resume'),
+  downloadResume: () =>
+    api.get('/Student/resume/download', {
+      responseType: 'blob',
+    }),
+};
+
 export const companyAPI = {
   banStudent: (studentId: string | number, reason: string) =>
     api.post(`/Company/ban-student/${studentId}`, { Reason: reason } as BanStudentData),

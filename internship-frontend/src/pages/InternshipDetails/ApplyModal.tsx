@@ -11,6 +11,9 @@ interface ApplyModalProps {
   onFileSelect: (file: File) => void;
   applying: boolean;
   onApply: () => void;
+  hasBaseResume: boolean;
+  useBaseResume: boolean;
+  onToggleUseBaseResume: (useBaseResume: boolean) => void;
 }
 
 export default function ApplyModal({
@@ -21,6 +24,9 @@ export default function ApplyModal({
   onFileSelect,
   applying,
   onApply,
+  hasBaseResume,
+  useBaseResume,
+  onToggleUseBaseResume,
 }: ApplyModalProps) {
   return (
     <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="480px" ariaLabel="Submit application">
@@ -44,10 +50,40 @@ export default function ApplyModal({
           </p>
         </div>
 
-        <label className="retro-label">Resume (PDF, max 5MB) *</label>
-        <div className="mb-5">
-          <DropZone onFileSelect={onFileSelect} selectedFile={resumeFile} />
-        </div>
+        {hasBaseResume && (
+          <div className="flex gap-1 mb-5">
+            <button
+              onClick={() => onToggleUseBaseResume(true)}
+              className={useBaseResume ? 'retro-tab-active' : 'retro-tab-inactive'}
+              style={{ flex: 1, justifyContent: 'center' }}
+            >
+              Use My Base CV
+            </button>
+            <button
+              onClick={() => onToggleUseBaseResume(false)}
+              className={!useBaseResume ? 'retro-tab-active' : 'retro-tab-inactive'}
+              style={{ flex: 1, justifyContent: 'center' }}
+            >
+              Upload Different
+            </button>
+          </div>
+        )}
+
+        {useBaseResume ? (
+          <p
+            className="text-sm mb-5"
+            style={{ color: 'rgba(160,180,210,0.65)', fontFamily: 'Rajdhani, sans-serif' }}
+          >
+            Your base CV on file will be used for this application.
+          </p>
+        ) : (
+          <>
+            <label className="retro-label">Resume (PDF, max 5MB) *</label>
+            <div className="mb-5">
+              <DropZone onFileSelect={onFileSelect} selectedFile={resumeFile} />
+            </div>
+          </>
+        )}
 
         <div className="flex gap-3">
           <button
@@ -59,9 +95,9 @@ export default function ApplyModal({
           </button>
           <button
             onClick={onApply}
-            disabled={!resumeFile || applying}
+            disabled={(!useBaseResume && !resumeFile) || applying}
             className="btn-retro-primary flex-1 justify-center"
-            style={{ fontSize: '0.65rem', opacity: (!resumeFile || applying) ? 0.5 : 1 }}
+            style={{ fontSize: '0.65rem', opacity: ((!useBaseResume && !resumeFile) || applying) ? 0.5 : 1 }}
           >
             {applying ? (
               <>

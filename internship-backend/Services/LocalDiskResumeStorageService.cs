@@ -20,6 +20,22 @@ namespace C__Internship_Management_Program.Services
             return objectName;
         }
 
+        public Task<string> CopyResumeAsync(string sourceObjectName, string destObjectName)
+        {
+            var sourcePath = Path.Combine(_uploadsFolder, sourceObjectName);
+            var destPath = Path.Combine(_uploadsFolder, destObjectName);
+            File.Copy(sourcePath, destPath, overwrite: true);
+            return Task.FromResult(destObjectName);
+        }
+
+        public Task DeleteResumeAsync(string objectName)
+        {
+            var filePath = Path.Combine(_uploadsFolder, objectName);
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+            return Task.CompletedTask;
+        }
+
         public Task<Stream?> GetResumeAsync(string objectName)
         {
             var filePath = Path.Combine(_uploadsFolder, objectName);

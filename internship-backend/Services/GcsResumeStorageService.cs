@@ -24,6 +24,23 @@ namespace C__Internship_Management_Program.Services
             return objectName;
         }
 
+        public async Task<string> CopyResumeAsync(string sourceObjectName, string destObjectName)
+        {
+            await _storageClient.CopyObjectAsync(_bucketName, sourceObjectName, _bucketName, destObjectName);
+            return destObjectName;
+        }
+
+        public async Task DeleteResumeAsync(string objectName)
+        {
+            try
+            {
+                await _storageClient.DeleteObjectAsync(_bucketName, objectName);
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+            }
+        }
+
         public async Task<Stream?> GetResumeAsync(string objectName)
         {
             var memory = new MemoryStream();

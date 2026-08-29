@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { internshipAPI, applicationAPI } from '../../services/api';
+import { internshipAPI, applicationAPI, studentAPI } from '../../services/api';
 import { Briefcase, CheckCircle, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import StickyReveal from '../../motion/StickyReveal';
@@ -21,10 +21,13 @@ export default function InternshipDetails() {
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [pulseTrigger, setPulseTrigger] = useState(0);
+  const [hasBaseResume, setHasBaseResume] = useState(false);
+  const [useBaseResume, setUseBaseResume] = useState(false);
 
   useEffect(() => {
     loadInternship();
     checkIfApplied();
+    checkBaseResume();
   }, [id]);
 
   const loadInternship = async () => {
@@ -48,6 +51,16 @@ export default function InternshipDetails() {
     }
   };
 
+  const checkBaseResume = async () => {
+    try {
+      const res = await studentAPI.getMyResume();
+      setHasBaseResume(res.data.hasBaseResume);
+      setUseBaseResume(res.data.hasBaseResume);
+    } catch {
+      // noop
+    }
+  };
+
   const validateAndSetFile = (file: File) => {
     if (file.type !== 'application/pdf') {
       toast.error('Please upload a PDF file');
@@ -62,7 +75,7 @@ export default function InternshipDetails() {
   };
 
   const handleApply = async () => {
-    if (!resumeFile) {
+    if (!useBaseResume && !resumeFile) {
       toast.error('Please upload your resume first');
       return;
     }
@@ -70,7 +83,11 @@ export default function InternshipDetails() {
     try {
       const fd = new FormData();
       fd.append('internshipID', id as string);
-      fd.append('resume', resumeFile);
+      if (useBaseResume) {
+        fd.append('useBaseResume', 'true');
+      } else {
+        fd.append('resume', resumeFile as File);
+      }
       await applicationAPI.submitWithResume(fd);
       toast.success('Application submitted!');
       setApplied(true);
@@ -88,6 +105,7 @@ export default function InternshipDetails() {
   const closeModal = () => {
     setShowApplyModal(false);
     setResumeFile(null);
+    setUseBaseResume(hasBaseResume);
   };
 
   if (loading) {
@@ -211,6 +229,9 @@ export default function InternshipDetails() {
         onFileSelect={validateAndSetFile}
         applying={applying}
         onApply={handleApply}
+        hasBaseResume={hasBaseResume}
+        useBaseResume={useBaseResume}
+        onToggleUseBaseResume={setUseBaseResume}
       />
     </main>
   );

@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { FileText, Calendar, CheckCircle, Clock, XCircle, Ban } from 'lucide-react';
 import TiltCard from '../../motion/TiltCard';
 import { staggerContainer, staggerItem } from '../../motion/staggerVariants';
 import { Application } from './types';
@@ -8,9 +8,10 @@ import { Application } from './types';
 interface ApplicationsTabProps {
   applications: Application[];
   onBrowseClick: () => void;
+  onWithdraw: (applicationID: number, companyName: string) => void;
 }
 
-export default function ApplicationsTab({ applications, onBrowseClick }: ApplicationsTabProps) {
+export default function ApplicationsTab({ applications, onBrowseClick, onWithdraw }: ApplicationsTabProps) {
   const getStatusBadge = (status: string) => {
     const classes: { [key: string]: string } = {
       Pending: 'badge-pending',
@@ -63,12 +64,21 @@ export default function ApplicationsTab({ applications, onBrowseClick }: Applica
               {getStatusBadge(app.status)}
             </div>
             <div
-              className="flex items-center gap-2 font-['Share_Tech_Mono'] text-xs"
+              className="flex items-center gap-2 font-['Share_Tech_Mono'] text-xs mb-3"
               style={{ color: 'rgba(100,120,140,0.6)' }}
             >
               <Calendar className="h-3.5 w-3.5" />
               Applied: {new Date(app.appliedAt).toLocaleDateString()}
             </div>
+            {app.status === 'Pending' && (
+              <button
+                onClick={() => onWithdraw(app.applicationID, app.internship?.companyName || 'this company')}
+                className="btn-retro-danger-sm"
+              >
+                <Ban className="h-3 w-3" />
+                Withdraw
+              </button>
+            )}
           </TiltCard>
           </motion.div>
         ))

@@ -10,17 +10,10 @@ import ConfirmDialog from '../../motion/ConfirmDialog';
 import BrowseTab from './BrowseTab';
 import ApplicationsTab from './ApplicationsTab';
 import InsightsSection from './InsightsSection';
-import { Internship, Application } from './types';
+import ResumeSection from './ResumeSection';
+import { Internship, Application, ConfirmState } from './types';
 
-type TabType = 'browse' | 'applications';
-
-interface ConfirmState {
-  title: string;
-  message: string;
-  confirmLabel?: string;
-  tone?: 'default' | 'danger';
-  onConfirm: () => void;
-}
+type TabType = 'browse' | 'applications' | 'resume';
 
 export default function StudentDashboard() {
   const { user, logout } = useAuth();
@@ -75,6 +68,25 @@ export default function StudentDashboard() {
   };
 
   const handleApply = (id: number) => navigate(`/internship/${id}`);
+
+  const handleWithdraw = (applicationID: number, companyName: string) => {
+    setConfirmDialog({
+      title: 'Withdraw Application',
+      message: `Withdraw application to ${companyName}? You can reapply later.`,
+      confirmLabel: 'Withdraw',
+      tone: 'danger',
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        try {
+          await applicationAPI.withdraw(applicationID);
+          toast.success('Application withdrawn');
+          loadData();
+        } catch (e) {
+          toast.error('Failed to withdraw application');
+        }
+      },
+    });
+  };
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -196,13 +208,13 @@ export default function StudentDashboard() {
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6">
-          {(['browse', 'applications'] as TabType[]).map(tab => (
+          {(['browse', 'applications', 'resume'] as TabType[]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={activeTab === tab ? 'retro-tab-active' : 'retro-tab-inactive'}
             >
-              {tab === 'browse' ? 'Browse Internships' : 'My Applications'}
+              {tab === 'browse' ? 'Browse Internships' : tab === 'applications' ? 'My Applications' : 'My Resume'}
             </button>
           ))}
         </div>
@@ -219,8 +231,14 @@ export default function StudentDashboard() {
         )}
 
         {activeTab === 'applications' && (
-          <ApplicationsTab applications={applications} onBrowseClick={() => setActiveTab('browse')} />
+          <ApplicationsTab
+            applications={applications}
+            onBrowseClick={() => setActiveTab('browse')}
+            onWithdraw={handleWithdraw}
+          />
         )}
+
+        {activeTab === 'resume' && <ResumeSection openConfirm={setConfirmDialog} />}
       </main>
 
       <ConfirmDialog

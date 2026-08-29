@@ -20,3 +20,11 @@ export interface Application {
   appliedAt: string;
   internship?: InternshipInfo;
 }
+
+export interface ConfirmState {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  tone?: 'default' | 'danger';
+  onConfirm: () => void;
+}

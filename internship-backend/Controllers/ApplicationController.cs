@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.DTOs;
+using C__Internship_Management_Program.Extensions;
 using C__Internship_Management_Program.Models;
 using C__Internship_Management_Program.Services;
 using System.Security.Claims;
@@ -125,31 +126,30 @@ namespace C__Internship_Management_Program.Controllers
             if (existingApplication != null)
                 return BadRequest(new { message = "You have already applied to this internship" });
 
-            if (dto.Resume == null || dto.Resume.Length == 0)
-                return BadRequest(new { message = "A resume file is required" });
-
-            const long maxResumeBytes = 5 * 1024 * 1024; // 5MB
-            if (dto.Resume.Length > maxResumeBytes)
-                return BadRequest(new { message = "Resume file must be 5MB or smaller" });
-
-            // Verify the file is actually a PDF by its magic bytes ("%PDF-"), not just its declared name/content-type
-            var header = new byte[5];
-            using (var headerStream = dto.Resume.OpenReadStream())
-            {
-                var bytesRead = await headerStream.ReadAsync(header, 0, header.Length);
-                var isPdf = bytesRead == header.Length &&
-                    header[0] == 0x25 && header[1] == 0x50 && header[2] == 0x44 && header[3] == 0x46 && header[4] == 0x2D;
-
-                if (!isPdf)
-                    return BadRequest(new { message = "Resume must be a valid PDF file" });
-            }
-
             // Save resume file (Google Cloud Storage in production, local disk for
             // local dev — see IResumeStorageService registration in Program.cs)
             var uniqueFileName = $"{studentId}_{dto.InternshipID}_{Guid.NewGuid()}.pdf";
-            await _resumeStorage.SaveResumeAsync(dto.Resume, uniqueFileName);
+            string resumePath;
 
-            string resumePath = uniqueFileName;
+            if (dto.UseBaseResume)
+            {
+                var student = await _context.Students.FindAsync(studentId);
+                if (student == null || string.IsNullOrEmpty(student.BaseResumePath))
+                    return BadRequest(new { message = "No base CV on file. Upload one from your dashboard first." });
+
+                // Copies the blob to a new object rather than referencing the base CV
+                // directly, so replacing/removing the base CV later never changes what
+                // a company sees on this application.
+                resumePath = await _resumeStorage.CopyResumeAsync(student.BaseResumePath, uniqueFileName);
+            }
+            else
+            {
+                var validationError = await dto.Resume.ValidateAsResumeAsync();
+                if (validationError != null)
+                    return BadRequest(new { message = validationError });
+
+                resumePath = await _resumeStorage.SaveResumeAsync(dto.Resume!, uniqueFileName);
+            }
 
             var application = new Application
             {

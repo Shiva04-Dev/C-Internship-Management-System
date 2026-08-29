@@ -29,6 +29,8 @@ namespace C__Internship_Management_Program.Models
 
         public string Degree { get; set; }
 
+        public string? BaseResumePath { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<Application> Applications { get; set; }
