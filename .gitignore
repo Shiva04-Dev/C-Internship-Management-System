@@ -239,6 +239,12 @@ _pkginfo.txt
 *.appxbundle
 *.appxupload
 
+
+.claude/
+.superpowers/
+CLAUDE.md
+docs
+
 # Visual Studio cache files
 # files ending in .cache can be ignored
 *.[Cc]ache
@@ -418,8 +424,3 @@ FodyWeavers.xsd
 *.msp
 
 internship-backend/uploads/resumes/*.pdf
-
-.claude/
-.superpowers/
-CLAUDE.md
-docs
