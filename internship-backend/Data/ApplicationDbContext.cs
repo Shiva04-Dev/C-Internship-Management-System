@@ -73,6 +73,10 @@ namespace C__Internship_Management_Program.Data
 
             modelBuilder.Entity<Application>()
                 .HasIndex(a => a.Status);
+
+            // Filtered on every company search query (Company/students).
+            modelBuilder.Entity<Student>()
+                .HasIndex(s => s.IsDiscoverable);
         }
     }
 }

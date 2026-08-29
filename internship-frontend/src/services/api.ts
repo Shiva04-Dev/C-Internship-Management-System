@@ -68,6 +68,17 @@ interface AdminParams {
   [key: string]: unknown;
 }
 
+interface UpdateDiscoverableData {
+  isDiscoverable: boolean;
+}
+
+interface StudentSearchParams {
+  university?: string;
+  degree?: string;
+  query?: string;
+  [key: string]: unknown;
+}
+
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -200,6 +211,10 @@ export const studentAPI = {
     api.get('/Student/resume/download', {
       responseType: 'blob',
     }),
+  getDiscoverable: () =>
+    api.get('/Student/discoverable'),
+  updateDiscoverable: (isDiscoverable: boolean) =>
+    api.put('/Student/discoverable', { isDiscoverable } as UpdateDiscoverableData),
 };
 
 export const companyAPI = {
@@ -213,6 +228,12 @@ export const companyAPI = {
     api.get('/Company/me'),
   getApplicationStats: () =>
     api.get('/Company/application-stats'),
+  searchStudents: (params?: StudentSearchParams) =>
+    api.get('/Company/students', { params }),
+  downloadStudentResume: (studentId: string | number) =>
+    api.get(`/Company/download-student-resume/${studentId}`, {
+      responseType: 'blob',
+    }),
 };
 
 export const adminAPI = {

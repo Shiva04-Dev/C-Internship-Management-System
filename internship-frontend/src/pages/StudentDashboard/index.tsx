@@ -11,6 +11,7 @@ import BrowseTab from './BrowseTab';
 import ApplicationsTab from './ApplicationsTab';
 import InsightsSection from './InsightsSection';
 import ResumeSection from './ResumeSection';
+import DiscoverabilityToggle from './DiscoverabilityToggle';
 import { Internship, Application, ConfirmState } from './types';
 
 type TabType = 'browse' | 'applications' | 'resume';
@@ -238,7 +239,12 @@ export default function StudentDashboard() {
           />
         )}
 
-        {activeTab === 'resume' && <ResumeSection openConfirm={setConfirmDialog} />}
+        {activeTab === 'resume' && (
+          <div className="space-y-6">
+            <ResumeSection openConfirm={setConfirmDialog} />
+            <DiscoverabilityToggle />
+          </div>
+        )}
       </main>
 
       <ConfirmDialog

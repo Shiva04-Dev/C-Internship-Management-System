@@ -423,3 +423,14 @@ internship-backend/uploads/resumes/*.pdf
 .superpowers/
 CLAUDE.md
 docs
+
+(Re)Launch of my flagship project; IMS Internships.
+
+
+I had initially started designing this side project in my 3rd year to decorate my CV, because with projects, software engineers are apparently not relevant. I finished it in January 2026, but could only keep it hosted for 1 month due to a few constraints. Since that launch, I had always felt incomplete regarding the project because although I had built most of it from scratch, it felt and looked empty.
+
+
+June came around and I thought of adding more features and finding a new backend hosting solution, now after almost 2 months, I have added new features; scroll-and-cursor-animations, visual charts, a more secure admin dashboard, and more. If you guys want to explore and play around with my project, please feel free to; (I am not rich so I hosted it using Vercel and GCR).
+
+
+**DISCLAIMER**: All the current data on the website is dummy/seeder data, BUT real user data will also show up as people use it. I encourage you to register your own accounts but I have added demo credentials so you can explore, please do not abuse them. 

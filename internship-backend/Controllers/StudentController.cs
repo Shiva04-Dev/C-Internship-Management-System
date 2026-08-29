@@ -87,6 +87,35 @@ namespace C__Internship_Management_Program.Controllers
             return Ok(new { message = "Base CV removed" });
         }
 
+        // GET: api/Student/discoverable - Whether the student is opted in to company search
+        [HttpGet("discoverable")]
+        public async Task<IActionResult> GetMyDiscoverable()
+        {
+            var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var student = await _context.Students.FindAsync(studentId);
+            if (student == null)
+                return NotFound(new { message = "Student not found" });
+
+            return Ok(new { isDiscoverable = student.IsDiscoverable });
+        }
+
+        // PUT: api/Student/discoverable - Opt in or out of company search
+        [HttpPut("discoverable")]
+        public async Task<IActionResult> UpdateMyDiscoverable([FromBody] UpdateDiscoverableDto dto)
+        {
+            var studentId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var student = await _context.Students.FindAsync(studentId);
+            if (student == null)
+                return NotFound(new { message = "Student not found" });
+
+            student.IsDiscoverable = dto.IsDiscoverable;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { isDiscoverable = student.IsDiscoverable });
+        }
+
         // GET: api/Student/resume/download - Download the logged-in student's own base CV
         [HttpGet("resume/download")]
         public async Task<IActionResult> DownloadMyResume()

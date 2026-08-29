@@ -23,8 +23,11 @@ const GlowInput = forwardRef<HTMLInputElement, GlowInputProps>(function GlowInpu
     if (!el || !trace || prefersReducedMotion()) return;
 
     const updatePerimeter = () => {
-      const rect = el.getBoundingClientRect();
-      const perimeter = 2 * (rect.width + rect.height);
+      // Use the rect's actual traced path length, not the sharp-corner
+      // 2*(w+h) formula — with rx set, the real path is shorter than that
+      // by the rounded-corner arcs, and the mismatch left a permanently
+      // visible seam (and an unlit gap on focus) at the path's start point.
+      const perimeter = trace.getTotalLength();
       perimeterRef.current = perimeter;
       gsap.set(trace, { strokeDasharray: perimeter });
 

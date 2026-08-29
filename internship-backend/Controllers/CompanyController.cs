@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.DTOs;
 using C__Internship_Management_Program.Models;
+using C__Internship_Management_Program.Services;
 using System.Security.Claims;
 
 namespace C__Internship_Management_Program.Controllers
@@ -14,10 +15,12 @@ namespace C__Internship_Management_Program.Controllers
     public class CompanyController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IResumeStorageService _resumeStorage;
 
-        public CompanyController(ApplicationDbContext context)
+        public CompanyController(ApplicationDbContext context, IResumeStorageService resumeStorage)
         {
             _context = context;
+            _resumeStorage = resumeStorage;
         }
 
         // GET: api/Company/me - The logged-in company's own profile/approval status
@@ -117,6 +120,74 @@ namespace C__Internship_Management_Program.Controllers
                 .ToListAsync();
 
             return Ok(new { applicationsByStatus });
+        }
+
+        // GET: api/Company/students?university=&degree=&query= - Search opted-in students
+        [HttpGet("students")]
+        public async Task<IActionResult> SearchStudents(
+            [FromQuery] string? university = null,
+            [FromQuery] string? degree = null,
+            [FromQuery] string? query = null)
+        {
+            var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var company = await _context.Companies.FindAsync(companyId);
+            if (company == null)
+                return NotFound(new { message = "Company not found" });
+
+            if (!company.IsApproved)
+                return StatusCode(403, new { message = "Your company account is pending admin approval. You'll be able to search students once approved." });
+
+            var studentsQuery = _context.Students.Where(s => s.IsDiscoverable &&
+                !_context.CompanyBans.Any(b => b.CompanyID == companyId && b.StudentID == s.StudentID));
+
+            if (!string.IsNullOrEmpty(university))
+                studentsQuery = studentsQuery.Where(s => s.University.Contains(university));
+
+            if (!string.IsNullOrEmpty(degree))
+                studentsQuery = studentsQuery.Where(s => s.Degree.Contains(degree));
+
+            if (!string.IsNullOrEmpty(query))
+                studentsQuery = studentsQuery.Where(s => (s.FirstName + " " + s.LastName).Contains(query));
+
+            var students = await studentsQuery
+                .Select(s => new
+                {
+                    s.StudentID,
+                    s.FirstName,
+                    s.LastName,
+                    s.Email,
+                    s.University,
+                    s.Degree,
+                    hasResume = !string.IsNullOrEmpty(s.BaseResumePath)
+                })
+                .ToListAsync();
+
+            return Ok(students);
+        }
+
+        // GET: api/Company/download-student-resume/{studentId} - Download a discoverable student's base CV
+        [HttpGet("download-student-resume/{studentId}")]
+        public async Task<IActionResult> DownloadStudentResume(int studentId)
+        {
+            var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var company = await _context.Companies.FindAsync(companyId);
+            if (company == null)
+                return NotFound(new { message = "Company not found" });
+
+            if (!company.IsApproved)
+                return StatusCode(403, new { message = "Your company account is pending admin approval." });
+
+            var student = await _context.Students.FindAsync(studentId);
+            if (student == null || !student.IsDiscoverable || string.IsNullOrEmpty(student.BaseResumePath))
+                return NotFound(new { message = "Resume not found" });
+
+            var stream = await _resumeStorage.GetResumeAsync(student.BaseResumePath);
+            if (stream == null)
+                return NotFound(new { message = "Resume not found" });
+
+            return File(stream, "application/pdf", student.BaseResumePath);
         }
     }
 }

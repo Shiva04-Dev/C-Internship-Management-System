@@ -56,3 +56,13 @@ export interface FormData {
 export interface FormErrors {
   [key: string]: string;
 }
+
+export interface SearchStudent {
+  studentID: number;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  university?: string;
+  degree?: string;
+  hasResume?: boolean;
+}

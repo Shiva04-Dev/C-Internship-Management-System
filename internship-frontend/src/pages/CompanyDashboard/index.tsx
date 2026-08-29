@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { internshipAPI, applicationAPI, companyAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Briefcase, LogOut, Plus, Eye, Calendar, MapPin, Trash2, RefreshCw, Building2, Shield, Clock } from 'lucide-react';
+import { Briefcase, LogOut, Plus, Eye, Calendar, MapPin, Trash2, RefreshCw, Building2, Shield, Clock, Search } from 'lucide-react';
 import StatCounter from '../../motion/StatCounter';
 import TiltCard from '../../motion/TiltCard';
 import { staggerContainer, staggerItem } from '../../motion/staggerVariants';
@@ -14,6 +14,7 @@ import ConfirmDialog from '../../motion/ConfirmDialog';
 import CreateInternshipModal from './CreateInternshipModal';
 import ApplicationsModal from './ApplicationsModal';
 import BannedStudentsModal from './BannedStudentsModal';
+import StudentSearchModal from './StudentSearchModal';
 import InsightsSection from './InsightsSection';
 import { Internship, Application, BannedStudent, FormData, FormErrors, ApplicationStatusCount } from './types';
 
@@ -41,6 +42,7 @@ export default function CompanyDashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showApplicationsModal, setShowApplicationsModal] = useState(false);
   const [showBannedStudentsModal, setShowBannedStudentsModal] = useState(false);
+  const [showSearchStudentsModal, setShowSearchStudentsModal] = useState(false);
   const [formData, setFormData] = useState<FormData>({ title: '', description: '', requirements: '', location: '', startDate: '', endDate: '' });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [postPulse, setPostPulse] = useState(0);
@@ -241,6 +243,15 @@ export default function CompanyDashboard() {
             <button onClick={handleRefresh} disabled={refreshing} className="w-9 h-9 flex items-center justify-center border transition-colors" style={{ background: 'rgba(176,38,255,0.03)', borderColor: 'rgba(176,38,255,0.2)', cursor: 'pointer' }}>
               <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} style={{ color: 'var(--neon-purple)' }} />
             </button>
+            <button
+              onClick={() => setShowSearchStudentsModal(true)}
+              disabled={!isApproved}
+              title={!isApproved ? 'Pending admin approval' : undefined}
+              className="btn-retro-sm"
+              style={{ opacity: isApproved ? 1 : 0.4, cursor: isApproved ? 'pointer' : 'not-allowed' }}
+            >
+              <Search className="h-3.5 w-3.5" />Search Students
+            </button>
             <button onClick={() => setShowBannedStudentsModal(true)} className="btn-retro-danger-sm">
               <Shield className="h-3.5 w-3.5" />Banned
             </button>
@@ -411,6 +422,11 @@ export default function CompanyDashboard() {
         onClose={() => setShowBannedStudentsModal(false)}
         bannedStudents={bannedStudents}
         onUnbanStudent={handleUnbanStudent}
+      />
+
+      <StudentSearchModal
+        isOpen={showSearchStudentsModal}
+        onClose={() => setShowSearchStudentsModal(false)}
       />
 
       <ConfirmDialog
