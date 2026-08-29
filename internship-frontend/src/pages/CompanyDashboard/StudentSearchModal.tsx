@@ -18,6 +18,7 @@ export default function StudentSearchModal({ isOpen, onClose }: StudentSearchMod
   const [degree, setDegree] = useState('');
   const [query, setQuery] = useState('');
   const [students, setStudents] = useState<SearchStudent[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
 
@@ -25,8 +26,9 @@ export default function StudentSearchModal({ isOpen, onClose }: StudentSearchMod
     e.preventDefault();
     setSearching(true);
     try {
-      const res = await companyAPI.searchStudents({ university, degree, query });
-      setStudents(res.data);
+      const res = await companyAPI.searchStudents({ university, degree, query, pageSize: 50 });
+      setStudents(res.data.students);
+      setTotalCount(res.data.totalCount);
       setSearched(true);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -110,7 +112,13 @@ export default function StudentSearchModal({ isOpen, onClose }: StudentSearchMod
             </p>
           </div>
         ) : (
-          students.map(s => (
+          <>
+          {totalCount > students.length && (
+            <p className="font-['Share_Tech_Mono'] text-xs mb-1" style={{ color: 'rgba(100,120,140,0.6)' }}>
+              Showing {students.length} of {totalCount} matches — narrow your search to see more.
+            </p>
+          )}
+          {students.map(s => (
             <motion.div
               key={s.studentID}
               variants={staggerItem()}
@@ -133,7 +141,8 @@ export default function StudentSearchModal({ isOpen, onClose }: StudentSearchMod
                 </button>
               )}
             </motion.div>
-          ))
+          ))}
+          </>
         )}
       </motion.div>
     </AnimatedModal>

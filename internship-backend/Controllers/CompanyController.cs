@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using C__Internship_Management_Program.Data;
 using C__Internship_Management_Program.DTOs;
@@ -124,10 +125,13 @@ namespace C__Internship_Management_Program.Controllers
 
         // GET: api/Company/students?university=&degree=&query= - Search opted-in students
         [HttpGet("students")]
+        [EnableRateLimiting("search")]
         public async Task<IActionResult> SearchStudents(
             [FromQuery] string? university = null,
             [FromQuery] string? degree = null,
-            [FromQuery] string? query = null)
+            [FromQuery] string? query = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20)
         {
             var companyId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
@@ -150,7 +154,12 @@ namespace C__Internship_Management_Program.Controllers
             if (!string.IsNullOrEmpty(query))
                 studentsQuery = studentsQuery.Where(s => (s.FirstName + " " + s.LastName).Contains(query));
 
+            var totalCount = await studentsQuery.CountAsync();
+
             var students = await studentsQuery
+                .OrderBy(s => s.StudentID)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(s => new
                 {
                     s.StudentID,
@@ -163,7 +172,14 @@ namespace C__Internship_Management_Program.Controllers
                 })
                 .ToListAsync();
 
-            return Ok(students);
+            return Ok(new
+            {
+                totalCount,
+                currentPage = page,
+                pageSize,
+                totalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                students
+            });
         }
 
         // GET: api/Company/download-student-resume/{studentId} - Download a discoverable student's base CV
@@ -180,7 +196,10 @@ namespace C__Internship_Management_Program.Controllers
                 return StatusCode(403, new { message = "Your company account is pending admin approval." });
 
             var student = await _context.Students.FindAsync(studentId);
-            if (student == null || !student.IsDiscoverable || string.IsNullOrEmpty(student.BaseResumePath))
+            var isBanned = await _context.CompanyBans
+                .AnyAsync(b => b.CompanyID == companyId && b.StudentID == studentId);
+
+            if (student == null || !student.IsDiscoverable || isBanned || string.IsNullOrEmpty(student.BaseResumePath))
                 return NotFound(new { message = "Resume not found" });
 
             var stream = await _resumeStorage.GetResumeAsync(student.BaseResumePath);

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
 using C__Internship_Management_Program.Services;
@@ -72,6 +73,20 @@ namespace C__Internship_Management_Program.Extensions
                         factory: _ => new FixedWindowRateLimiterOptions
                         {
                             PermitLimit = 10,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueLimit = 0
+                        }));
+
+                // Keyed by the authenticated company, not IP — this guards against one
+                // approved account scraping the discoverable-student directory via many
+                // paginated calls, not against pre-auth brute force.
+                options.AddPolicy("search", context =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                            ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 20,
                             Window = TimeSpan.FromMinutes(1),
                             QueueLimit = 0
                         }));
